@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
@@ -38,9 +39,9 @@ class _UsuarioMapState extends State<UsuarioMap> {
             child: Column(
               children: [
                 _buttonDrawer(),
-                _cardGooglePlaces(),
                 _buttonCenterPosition(),
                 Expanded(child: Container()),
+                //_cardGooglePlaces(),
                 _buttonRequest(),
               ],
             ),
@@ -56,43 +57,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
   }
 
 
-  Widget _alertDialogCosto() {
-    return AlertDialog(
-      title: Text('¿EL COSTO DEL SERVICIO SERA DE?'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Image.asset('assets/img/money.jpg',
-            width: 70,
-            height: 70,),
-          Text(
-            'Bs 200',
-            style: TextStyle(
-              fontSize: 30, // Tamaño de la fuente, ajusta el valor según lo que necesites
-              color: Colors.red, // Color del texto, puedes cambiarlo a otro color
-              fontWeight: FontWeight.bold, // Opcional: Puedes agregar negrita u otras propiedades de fuente
-            ),
-          )
-        ],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            // Acción para "Aceptar"
-            Navigator.of(context).pop();
-          },
-          child: Text('Aceptar'),
-        ),
-        TextButton(
-          onPressed: () {
-            // Acción para "Cancelar"
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancelar'),
-        ),
-      ],
-    );
-  }
+
 
   Widget _iconMyLocation(){
     return Image.asset(
@@ -206,12 +171,12 @@ class _UsuarioMapState extends State<UsuarioMap> {
         color: Colors.amber,
         textColor: Colors.black,
         //onPressed: _alertDialogCosto
-          onPressed: () {
+/*          onPressed: () {
     showDialog(
     context: context,
     builder: (context) => _alertDialogCosto(),
     );
-    },
+    },*/
         //child: Text('Mostrar AlertDialog'),,
       ),
     );
@@ -250,7 +215,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
               ),
               Text(
                 //_con.from ??
-                    'DSjje jois ljlkdf',
+                    'Av. San Martin calle curi',
                 style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,
@@ -273,13 +238,31 @@ class _UsuarioMapState extends State<UsuarioMap> {
               ),
               Text(
                 // _con.to ??
-                    'ej iosjoeijlsji fei',
+                    'Villa 1ro de mayo calle cusis 34',
                 style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,
                     fontWeight: FontWeight.bold
                 ),
                 maxLines: 2,
+              ),
+              SizedBox(height: 20),
+              TextField(
+                //controller: _con.monbreapellidoController,
+                maxLength: 30,
+                style: const TextStyle(fontSize: 14),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
+                ],
+                decoration: InputDecoration(
+                  // hintText: 'Correo Electronico',
+                  labelText: 'Referencia',
+                  filled: true, // Habilita el llenado de color de fondo
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ) ,
               ),
             ],
           ),
