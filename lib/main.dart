@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorRegistro_view.dart';
 import 'package:gruasgo/src/pages/home/home_page.dart';
-import 'package:gruasgo/src/pages/login/loginUs.dart';
 import 'package:gruasgo/src/pages/login/login_usr.dart';
+import 'package:gruasgo/src/pages/usuario/mapa_usuario_pedido.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
@@ -11,8 +13,15 @@ import 'package:gruasgo/src/pages/usuario/usuario_view.dart';
 
 
 void main() {
-
-  runApp(const MyApp());
+  
+  runApp(MultiBlocProvider(
+    providers: [
+      BlocProvider(
+        create: (context) => UsuarioPedidoBloc(),
+      )
+    ], 
+    child: const MyApp()
+  ));
 }
 
 class MyApp extends StatefulWidget {
@@ -49,6 +58,7 @@ class _MyAppState extends State<MyApp> {
         'MapaConductor' : (BuildContext context) => const ConductorMap(),
         'MapaUsuario' : (BuildContext context) => const UsuarioMap(),
         'UsuarioPedido' : (BuildContext context) => const UsuarioPedido(),
+        'VistaMapaUsuarioPedido' : (BuildContext context) => const MapaUsuarioPedido(),
         
 
        // 'home' : (BuildContext context) => LoginUsr(),
@@ -57,3 +67,5 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+// Directions API
+// Places API

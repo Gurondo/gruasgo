@@ -1,14 +1,14 @@
-import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
+import 'package:gruasgo/src/widgets/widget.dart';
 
 
 class UsuarioPedido extends StatefulWidget {
@@ -21,9 +21,12 @@ class UsuarioPedido extends StatefulWidget {
 class _UsuarioPedidoState extends State<UsuarioPedido> {
 
   final _formKey = GlobalKey<FormState>();
- // final usuarioRegisterController _con = usuarioRegisterController();
 
-  // List<Map> _myJson = [{"id":0,"name":"ventas"},{"id":1,"name":"admin"}];
+  TextEditingController tecOrigen = TextEditingController();
+  TextEditingController tecDestino = TextEditingController();
+  TextEditingController tecNroContrato = TextEditingController();
+  TextEditingController tecDescripcion = TextEditingController();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -38,20 +41,11 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   @override
   Widget build(BuildContext context) {
 
+    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+
     return Scaffold(
         appBar: AppBar(
           backgroundColor: utils.Colors.logoColor,
-          //title: Text('Mi Aplicación'),
-          /*  actions: [
-          //leading:
-          IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-              // Aquí puedes manejar la acción de abrir el menú o el cajón de navegación
-            },
-          ),
-        ],*/
         ),
         backgroundColor: Colors.white,
         body: FutureBuilder<Position>(
@@ -63,6 +57,9 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               return const Center(child: Text('Cargando'),);
             
             }else{
+              
+              usuarioPedidoBloc.add(OnSetOrigen(LatLng(snapshot.data!.latitude, snapshot.data!.longitude)));
+
               return SingleChildScrollView(
                 child: Form(
                   key: _formKey,
@@ -70,11 +67,72 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                     children: [
                       const SizedBox(height: 10),
                       _textDetallePedido(),
-          
+
+                      Column(
+                        children: [
+
+
+                          BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
+                            builder: (context, state) {
+
+                              return Column(
+                                children: [
+                                  TextFormFieldMapWidget(
+                                    labelText: 'Lugar de origen',
+                                    initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty){
+                                        return 'Este campo es obligatorio';
+                                      }
+                                      return null;
+                                    },
+
+                                    onPressIcon: () {
+                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: 'origen');
+                                    },
+                                  ),
+
+                                  TextFormFieldMapWidget(
+                                    labelText: 'Lugar de destino',
+                                    initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty){
+                                        return 'Este campo es obligatorio';
+                                      }
+                                      return null;
+                                    },
+
+                                    onPressIcon: () {
+                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: 'destino');
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                  
+                        ],
+                      ),
                       // Lugar de recogida
+ 
+                  
+                      //   const SizedBox(height: 15),
                       TextFormFieldWidget(
-                        labelText: 'Lugar de origen',
-                        position: snapshot.data!,
+                        tecNroContrato: tecNroContrato,
+                        label: 'Numero de contacto para entrega',
+                        textInputType: TextInputType.number,
+                        maxLength: 8,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty){
+                            return 'Este campo es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      TextFormFieldWidget(
+                        label: 'Descripcion de la carga',
+                        tecNroContrato: tecDescripcion,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty){
                             return 'Este campo es obligatorio';
@@ -83,22 +141,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                         },
                       ),
 
-                      TextFormFieldWidget(
-                        labelText: 'Lugar de recogida',
-                        position: snapshot.data!,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty){
-                            return 'Este campo es obligatorio';
-                          }
-                          return null;
-                        },
-                      ),
-                  
-                      //   const SizedBox(height: 15),
-                      _txthasta(),
-                      _txtCelular(),
-                      _txtDescripcionCarga(),
-                      _btnCalcularPedido(context),
+                      _btnCalcularPedido(context, usuarioPedidoBloc),
                     ],
                   ),
                 ),
@@ -126,78 +169,8 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
     );
   }
 
-  Widget _txthasta(){
-    return Container(
-      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
-      height: 70, // ALTO DEL TEXT
-      child: TextField(
-        // controller: _con.monbreapellidoController,
-        maxLength: 35,
-        style: const TextStyle(fontSize: 17),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-        ],
-        decoration: InputDecoration(
-          // hintText: 'Correo Electronico',
-          labelText: 'Lugar de recogida',
-          filled: true, // Habilita el llenado de color de fondo
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ) ,
-      ),
-    );
-  }
 
-  Widget _txtDescripcionCarga (){
-    return Container(
-      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
-      height: 70,
-      child: TextField(
-       // controller: _con.emailController,
-        style: const TextStyle(fontSize: 17),
-        maxLength: 30,
-        decoration: InputDecoration(
-          // hintText: 'Correo Electronico',
-          labelText: 'Descripcion de la carga',
-          filled: true, // Habilita el llenado de color de fondo
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ) ,
-      ),
-    );
-  }
-
-
-  Widget _txtCelular(){
-    return Container(
-      //width: 233, // Ancho del segundo widget
-      //height: 70, // Alto del segundo widget
-      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
-      child: TextField(
-        keyboardType: TextInputType.number,
-        inputFormatters: <TextInputFormatter> [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
-      //  controller: _con.celularController,
-        style: const TextStyle(fontSize: 17),
-        maxLength: 8,
-        decoration: InputDecoration(
-          labelText: 'Numero de contacto para entrega',
-          filled: true, // Habilita el llenado de color de fondo
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ) ,
-      ),
-    );
-  }
-
-  Widget _alertDialogCosto() {
+  Widget _alertDialogCosto(double precio) {
     return AlertDialog(
       title: const Text('¿EL COSTO DEL SERVICIO SERA DE?'),
       content: Column(
@@ -206,9 +179,9 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
           Image.asset('assets/img/money.jpg',
             width: 70,
             height: 70,),
-          const Text(
-            'Bs 200',
-            style: TextStyle(
+          Text(
+            'Bs ${precio.toString()}',
+            style: const TextStyle(
               fontSize: 30, // Tamaño de la fuente, ajusta el valor según lo que necesites
               color: Colors.red, // Color del texto, puedes cambiarlo a otro color
               fontWeight: FontWeight.bold, // Opcional: Puedes agregar negrita u otras propiedades de fuente
@@ -223,21 +196,21 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             Navigator.of(context).pop();
             Navigator.pushNamedAndRemoveUntil(context, 'MapaUsuario', (route) => false);
           },
-          child: Text('REALIZAR PEDIDO'),
+          child: const Text('REALIZAR PEDIDO'),
         ),
         TextButton(
           onPressed: () {
-            // Acción para "Cancelar"
+            // TODO: Hacer el pedido aqui
             Navigator.of(context).pop();
           },
-          child: Text('Cancelar'),
+          child: const Text('Cancelar'),
         ),
       ],
     );
   }
 
 
-  Widget _btnCalcularPedido(BuildContext context){
+  Widget _btnCalcularPedido(BuildContext context, UsuarioPedidoBloc usuarioPedidoBloc){
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
 
@@ -246,14 +219,21 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
         color: Colors.amber,
         textColor: Colors.black,
         //onPressed: _con.registerUsuario,
-        onPressed: () {
-
+        onPressed: () async {
+          
           if (_formKey.currentState!.validate()) {
             
-            showDialog(
-              context: context,
-              builder: (context) => _alertDialogCosto(),
-            );
+            final precio = await usuarioPedidoBloc.calcularDistancia();
+
+            if (precio != null){
+              if (!mounted) return null;
+              showDialog(
+                context: context,
+                builder: (context) => _alertDialogCosto(precio),
+              );
+            }else{
+              // TODO: Mensaje de Error
+            }
 
           }
 
@@ -265,107 +245,45 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 }
 
 class TextFormFieldWidget extends StatelessWidget {
-
-  final String labelText;
+  final TextEditingController tecNroContrato;
+  final String label;
   final String? Function(String?)? validator;
-  final Position position;
+  final TextInputType textInputType;
+  final int maxLength;
 
   const TextFormFieldWidget({
-    required this.labelText,
-    required this.position,
-    this.validator,
     super.key,
+    this.textInputType = TextInputType.text,
+    this.maxLength = 35,
+    required this.tecNroContrato,
+    required this.label,
+    required this.validator
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
-      height: 70, // ALTO DEL TEXT
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: TextFormField(
-              validator: validator,
-              
-             // controller: _con.monbreapellidoController,
-              maxLength: 35,
-              style: const TextStyle(fontSize: 17),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-              ],
-              decoration: InputDecoration(
-                // hintText: 'Correo Electronico',
-                labelText: labelText,
-                filled: true, // Habilita el llenado de color de fondo
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ) ,
-            ),
+      //width: 233, // Ancho del segundo widget
+      //height: 70, // Alto del segundo widget
+      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
+      child: TextFormField(
+        keyboardType: textInputType,
+        // inputFormatters: <TextInputFormatter> [
+        //   FilteringTextInputFormatter.digitsOnly,
+        // ],
+        validator: validator,
+        controller: tecNroContrato,
+      //  controller: _con.celularController,
+        style: const TextStyle(fontSize: 17),
+        maxLength: maxLength,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true, // Habilita el llenado de color de fondo
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: IconButton(
-              icon: const Icon(Icons.pin_drop, size: 28, color: Colors.blue,),
-              onPressed: () {
-                showCupertinoModalPopup(
-                  context: context, 
-                  builder: (context) {
-                    
-                    final Completer<GoogleMapController> controllerxD = Completer<GoogleMapController>();
-                    
-                    return SafeArea(
-                      child: Scaffold(
-                        body: Stack(
-                          children: [
-                            GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: LatLng(position.latitude, position.longitude),
-                                zoom: 13.151926040649414
-                              ),
-                              markers: {
-                                Marker(
-                                  markerId: const MarkerId('user'),
-                                  position: LatLng(position.latitude, position.longitude),
-                                )
-                              },
-                              mapType: MapType.normal,
-                              onMapCreated: (GoogleMapController controller) {
-                                controllerxD.complete(controller);
-                              },
-                              onCameraMove: (position) {
-                                
-                              },
-                              onTap: (argument) {
-                                print(argument);
-                              },
-                            ),
-                            Align(
-                              alignment: Alignment.topCenter,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(5)
-                                ),
-                                margin: const EdgeInsets.all(8),
-                                padding: const EdgeInsets.all(8),
-                                child: const Text('Seleccione el lugar en el mapa', style: TextStyle(fontSize: 14),)
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }, 
-                );
-              }, 
-            ),
-          )
-        ],
-        
+        ) ,
       ),
     );
   }
