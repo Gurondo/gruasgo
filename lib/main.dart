@@ -6,6 +6,7 @@ import 'package:gruasgo/src/pages/login/loginUs.dart';
 import 'package:gruasgo/src/pages/login/login_usr.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
+import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_view.dart';
 
 
@@ -22,7 +23,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String initialRoute = "login";
+  
+  String initialRoute = "UsuarioPedido";
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -45,7 +48,8 @@ class _MyAppState extends State<MyApp> {
         'RegistroConductor' : (BuildContext context) => const conductorReg(),
         'MapaConductor' : (BuildContext context) => const ConductorMap(),
         'MapaUsuario' : (BuildContext context) => const UsuarioMap(),
-
+        'UsuarioPedido' : (BuildContext context) => const UsuarioPedido(),
+        
 
        // 'home' : (BuildContext context) => LoginUsr(),
       },

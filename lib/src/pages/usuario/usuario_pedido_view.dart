@@ -1,8 +1,14 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
+import 'package:gruasgo/src/helpers/helpers.dart';
 
 
 class UsuarioPedido extends StatefulWidget {
@@ -14,8 +20,8 @@ class UsuarioPedido extends StatefulWidget {
 
 class _UsuarioPedidoState extends State<UsuarioPedido> {
 
+  final _formKey = GlobalKey<FormState>();
  // final usuarioRegisterController _con = usuarioRegisterController();
-
 
   // List<Map> _myJson = [{"id":0,"name":"ventas"},{"id":1,"name":"admin"}];
   @override
@@ -31,6 +37,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         appBar: AppBar(
           backgroundColor: utils.Colors.logoColor,
@@ -47,19 +54,59 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
         ],*/
         ),
         backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              _textDetallePedido(),
-              _txtdesde(),
-           //   const SizedBox(height: 15),
-              _txthasta(),
-              _txtCelular(),
-              _txtDescripcionCarga(),
-              _btnCalcularPedido(context),
-            ],
-          ),
+        body: FutureBuilder<Position>(
+          future: getPositionHelpers(),
+          builder: (context, snapshot) {
+            
+            if (!snapshot.hasData){
+
+              return const Center(child: Text('Cargando'),);
+            
+            }else{
+              return SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      _textDetallePedido(),
+          
+                      // Lugar de recogida
+                      TextFormFieldWidget(
+                        labelText: 'Lugar de origen',
+                        position: snapshot.data!,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty){
+                            return 'Este campo es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      TextFormFieldWidget(
+                        labelText: 'Lugar de recogida',
+                        position: snapshot.data!,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty){
+                            return 'Este campo es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
+                  
+                      //   const SizedBox(height: 15),
+                      _txthasta(),
+                      _txtCelular(),
+                      _txtDescripcionCarga(),
+                      _btnCalcularPedido(context),
+                    ],
+                  ),
+                ),
+              );
+
+            }
+
+          }
         )
     );
   }
@@ -75,30 +122,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
           fontWeight: FontWeight.bold,
           fontSize: 20,
         ),
-      ),
-    );
-  }
-
-  Widget _txtdesde(){
-    return Container(
-      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
-      height: 70, // ALTO DEL TEXT
-      child: TextField(
-       // controller: _con.monbreapellidoController,
-        maxLength: 35,
-        style: const TextStyle(fontSize: 17),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-        ],
-        decoration: InputDecoration(
-          // hintText: 'Correo Electronico',
-          labelText: 'Lugar de recogida',
-          filled: true, // Habilita el llenado de color de fondo
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ) ,
       ),
     );
   }
@@ -148,24 +171,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
     );
   }
 
-  Widget _imagenes(){
-    return Container(
-/*      width: 100, // Ancho del primer widget
-      height: 100, // Alto del primer widget*/
-      //margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 3),
-      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
-      //color: Colors.white,
-      child:
-      Image.asset(
-        'assets/img/591.png',  // Ruta de la imagen en la carpeta de assets
-        width: 80,              // Ancho de la imagen
-        height: 80,             // Alto de la imagen
-      ),
-      /*CircleAvatar(
-        backgroundImage: AssetImage('assets/img/my_location.png'),
-      ),*/
-    );
-  }
 
   Widget _txtCelular(){
     return Container(
@@ -194,14 +199,14 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
   Widget _alertDialogCosto() {
     return AlertDialog(
-      title: Text('¿EL COSTO DEL SERVICIO SERA DE?'),
+      title: const Text('¿EL COSTO DEL SERVICIO SERA DE?'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Image.asset('assets/img/money.jpg',
             width: 70,
             height: 70,),
-          Text(
+          const Text(
             'Bs 200',
             style: TextStyle(
               fontSize: 30, // Tamaño de la fuente, ajusta el valor según lo que necesites
@@ -242,12 +247,125 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
         textColor: Colors.black,
         //onPressed: _con.registerUsuario,
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => _alertDialogCosto(),
-          );
+
+          if (_formKey.currentState!.validate()) {
+            
+            showDialog(
+              context: context,
+              builder: (context) => _alertDialogCosto(),
+            );
+
+          }
+
         },
 
+      ),
+    );
+  }
+}
+
+class TextFormFieldWidget extends StatelessWidget {
+
+  final String labelText;
+  final String? Function(String?)? validator;
+  final Position position;
+
+  const TextFormFieldWidget({
+    required this.labelText,
+    required this.position,
+    this.validator,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
+      height: 70, // ALTO DEL TEXT
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TextFormField(
+              validator: validator,
+              
+             // controller: _con.monbreapellidoController,
+              maxLength: 35,
+              style: const TextStyle(fontSize: 17),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+              ],
+              decoration: InputDecoration(
+                // hintText: 'Correo Electronico',
+                labelText: labelText,
+                filled: true, // Habilita el llenado de color de fondo
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ) ,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: IconButton(
+              icon: const Icon(Icons.pin_drop, size: 28, color: Colors.blue,),
+              onPressed: () {
+                showCupertinoModalPopup(
+                  context: context, 
+                  builder: (context) {
+                    
+                    final Completer<GoogleMapController> controllerxD = Completer<GoogleMapController>();
+                    
+                    return SafeArea(
+                      child: Scaffold(
+                        body: Stack(
+                          children: [
+                            GoogleMap(
+                              initialCameraPosition: CameraPosition(
+                                target: LatLng(position.latitude, position.longitude),
+                                zoom: 13.151926040649414
+                              ),
+                              markers: {
+                                Marker(
+                                  markerId: const MarkerId('user'),
+                                  position: LatLng(position.latitude, position.longitude),
+                                )
+                              },
+                              mapType: MapType.normal,
+                              onMapCreated: (GoogleMapController controller) {
+                                controllerxD.complete(controller);
+                              },
+                              onCameraMove: (position) {
+                                
+                              },
+                              onTap: (argument) {
+                                print(argument);
+                              },
+                            ),
+                            Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(5)
+                                ),
+                                margin: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(8),
+                                child: const Text('Seleccione el lugar en el mapa', style: TextStyle(fontSize: 14),)
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }, 
+                );
+              }, 
+            ),
+          )
+        ],
+        
       ),
     );
   }
