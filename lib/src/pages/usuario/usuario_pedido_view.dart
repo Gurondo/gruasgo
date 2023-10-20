@@ -80,6 +80,9 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   TextFormFieldMapWidget(
                                     labelText: 'Lugar de origen',
                                     initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    onChanged: (p0) {
+                                      usuarioPedidoBloc.searchPlace(place: p0);
+                                    },
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty){
                                         return 'Este campo es obligatorio';
@@ -225,14 +228,18 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             
             final precio = await usuarioPedidoBloc.calcularDistancia();
 
+            if (!mounted) return null;
             if (precio != null){
-              if (!mounted) return null;
               showDialog(
                 context: context,
                 builder: (context) => _alertDialogCosto(precio),
               );
             }else{
-              // TODO: Mensaje de Error
+              showAboutDialog(
+                context: context, 
+                applicationName: 'Error',
+                applicationVersion: 'No existe un registros con los datos ingresados',
+              );
             }
 
           }

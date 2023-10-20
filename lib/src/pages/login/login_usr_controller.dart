@@ -23,9 +23,12 @@ class loginController{
 
   Future<UserModel?> login() async {
     final response = await http.post(uri, body: {
+      // TODO: Deshacer esto ya que estoy probando
       "btip": 'LOGIN',
-      "busuario": emailController.text,
-      "bpassword": passwordController.text,
+      "busuario": 'jose',
+      "bpassword": '6543',
+      // "busuario": emailController.text,
+      // "bpassword": passwordController.text,
     });
 
     if (response.statusCode == 200) {

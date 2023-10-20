@@ -201,7 +201,7 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
                     onTap: () {
                       // Acción para la opción 1
                       Navigator.of(context).pop(); // Cierra el AlertDialog
-                      Navigator.pushNamedAndRemoveUntil(context, 'UsuarioPedido', (route) => false);
+                      Navigator.pushNamedAndRemoveUntil(context, 'UsuarioPedido', (route) => true);
                     },
                   ),
                   Divider(

@@ -33,23 +33,27 @@ class MapaUsuarioPedido extends StatelessWidget {
               builder: (context, state) {
 
                 Set<Marker> markers = {};
-                if (state.origen != null){
-                  markers.add(
-                    Marker(
-                      markerId: const MarkerId('origen'),
-                      position: state.origen!,
-                    )
-                  );
-                }
-                if (state.destino != null){
-                  markers.add(
-                    Marker(
-                      markerId: const MarkerId('destino'),
-                      position: state.destino!
-                    )
-                  );
-                }
 
+                if (type == 'origen'){
+                  if (state.origen != null){
+                    markers.add(
+                      Marker(
+                        markerId: const MarkerId('origen'),
+                        position: state.origen!,
+                      )
+                    );
+                  }
+                }else{
+                  if (state.destino != null){
+                    markers.add(
+                      Marker(
+                        markerId: const MarkerId('destino'),
+                        position: state.destino!
+                      )
+                    );
+                  }
+                }
+                
                 return GoogleMapWidget(
                   initPosition: state.origen!, 
                   controllerxD: controllerxD, 
@@ -58,6 +62,7 @@ class MapaUsuarioPedido extends StatelessWidget {
                     (type == 'origen') 
                       ? usuarioPedidoBloc.add(OnSetOrigen(p0))
                       : usuarioPedidoBloc.add(OnSetDestino(p0));
+                      Navigator.pop(context);
                   },
                 );
               },
@@ -84,7 +89,7 @@ class MapaUsuarioPedido extends StatelessWidget {
                   width: 200,
                   height: 50,
                   child: ButtonApp(
-                    text: 'Confirmar',
+                    text: 'Cancelar',
                     color: Colors.amber,
                     textColor: Colors.black,
                     onPressed: () {

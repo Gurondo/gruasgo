@@ -25,22 +25,85 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     });
   }
 
+  Future<String> searchPlace({required String place}) async {
+
+    var urlParse = Uri.parse('${Enviroment().server}/map/search?place=$place');
+
+    try {
+      
+      final response = await http.get(
+        urlParse, 
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      );
+      
+      print(response.body);
+      
+      return '';
+
+    } catch (e) {
+      print(e);
+      return '';  
+    }
+
+  }
+
   Future<double?> calcularDistancia() async {
       
     try {
+      
+      // var urlParse = Uri.parse('https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${state.destino!.latitude},${state.destino!.longitude}&origins=${state.origen!.latitude},${state.origen!.longitude}&key=${Enviroment().apiKeyGoogleMap}');
+      // final resp = await http.post(urlParse);
+      // Map<String, dynamic> jsonData = json.decode(resp.body);
+      // int distanceValue = jsonData['rows'][0]['elements'][0]['distance']['value'];
+      // String distanceString = jsonData['rows'][0]['elements'][0]['distance']['text'];
+      
+      // print(distanceString);
+      // print(distanceValue);
 
-      var urlParse = Uri.parse('https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${state.destino!.latitude},${state.destino!.longitude}&origins=${state.origen!.latitude},${state.origen!.longitude}&key=${Enviroment().apiKeyGoogleMap}');
-      final resp = await http.post(urlParse);
-      Map<String, dynamic> jsonData = json.decode(resp.body);
-      int distanceValue = jsonData['rows'][0]['elements'][0]['distance']['value'];
-      String distanceString = jsonData['rows'][0]['elements'][0]['distance']['text'];
+      //   'btip': 'costo',
+      //   'bkilometros': '2.0',
+      //   'bserv': 'gruas'
+      // });
+
+      final data = {
+        'lat_origen': state.origen!.latitude,
+        'lng_origen': state.origen!.longitude,
+        'lat_destino': state.destino!.latitude,
+        'lng_destino': state.destino!.longitude,
+        'servicio': 'gruas'
+      };
+
+      var urlParse = Uri.parse('${Enviroment().server}/map');
+
+      final response = await http.post(
+        urlParse, 
+        body: jsonEncode(data),       
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      );
+
+      Map<String, dynamic> jsonData = json.decode(response.body);
+      String distanceValue = jsonData['distancia'];
+
+      const String url = "https://nesasbolivia.com/gruasgo/pedido.php";
+      final Uri uri = Uri.parse(url);
+
+      final responsePrecio = await http.post(uri, body: {
+        "btip": 'costo',
+        "bkilometros": distanceValue,
+        "bserv": 'gruas'
+      });
+
+      if (responsePrecio.body == '[]'){
+        return null;
+      }
+      List<dynamic> jsonDataPrecio = json.decode(responsePrecio.body);
+      String precioData = jsonDataPrecio[0]['costo'];
       
-      print(distanceString);
-      print(distanceValue);
-      
-      // TODO: Aqui debo consultar para obtener el precio mediante su distancia, y retornar el precio total
-      
-      return 0.0;
+      return double.parse(precioData);
     } catch (e) {
       print(e);
       return null;

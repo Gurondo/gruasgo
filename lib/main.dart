@@ -33,7 +33,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   
-  String initialRoute = "UsuarioPedido";
+  String initialRoute = "login";
 
   @override
   Widget build(BuildContext context) {

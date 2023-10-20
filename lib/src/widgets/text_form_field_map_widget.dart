@@ -9,9 +9,11 @@ class TextFormFieldMapWidget extends StatelessWidget {
   final String? Function(String?)? validator;
   final LatLng initPosition;
   final Function() onPressIcon;
+  final Function(String)? onChanged;
 
   const TextFormFieldMapWidget({
     super.key,
+    this.onChanged,
     required this.labelText,
     required this.initPosition,
     required this.onPressIcon,
@@ -31,7 +33,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
               initialValue: 'x,y',
               // controller: controller,
               validator: validator,
-              
+              onChanged: onChanged,
              // controller: _con.monbreapellidoController,
               maxLength: 35,
               style: const TextStyle(fontSize: 17),
