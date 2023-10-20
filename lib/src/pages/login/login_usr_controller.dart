@@ -22,17 +22,16 @@ class loginController{
   }
 
   Future<UserModel?> login() async {
+    
     final response = await http.post(uri, body: {
-      // TODO: Deshacer esto ya que estoy probando
       "btip": 'LOGIN',
-      "busuario": 'jose',
-      "bpassword": '6543',
-      // "busuario": emailController.text,
-      // "bpassword": passwordController.text,
+      "busuario": emailController.text,
+      "bpassword": passwordController.text,
     });
 
     if (response.statusCode == 200) {
       var datauser = json.decode(response.body);
+      print(datauser.toString());
       if (datauser.length == 0) {
         utils.Snackbar.showSnackbar(context!, key, 'Usuario o contraseña incorrectos.');
 /*        scaffoldKey.currentState?.showSnackBar(
@@ -43,9 +42,11 @@ class loginController{
         return null;
       } else {
 
+        // TODO: Aqui agregando el IdUsuario para el modelo
         String nombreusuario = datauser[0]['NombreApe'];
         String tipusuario = datauser[0]['TipoUsuario'];
-        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario);
+        String idUsuario = datauser[0]['idUsuario'];
+        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: idUsuario);
         //print("esto si funciona gustavo");
         return user;
       }

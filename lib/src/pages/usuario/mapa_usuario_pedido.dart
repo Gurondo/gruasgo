@@ -62,6 +62,7 @@ class MapaUsuarioPedido extends StatelessWidget {
                     (type == 'origen') 
                       ? usuarioPedidoBloc.add(OnSetOrigen(p0))
                       : usuarioPedidoBloc.add(OnSetDestino(p0));
+                      usuarioPedidoBloc.searchPlaceByCoors(coors: p0);
                       Navigator.pop(context);
                   },
                 );

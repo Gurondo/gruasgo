@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
@@ -30,7 +29,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     //print('INIT STATE');
 
@@ -43,6 +41,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   Widget build(BuildContext context) {
 
     final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    final userBloc = BlocProvider.of<UserBloc>(context);
 
     return Scaffold(
         appBar: AppBar(
@@ -159,7 +158,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                         },
                       ),
 
-                      _btnCalcularPedido(context, usuarioPedidoBloc),
+                      _btnCalcularPedido(context, usuarioPedidoBloc, userBloc),
                     ],
                   ),
                 ),
@@ -188,7 +187,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
 
-  Widget _alertDialogCosto(double precio) {
+  Widget _alertDialogCosto(double precio, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc) {
     return AlertDialog(
       title: const Text('¿EL COSTO DEL SERVICIO SERA DE?'),
       content: Column(
@@ -209,16 +208,33 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () {
+          onPressed: () async {
             // Acción para "Aceptar"
-            Navigator.of(context).pop();
-            Navigator.pushNamedAndRemoveUntil(context, 'MapaUsuario', (route) => false);
+
+            final navigator = Navigator.of(context);
+
+            final status = await usuarioPedidoBloc.registrarPedido(
+              idUsuario: userBloc.user!.idUsuario, 
+              ubiInicial: tecOrigen.text.trim(), 
+              ubiFinal: tecDestino.text.trim(), 
+              metodoPago: 'efectivo', 
+              monto: precio, 
+              servicio: 'gruas', 
+              descarga: '-', 
+              entrega: '-'
+            );
+
+            if (status){
+              navigator.pop();
+              navigator.pushNamedAndRemoveUntil('MapaUsuario', (route) => false);
+              
+            }
           },
           child: const Text('REALIZAR PEDIDO'),
         ),
         TextButton(
           onPressed: () {
-            // TODO: Hacer el pedido aqui
+
             Navigator.of(context).pop();
           },
           child: const Text('Cancelar'),
@@ -228,7 +244,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
 
-  Widget _btnCalcularPedido(BuildContext context, UsuarioPedidoBloc usuarioPedidoBloc){
+  Widget _btnCalcularPedido(BuildContext context, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc){
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
 
@@ -247,7 +263,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             if (precio != null){
               showDialog(
                 context: context,
-                builder: (context) => _alertDialogCosto(precio),
+                builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc),
               );
             }else{
               showAboutDialog(

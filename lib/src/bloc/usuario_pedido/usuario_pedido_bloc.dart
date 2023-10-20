@@ -11,6 +11,8 @@ import 'package:http/http.dart' as http;
 
 import 'package:gruasgo/src/models/response/place_response.dart';
 
+import 'package:uuid/uuid.dart';
+
 part 'usuario_pedido_event.dart';
 part 'usuario_pedido_state.dart';
 
@@ -47,6 +49,27 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         emit(state.copyWitch(destino: LatLng(position.lat, position.lng)));
       }
     });
+  }
+
+  Future<void> searchPlaceByCoors({required LatLng coors}) async {
+
+    var urlParse = Uri.parse('${Enviroment().server}/map/searchPlaceByCoors?lat=${coors.latitude}&&lng=${coors.longitude}');
+
+    try {
+      
+      final response = await http.get(
+        urlParse, 
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      );
+      
+      print(response.body);
+     
+    } catch (e) {
+      print(e);
+    }
+
   }
 
   Future<List<String>> searchPlace({required String place}) async {
@@ -144,7 +167,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }
 
   Future<bool> registrarPedido({
-    required idPedido,
     required idUsuario,
     required ubiInicial,
     required ubiFinal,
@@ -155,30 +177,42 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required entrega
   }) async {
     
-    final String url = "${Enviroment().baseUrl}/pedidos.php";
-    final Uri uri = Uri.parse(url);
+    const uuid = Uuid();
 
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+    final uuidPedido = uuid.v4();
     try {
 
       final response = await http.post(uri, body: {
-        "btip": '',
-        "bidpedido": idPedido,
-        "bidusuario": idUsuario,
+        "btip": 'addPedido',
+        "bidpedido": uuidPedido,
+        "bidusuario": idUsuario.toString(),
         "bubinicial": ubiInicial,
         "bubfinal": ubiFinal,
         "bmetodopago": metodoPago,
-        "bmonto": monto,
+        "bmonto": monto.toString(),
         "bservicio": servicio,
         "bdescarga": descarga,
         "bcelentrega": entrega
       });
 
+      print('-------------------------------------------');
+      print(response.body);
+      print('-------------------------------------------');
+
+      
+      // int distanceValue = jsonData['rows'][0]['elements'][0]['distance']['value'];
+      // String distanceString = jsonData['rows'][0]['elements'][0]['distance']['text'];
+
       if (response.statusCode != 200) {
         // TODO: Mensaje de error
-        return true;
+        return false;
       }
-
-      return true;
+      
+      dynamic jsonData = json.decode(response.body);
+      if (jsonData['success'] == 'si') return true;
+      return false;
     
     } catch (e) {
       print(e);

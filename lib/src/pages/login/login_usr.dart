@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
+import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/pages/login/login_usr_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 
@@ -30,6 +32,9 @@ class _LoginUsrState extends State<LoginUsr> {
   @override
   Widget build(BuildContext context) {
 
+    // TODO: Aqui agregando este bloc, para que pueda almacenar en un estado el usuario, asi este valor se recupera y no se pierde a lo largo de la app
+    final userBloc = BlocProvider.of<UserBloc>(context);
+
     //print('METODO BUILD');
     return Scaffold(
 /*      appBar: AppBar(
@@ -45,7 +50,7 @@ class _LoginUsrState extends State<LoginUsr> {
             const SizedBox(height: 30),
             _txtEmail(),
             _txtPassword(),
-            _btnLogin(),
+            _btnLogin(userBloc),
             _textOlvidaste(),
             _textRegistrarse(),
           ],
@@ -75,7 +80,7 @@ class _LoginUsrState extends State<LoginUsr> {
     );
   }
 
-  Widget _btnLogin(){
+  Widget _btnLogin(UserBloc userBloc){
     final BuildContext currentContext = context;
     return Container(
      margin: const EdgeInsets.symmetric(horizontal: 30,vertical: 25),
@@ -89,6 +94,8 @@ class _LoginUsrState extends State<LoginUsr> {
          if (user != null) {
            if (user.TipoUsuario == 'usu'){
              String userme = user.nombreusuario;
+            //  TODO: Aqui simplemente agregue el usuario al estado
+             userBloc.user = user;
              Navigator.pushNamedAndRemoveUntil(currentContext, 'bienbendioUsuario', (route) => false,arguments: userme);
            }
            if (user.TipoUsuario == 'conduc'){

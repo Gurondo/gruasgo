@@ -63,7 +63,10 @@ class TextFormFieldMapWidget extends StatelessWidget {
                 usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
               }, 
               itemBuilder: (context, String itemData) {
-                return Text(itemData);
+                return Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(itemData),
+                );
               }, 
               suggestionsCallback: suggestionsCallback, 
             ),

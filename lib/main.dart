@@ -17,6 +17,9 @@ void main() {
   runApp(MultiBlocProvider(
     providers: [
       BlocProvider(
+        create: (context) => UserBloc(),
+      ),
+      BlocProvider(
         create: (context) => UsuarioPedidoBloc(),
       )
     ], 
