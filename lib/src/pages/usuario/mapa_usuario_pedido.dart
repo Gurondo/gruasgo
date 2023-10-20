@@ -19,7 +19,9 @@ class MapaUsuarioPedido extends StatelessWidget {
     final Completer<GoogleMapController> controllerxD = Completer<GoogleMapController>();
     final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
 
-    final type = ModalRoute.of(context)!.settings.arguments as String; // origen o destino
+    final paramters = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>; // origen o destino
+    final type = paramters['type'] as String;
+    TextEditingController tec = paramters['controller'] as TextEditingController;
 
     return SafeArea(
       child: Scaffold(
@@ -58,12 +60,16 @@ class MapaUsuarioPedido extends StatelessWidget {
                   initPosition: state.origen!, 
                   controllerxD: controllerxD, 
                   markers: markers,
-                  onTap: (p0) {
+                  onTap: (p0) async {
+                    final navigator = Navigator.of(context);
                     (type == 'origen') 
                       ? usuarioPedidoBloc.add(OnSetOrigen(p0))
                       : usuarioPedidoBloc.add(OnSetDestino(p0));
-                      usuarioPedidoBloc.searchPlaceByCoors(coors: p0);
-                      Navigator.pop(context);
+                      final place = await usuarioPedidoBloc.searchPlaceByCoors(coors: p0);
+                      if (place!=null){
+                        tec.text = place;
+                      }
+                      navigator.pop();
                   },
                 );
               },

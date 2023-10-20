@@ -99,7 +99,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                     },
 
                                     onPressIcon: () {
-                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: 'origen');
+                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'origen', 'controller': tecOrigen});
                                     },
                                   ),
 
@@ -120,7 +120,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                     },
 
                                     onPressIcon: () {
-                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: 'destino');
+                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
                                     },
                                   ),
                                 ],

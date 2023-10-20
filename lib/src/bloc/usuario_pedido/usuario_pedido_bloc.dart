@@ -4,8 +4,10 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
+import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/models/place_model.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
+import 'package:gruasgo/src/models/response/place_description.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 
@@ -51,7 +53,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     });
   }
 
-  Future<void> searchPlaceByCoors({required LatLng coors}) async {
+  Future<String?> searchPlaceByCoors({required LatLng coors}) async {
 
     var urlParse = Uri.parse('${Enviroment().server}/map/searchPlaceByCoors?lat=${coors.latitude}&&lng=${coors.longitude}');
 
@@ -64,10 +66,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         }
       );
       
-      print(response.body);
-     
+      var place = '';
+      final placesDescriptionResponse = placesDescriptionResponseFromJson(response.body);
+      for (var element in placesDescriptionResponse.place) {
+        if (!element.types.contains('plus_code')){
+          place = '$place ${element.longName}';
+        }
+      }
+      
+      return place;
+           
     } catch (e) {
       print(e);
+      return null;
     }
 
   }

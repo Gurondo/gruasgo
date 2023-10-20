@@ -29,7 +29,7 @@ class GoogleMapWidget extends StatelessWidget {
       polylines: {},
       initialCameraPosition: CameraPosition(
         target: LatLng(initPosition.latitude, initPosition.longitude),
-        zoom: 15.151926040649414
+        zoom: 18.151926040649414
       ),
       markers: markers,
       mapType: MapType.normal,

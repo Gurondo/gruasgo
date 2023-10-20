@@ -25,8 +25,11 @@ class loginController{
     
     final response = await http.post(uri, body: {
       "btip": 'LOGIN',
-      "busuario": emailController.text,
-      "bpassword": passwordController.text,
+      // TODO: Cambiar esto
+      "busuario": 'jose',
+      "bpassword": '6543',
+      // "busuario": emailController.text,
+      // "bpassword": passwordController.text,
     });
 
     if (response.statusCode == 200) {
