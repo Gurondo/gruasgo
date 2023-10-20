@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
@@ -77,9 +78,17 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
                               return Column(
                                 children: [
+
+                                  
                                   TextFormFieldMapWidget(
+                                    textEditingController: tecOrigen,
+                                    type: 'origen',
+                                    usuarioPedidoBloc: usuarioPedidoBloc,
                                     labelText: 'Lugar de origen',
                                     initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    suggestionsCallback: (String pattern) { 
+                                      return usuarioPedidoBloc.searchPlace(place: pattern);
+                                    }, 
                                     onChanged: (p0) {
                                       usuarioPedidoBloc.searchPlace(place: p0);
                                     },
@@ -96,8 +105,14 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   ),
 
                                   TextFormFieldMapWidget(
+                                    textEditingController: tecDestino,
+                                    type: 'destino',
+                                    usuarioPedidoBloc: usuarioPedidoBloc,
                                     labelText: 'Lugar de destino',
                                     initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    suggestionsCallback: (String pattern) { 
+                                      return usuarioPedidoBloc.searchPlace(place: pattern);
+                                    }, 
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty){
                                         return 'Este campo es obligatorio';

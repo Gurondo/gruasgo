@@ -12,3 +12,9 @@ class OnSetDestino extends UsuarioPedidoEvent{
   final LatLng destino;
   OnSetDestino(this.destino);
 }
+
+class OnSelected extends UsuarioPedidoEvent{
+  final String name;
+  final String type;
+  OnSelected(this.name, this.type);
+}

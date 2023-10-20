@@ -4,14 +4,21 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
+import 'package:gruasgo/src/models/models/place_model.dart';
+import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:gruasgo/src/models/response/place_response.dart';
 
 part 'usuario_pedido_event.dart';
 part 'usuario_pedido_state.dart';
 
 
 class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
+  
+  List<PlaceModel> placeModel = [];
+
   UsuarioPedidoBloc() : super(UsuarioPedidoState()) {
     on<OnSetOrigen>((event, emit) {
       emit(state.copyWitch(
@@ -23,9 +30,26 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         destino: event.destino,
       ));
     });
+    on<OnSelected>((event, emit) {
+      
+      PositionModel position = PositionModel(lat: 0, lng: 0);
+      for (var element in placeModel) {
+        if (element.name == event.name){
+          if (element.position != null){
+            position = element.position!;
+          }
+        }
+      }
+
+      if (event.type == 'origen'){
+        emit(state.copyWitch(origen: LatLng(position.lat, position.lng)));
+      }else{
+        emit(state.copyWitch(destino: LatLng(position.lat, position.lng)));
+      }
+    });
   }
 
-  Future<String> searchPlace({required String place}) async {
+  Future<List<String>> searchPlace({required String place}) async {
 
     var urlParse = Uri.parse('${Enviroment().server}/map/search?place=$place');
 
@@ -38,13 +62,21 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         }
       );
       
-      print(response.body);
-      
-      return '';
+      List<String> placesName = [];
+
+      final placesResponse = placesResponseFromJson(response.body);
+      placeModel = placesResponse.places;
+      for (var element in placesResponse.places) {
+        if (element.name != null){
+          placesName.add(element.name!);
+        }
+      }
+      // return names;
+      return placesName;
 
     } catch (e) {
       print(e);
-      return '';  
+      return [];  
     }
 
   }
