@@ -3,4 +3,5 @@ class Enviroment {
   final apiKeyGoogleMap = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
   // final server = 'http://192.168.0.4:4000/api';
   final server = 'https://socketcarlosdev.fly.dev/api';
+  final serverSocket = 'https://socketcarlosdev.fly.dev';
 }
