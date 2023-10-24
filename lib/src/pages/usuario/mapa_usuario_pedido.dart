@@ -16,7 +16,9 @@ class MapaUsuarioPedido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     
-    final Completer<GoogleMapController> controllerxD = Completer<GoogleMapController>();
+    Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
+
+
     final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
 
     final paramters = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>; // origen o destino
@@ -58,7 +60,7 @@ class MapaUsuarioPedido extends StatelessWidget {
                 
                 return GoogleMapWidget(
                   initPosition: state.origen!, 
-                  controllerxD: controllerxD, 
+                  googleMapController: googleMapController, 
                   markers: markers,
                   onTap: (p0) async {
                     final navigator = Navigator.of(context);

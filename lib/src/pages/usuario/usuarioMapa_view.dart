@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
+import 'package:gruasgo/src/widgets/google_map_widget.dart';
 
 class UsuarioMap extends StatefulWidget {
   const UsuarioMap({super.key});
@@ -14,7 +20,7 @@ class UsuarioMap extends StatefulWidget {
 
 class _UsuarioMapState extends State<UsuarioMap> {
 
-  UsuarioMapController _con = UsuarioMapController();
+  final UsuarioMapController _con = UsuarioMapController();
 
   @override
   void initState() {
@@ -26,32 +32,149 @@ class _UsuarioMapState extends State<UsuarioMap> {
     });
   }
 
+  final LatLng origen = const LatLng(-17.7995132, -63.1924906);
+  final LatLng destino = const LatLng(-17.800688, -63.1878772);
+  Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
+
 
   @override
   Widget build(BuildContext context) {
+    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     return Scaffold(
       key: _con.key,
       drawer: _drawer(),
-      body: Stack(
-        children: [
-          _googleMapsWidget(),
-          SafeArea(
-            child: Column(
-              children: [
-                _buttonDrawer(),
-                _buttonCenterPosition(),
-                Expanded(child: Container()),
-                //_cardGooglePlaces(),
-                _buttonRequest(),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: _iconMyLocation(),
-          ),
+      body: FutureBuilder(
+        future: usuarioPedidoBloc.getDirecion(origen: origen, destino: destino),
+        builder: (context, snapshot) {
+          return Stack(
+            
+            children: [
 
-        ],
+              GoogleMapWidget(
+                initPosition: origen, 
+                googleMapController: googleMapController,
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('origen'),
+                    position: origen
+                  ),
+                  Marker(
+                    markerId: const MarkerId('destino'),
+                    position: destino
+                  )
+                },
+                polylines: {
+                  (usuarioPedidoBloc.polylines != null) ?
+                    Polyline(
+                      polylineId: const PolylineId('ruta'),
+                      color: Colors.black,
+                      width: 5,
+                      points: usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                    ) : 
+                    const Polyline(
+                      polylineId: PolylineId('ruta'),
+                      color: Colors.black,
+                      width: 5,
+                    )
+                  
+                },
+              ),
+
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 20),
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.yellow,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                            child: Text(usuarioPedidoBloc.googleMapDirection!.routes[0].legs[0].distance.text)
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.yellow,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                            child: Text(usuarioPedidoBloc.googleMapDirection!.routes[0].legs[0].duration.text)
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+                    color: Colors.white,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const ListTile(
+                        leading: Icon(Icons.add_location),
+                        title: Text('Desde'),
+                        subtitle: Text('Desde'),
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.my_location),
+                        title: Text('Hasta'),
+                        subtitle: Text('Hasta'),
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.attach_money),
+                        title: Text('Precio'),
+                        subtitle: Text('10 Bs'),
+                      ),
+                      _buttonRequest(),
+                    ],
+                  ),
+                ),
+              )
+
+              // Column(
+              //   mainAxisSize: MainAxisSize.min,
+              //   children: [
+              //     // const Row(
+              //     //   children: [
+              //     //     Text('Distancia: '),
+              //     //     Text(': 123 Km'),
+              //     //   ],
+              //     // ),
+              //     // const Row(
+              //     //   children: [
+              //     //     Text('Tiempo: '),
+              //     //     Text(': 123 mins'),
+              //     //   ],
+              //     // ),
+
+              //     _buttonDrawer(),
+              //     // _buttonCenterPosition(),
+              //     Expanded(child: Container()),
+              //     //_cardGooglePlaces(),
+              //     _buttonRequest(),
+              //   ],
+              // ),
+
+            ],
+          );
+        },
+
       ),
     );
   }
@@ -73,52 +196,48 @@ class _UsuarioMapState extends State<UsuarioMap> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
+            decoration: const BoxDecoration(
+                color: Colors.amber
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  child: Text(
-                    'Nombre de usuario',
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold
-                    ),
-                    maxLines: 1,
+                const Text(
+                  'Nombre de usuario',
+                  style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold
                   ),
+                  maxLines: 1,
                 ),
-                Container(
-                  child: Text(
-                    'Email',
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[800],
-                        fontWeight: FontWeight.bold
-                    ),
-                    maxLines: 1,
+                Text(
+                  'Email',
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.bold
                   ),
+                  maxLines: 1,
                 ),
-                SizedBox(height: 10),
-                CircleAvatar(
+                const SizedBox(height: 10),
+                const CircleAvatar(
                   backgroundImage: AssetImage('assets/img/profile.jpg'),
                   radius: 40,
                 )
               ],
             ),
-            decoration: BoxDecoration(
-                color: Colors.amber
-            ),
           ),
           ListTile(
-            title: Text('Historial Viajes'),
-            trailing: Icon(Icons.edit),
+            title: const Text('Historial Viajes'),
+            trailing: const Icon(Icons.edit),
             // leading: Icon(Icons.cancel),
             onTap: () {},
           ),
           ListTile(
-            title: Text('Cerrar sesion'),
-            trailing: Icon(Icons.power_settings_new),
+            title: const Text('Cerrar sesion'),
+            trailing: const Icon(Icons.power_settings_new),
             // leading: Icon(Icons.cancel),
             onTap: _con.cerrarSession,
           ),
@@ -132,13 +251,13 @@ class _UsuarioMapState extends State<UsuarioMap> {
       onTap: _con.centerPosition,
       child: Container(
         alignment: Alignment.centerRight,
-        margin: EdgeInsets.symmetric(horizontal: 5),
+        margin: const EdgeInsets.symmetric(horizontal: 5),
         child: Card(
-          shape: CircleBorder(),
+          shape: const CircleBorder(),
           color: Colors.amber[300],
           elevation: 4.0,
           child: Container(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Icon(
               Icons.location_searching,
               color: Colors.grey[600],
@@ -155,7 +274,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
       alignment: Alignment.centerLeft,
       child: IconButton(
         onPressed: _con.openDrawer,
-        icon: Icon(Icons.menu, color: Colors.white,) ,
+        icon: const Icon(Icons.menu, color: Colors.white,) ,
       ),
     );
   }
@@ -165,7 +284,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
     return Container(
       height: 50,
       alignment: Alignment.bottomCenter,
-      margin: EdgeInsets.symmetric(horizontal: 60,vertical: 30),
+      margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
       child: ButtonApp(
         text: 'SOLICITAR',
         color: Colors.amber,
@@ -202,18 +321,18 @@ class _UsuarioMapState extends State<UsuarioMap> {
             borderRadius: BorderRadius.circular(20)
         ),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Desde',
                 style: TextStyle(
                     color: Colors.grey,
                     fontSize: 10
                 ),
               ),
-              Text(
+              const Text(
                 //_con.from ??
                     'Av. San Martin calle curi',
                 style: TextStyle(
@@ -223,20 +342,17 @@ class _UsuarioMapState extends State<UsuarioMap> {
                 ),
                 maxLines: 2,
               ),
-              SizedBox(height: 5),
-              Container(
-                // width: double.infinity,
-                  child: Divider(color: Colors.grey, height: 10)
-              ),
-              SizedBox(height: 5),
-              Text(
+              const SizedBox(height: 5),
+              const Divider(color: Colors.grey, height: 10),
+              const SizedBox(height: 5),
+              const Text(
                 'Hasta',
                 style: TextStyle(
                     color: Colors.grey,
                     fontSize: 10
                 ),
               ),
-              Text(
+              const Text(
                 // _con.to ??
                     'Villa 1ro de mayo calle cusis 34',
                 style: TextStyle(
@@ -246,7 +362,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                 ),
                 maxLines: 2,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 //controller: _con.monbreapellidoController,
                 maxLength: 30,

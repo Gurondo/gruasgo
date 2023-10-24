@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/models/place_model.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
+import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/models/response/place_description.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +23,10 @@ part 'usuario_pedido_state.dart';
 
 class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   
+  PedidoModel? pedidoModel;
+  GoogleMapDirection? googleMapDirection;
+  List<PointLatLng>? polylines;
+
   List<PlaceModel> placeModel = [];
 
   UsuarioPedidoBloc() : super(UsuarioPedidoState()) {
@@ -177,6 +183,30 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
+  Future<void> getDirecion({
+    required LatLng origen,
+    required LatLng destino,
+  }) async{
+    
+    const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
+    var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
+    final resp = await http.get(urlParce);
+    
+    if (resp.statusCode == 200){
+      googleMapDirection = googleMapDirectionFromJson(resp.body);
+
+      print('-----------------------');
+      print(googleMapDirection!.routes[0].bounds.toJson());
+      print(googleMapDirection!.routes[0].legs[0].distance.text);
+      print(googleMapDirection!.routes[0].legs[0].duration.text);
+      polylines = PolylinePoints().decodePolyline(googleMapDirection!.routes[0].overviewPolyline.points);
+      // print(googleMapDirection!.routes[0].overviewPolyline.points);
+      // print(polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList());
+
+    }
+
+  }
+
   Future<bool> registrarPedido({
     required idUsuario,
     required ubiInicial,
@@ -208,19 +238,28 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         "bcelentrega": entrega
       });
 
-      print('-------------------------------------------');
-      print(response.body);
-      print('-------------------------------------------');
-
+      pedidoModel = PedidoModel(
+        btip: 'addPedido', 
+        bidpedido: uuidPedido, 
+        bidusuario: idUsuario.toString(), 
+        bubinicial: ubiInicial, 
+        bubfinal: ubiFinal, 
+        bmetodopago: metodoPago, 
+        bmonto: monto, 
+        bservicio: servicio, 
+        bdescarga: descarga, 
+        bcelentrega: entrega, 
+        origen: state.origen!, 
+        destino: state.destino!
+      );
       
-      // int distanceValue = jsonData['rows'][0]['elements'][0]['distance']['value'];
-      // String distanceString = jsonData['rows'][0]['elements'][0]['distance']['text'];
-
       if (response.statusCode != 200) {
+        print(response.body);
         // TODO: Mensaje de error
         return false;
       }
-      
+    
+
       dynamic jsonData = json.decode(response.body);
       if (jsonData['success'] == 'si') return true;
       return false;
