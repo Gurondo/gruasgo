@@ -33,7 +33,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
   }
 
   final LatLng origen = const LatLng(-17.7995132, -63.1924906);
-  final LatLng destino = const LatLng(-17.800688, -63.1878772);
+  final LatLng destino = const LatLng(-17.8005504, -63.1786198);
   Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
 
 
@@ -95,7 +95,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Text(usuarioPedidoBloc.googleMapDirection!.routes[0].legs[0].distance.text)
+                            child: Text(usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].distance.text ?? '')
                           ),
                         ),
                         Container(
@@ -106,7 +106,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Text(usuarioPedidoBloc.googleMapDirection!.routes[0].legs[0].duration.text)
+                            child: Text(usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].duration.text ?? '')
                           ),
                         ),
                       ],
