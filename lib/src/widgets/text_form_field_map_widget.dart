@@ -1,10 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
-import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 
 class TextFormFieldMapWidget extends StatelessWidget {
 
@@ -14,11 +12,11 @@ class TextFormFieldMapWidget extends StatelessWidget {
   final Function() onPressIcon;
   final Function(String)? onChanged;
   final UsuarioPedidoBloc usuarioPedidoBloc;
-  Future<Iterable<String>> Function(String) suggestionsCallback;
+  final Future<Iterable<String>> Function(String) suggestionsCallback;
   final String type;
   final TextEditingController textEditingController;
 
-  TextFormFieldMapWidget({
+  const TextFormFieldMapWidget({
     super.key,
     this.onChanged,
     required this.labelText,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -226,8 +225,17 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
             if (status){
               navigator.pop();
-              navigator.pushNamedAndRemoveUntil('MapaUsuario', (route) => false);
+              navigator.pushNamedAndRemoveUntil(
+                'MapaUsuario', 
+                (route) => false);
               
+            }else{
+              navigator.pop();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('No pudo realizarse la solicitud')
+              ));
+              print('un error');
             }
           },
           child: const Text('REALIZAR PEDIDO'),

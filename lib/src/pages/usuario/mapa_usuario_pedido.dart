@@ -59,7 +59,7 @@ class MapaUsuarioPedido extends StatelessWidget {
                 }
                 
                 return GoogleMapWidget(
-                  initPosition: state.origen!, 
+                  initPosition: (type == 'origen') ? state.origen! : state.destino ?? state.origen!, 
                   googleMapController: googleMapController, 
                   markers: markers,
                   onTap: (p0) async {

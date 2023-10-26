@@ -10,7 +10,7 @@ class PedidoModel{
   String bubinicial;
   String bubfinal;
   String bmetodopago;
-  Double bmonto;
+  double bmonto;
   String bservicio;
   String bdescarga;
   String bcelentrega;

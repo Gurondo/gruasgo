@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorRegistro_view.dart';
+import 'package:gruasgo/src/pages/Conductor/conductor_bienvenida_view.dart';
 import 'package:gruasgo/src/pages/home/home_page.dart';
 import 'package:gruasgo/src/pages/login/login_usr.dart';
 import 'package:gruasgo/src/pages/usuario/mapa_usuario_pedido.dart';
@@ -10,10 +11,11 @@ import 'package:gruasgo/src/pages/usuario/usuarioMapa_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_view.dart';
+import 'package:gruasgo/src/services/socket_services.dart';
 
 
 void main() {
-  
+
   runApp(MultiBlocProvider(
     providers: [
       BlocProvider(
@@ -21,6 +23,11 @@ void main() {
       ),
       BlocProvider(
         create: (context) => UsuarioPedidoBloc(),
+      ),
+      BlocProvider(
+        create: (context) => ConductorBloc(
+          userBloc: BlocProvider.of<UserBloc>(context)
+        ),
       )
     ], 
     child: const MyApp()
@@ -36,14 +43,17 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   
-  String initialRoute = "MapaUsuario";
+  String initialRoute = "login";
 
   @override
   Widget build(BuildContext context) {
+
+    SocketService.connection();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Gruas Go',
-      //initialRoute: 'login',
+      // initialRoute: 'login',
       initialRoute: initialRoute,
       theme: ThemeData(
         fontFamily: 'NimbusSans',
@@ -62,6 +72,9 @@ class _MyAppState extends State<MyApp> {
         'MapaUsuario' : (BuildContext context) => const UsuarioMap(),
         'UsuarioPedido' : (BuildContext context) => const UsuarioPedido(),
         'VistaMapaUsuarioPedido' : (BuildContext context) => const MapaUsuarioPedido(),
+
+        
+        'ConductorBienvenido' : (context) => const ConductorBienvenida(),
         
 
        // 'home' : (BuildContext context) => LoginUsr(),

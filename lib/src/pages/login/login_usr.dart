@@ -99,7 +99,9 @@ class _LoginUsrState extends State<LoginUsr> {
              Navigator.pushNamedAndRemoveUntil(currentContext, 'bienbendioUsuario', (route) => false,arguments: userme);
            }
            if (user.TipoUsuario == 'conduc'){
-             Navigator.pushNamedAndRemoveUntil(currentContext, 'MapaConductor', (route) => false);
+             userBloc.user = user;
+            //  Navigator.pushNamedAndRemoveUntil(currentContext, 'MapaConductor', (route) => false);
+             Navigator.pushNamedAndRemoveUntil(currentContext, 'ConductorBienvenido', (route) => false);
            }
 
 

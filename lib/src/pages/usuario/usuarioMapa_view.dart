@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
@@ -40,6 +39,10 @@ class _UsuarioMapState extends State<UsuarioMap> {
   @override
   Widget build(BuildContext context) {
     final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    
+    LatLng origen = usuarioPedidoBloc.pedidoModel!.origen;
+    LatLng destino = usuarioPedidoBloc.pedidoModel!.destino;
+    
     return Scaffold(
       key: _con.key,
       drawer: _drawer(),
@@ -126,22 +129,22 @@ class _UsuarioMapState extends State<UsuarioMap> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const ListTile(
-                        leading: Icon(Icons.add_location),
-                        title: Text('Desde'),
-                        subtitle: Text('Desde'),
+                      ListTile(
+                        leading: const Icon(Icons.add_location),
+                        title: const Text('Desde'),
+                        subtitle: Text(usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
                       ),
-                      const ListTile(
-                        leading: Icon(Icons.my_location),
-                        title: Text('Hasta'),
-                        subtitle: Text('Hasta'),
+                      ListTile(
+                        leading: const Icon(Icons.my_location),
+                        title: const Text('Hasta'),
+                        subtitle: Text(usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
                       ),
-                      const ListTile(
-                        leading: Icon(Icons.attach_money),
-                        title: Text('Precio'),
-                        subtitle: Text('10 Bs'),
+                      ListTile(
+                        leading: const Icon(Icons.attach_money),
+                        title: const Text('Precio'),
+                        subtitle: Text('${usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
                       ),
-                      _buttonRequest(),
+                      _buttonRequest(usuarioPedidoBloc),
                     ],
                   ),
                 ),
@@ -280,7 +283,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
   }
 
 
-  Widget _buttonRequest(){
+  Widget _buttonRequest(UsuarioPedidoBloc usuarioPedidoBloc){
     return Container(
       height: 50,
       alignment: Alignment.bottomCenter,
@@ -289,6 +292,13 @@ class _UsuarioMapState extends State<UsuarioMap> {
         text: 'SOLICITAR',
         color: Colors.amber,
         textColor: Colors.black,
+        onPressed: (){
+          usuarioPedidoBloc.solicitar(
+            origen: usuarioPedidoBloc.state.origen!,
+            destino: usuarioPedidoBloc.state.destino!,
+            servicio: usuarioPedidoBloc.pedidoModel!.bservicio,
+          );
+        },
         //onPressed: _alertDialogCosto
 /*          onPressed: () {
     showDialog(

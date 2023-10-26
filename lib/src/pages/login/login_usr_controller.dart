@@ -26,15 +26,23 @@ class loginController{
     final response = await http.post(uri, body: {
       "btip": 'LOGIN',
       // TODO: Cambiar esto
-      "busuario": 'jose',
-      "bpassword": '6543',
+
+      // Cliente
+      // "busuario": 'jose',
+      // "bpassword": '6543',
+
+      // conductor
+      // "busuario": 'gustavo',
+      // "bpassword": '12345',
+      
+      // usuairo: gustavo  pass: 12345 conductor
+      
       "busuario": emailController.text,
       "bpassword": passwordController.text,
     });
 
     if (response.statusCode == 200) {
       var datauser = json.decode(response.body);
-      print(datauser.toString());
       if (datauser.length == 0) {
         utils.Snackbar.showSnackbar(context!, key, 'Usuario o contraseña incorrectos.');
 /*        scaffoldKey.currentState?.showSnackBar(
@@ -44,7 +52,6 @@ class loginController{
         );*/
         return null;
       } else {
-
         // TODO: Aqui agregando el IdUsuario para el modelo
         String nombreusuario = datauser[0]['NombreApe'];
         String tipusuario = datauser[0]['TipoUsuario'];

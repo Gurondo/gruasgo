@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
@@ -10,6 +11,7 @@ import 'package:gruasgo/src/models/models/place_model.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/models/response/place_description.dart';
+import 'package:gruasgo/src/services/socket_services.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 
@@ -212,7 +214,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required ubiInicial,
     required ubiFinal,
     required metodoPago,
-    required monto,
+    required double monto,
     required servicio,
     required descarga,
     required entrega
@@ -225,48 +227,74 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     final uuidPedido = uuid.v4();
     try {
 
-      final response = await http.post(uri, body: {
-        "btip": 'addPedido',
-        "bidpedido": uuidPedido,
-        "bidusuario": idUsuario.toString(),
-        "bubinicial": ubiInicial,
-        "bubfinal": ubiFinal,
-        "bmetodopago": metodoPago,
-        "bmonto": monto.toString(),
-        "bservicio": servicio,
-        "bdescarga": descarga,
-        "bcelentrega": entrega
-      });
-
-      pedidoModel = PedidoModel(
-        btip: 'addPedido', 
-        bidpedido: uuidPedido, 
-        bidusuario: idUsuario.toString(), 
-        bubinicial: ubiInicial, 
-        bubfinal: ubiFinal, 
-        bmetodopago: metodoPago, 
-        bmonto: monto, 
-        bservicio: servicio, 
-        bdescarga: descarga, 
-        bcelentrega: entrega, 
-        origen: state.origen!, 
-        destino: state.destino!
-      );
+      // final response = await http.post(uri, body: {
+      //   "btip": 'addPedido',
+      //   "bidpedido": uuidPedido,
+      //   "bidusuario": idUsuario.toString(),
+      //   "bubinicial": ubiInicial,
+      //   "bubfinal": ubiFinal,
+      //   "bmetodopago": metodoPago,
+      //   "bmonto": monto.toString(),
+      //   "bservicio": servicio,
+      //   "bdescarga": descarga,
+      //   "bcelentrega": entrega
+      // });
       
-      if (response.statusCode != 200) {
-        print(response.body);
-        // TODO: Mensaje de error
-        return false;
-      }
-    
+      // if (response.statusCode != 200) {
+      //   print(response.body);
+      //   // TODO: Mensaje de error
+      //   return false;
+      // }
 
-      dynamic jsonData = json.decode(response.body);
-      if (jsonData['success'] == 'si') return true;
-      return false;
+      // dynamic jsonData = json.decode(response.body);
+      // if (jsonData['success'] == 'si') {
+        
+        pedidoModel = PedidoModel(
+          btip: 'addPedido', 
+          bidpedido: uuidPedido, 
+          bidusuario: idUsuario.toString(), 
+          bubinicial: ubiInicial, 
+          bubfinal: ubiFinal, 
+          bmetodopago: metodoPago, 
+          bmonto: monto, 
+          bservicio: servicio, 
+          bdescarga: descarga, 
+          bcelentrega: entrega, 
+          origen: state.origen!, 
+          destino: state.destino!
+        );
+        
+        return true;
+      // }else{
+      //   print(response.body);
+      //   return false;
+      // }
     
     } catch (e) {
       print(e);
       return false;
     }
+  }
+
+  // Socket
+  void solicitar({required LatLng origen, required LatLng destino, required String servicio}){
+
+    SocketService.open();
+    SocketService.emit('solicitar', {
+      'origen': origen, 
+      'destino': destino,
+      'servicio': servicio
+    });
+
+    respuesta();
+
+  }
+
+  void respuesta(){
+
+    SocketService.on('respuesta solicitud usuario', (data) {
+      print(data);
+    });
+
   }
 }
