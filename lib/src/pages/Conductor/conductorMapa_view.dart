@@ -30,6 +30,7 @@ class _ConductorMapState extends State<ConductorMap> {
 
   @override
   void initState() {
+    
     // TODO: implement initState
     super.initState();
 
@@ -40,6 +41,9 @@ class _ConductorMapState extends State<ConductorMap> {
       _conductorBloc.updatePosition(lat: position.latitude, lng: position.longitude);
 
     });
+
+    _conductorBloc.respuestaSolicitudConductor();
+
     // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
     //   _con.init(context, refresh);  //// REFRESH  PARA M3
     // });
@@ -47,7 +51,10 @@ class _ConductorMapState extends State<ConductorMap> {
 
   @override
   void dispose() {
+    
     _timer?.cancel();
+    _conductorBloc.clearSocket();
+
     // TODO: implement dispose
     super.dispose();
   }

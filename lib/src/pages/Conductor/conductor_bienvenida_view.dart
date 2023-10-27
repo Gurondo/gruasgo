@@ -1,13 +1,17 @@
 
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/conductor/conductor_bloc.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
+import 'package:gruasgo/src/widgets/google_map_widget.dart';
 
 class ConductorBienvenida extends StatefulWidget {
   const ConductorBienvenida({ Key? key }) : super(key: key);
@@ -17,6 +21,8 @@ class ConductorBienvenida extends StatefulWidget {
 }
 
 class _ConductorBienvenidaState extends State<ConductorBienvenida> {
+
+  Completer <GoogleMapController> _mapController = Completer();
 
 
 

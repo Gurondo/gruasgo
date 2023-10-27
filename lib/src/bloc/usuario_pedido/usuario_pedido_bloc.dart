@@ -286,8 +286,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       'servicio': servicio
     });
 
-    respuesta();
-
   }
 
   void respuesta(){
@@ -296,5 +294,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       print(data);
     });
 
+  }
+
+  void clearSocket(){
+    SocketService.off('respuesta solicitud usuario');
   }
 }

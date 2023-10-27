@@ -26,20 +26,34 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   TextEditingController tecNroContrato = TextEditingController();
   TextEditingController tecDescripcion = TextEditingController();
 
+  late UsuarioPedidoBloc _usuarioPedidoBloc;
+
   @override
   void initState() {
     super.initState();
     //print('INIT STATE');
-
+    _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    
+    _usuarioPedidoBloc.respuesta();
+    
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
      // _con.init(context);
     });
   }
 
   @override
+  void dispose() {
+
+    _usuarioPedidoBloc.clearSocket();
+    
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
 
-    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
 
     return Scaffold(
@@ -57,7 +71,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             
             }else{
               
-              usuarioPedidoBloc.add(OnSetOrigen(LatLng(snapshot.data!.latitude, snapshot.data!.longitude)));
+              _usuarioPedidoBloc.add(OnSetOrigen(LatLng(snapshot.data!.latitude, snapshot.data!.longitude)));
 
               return SingleChildScrollView(
                 child: Form(
@@ -81,14 +95,14 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   TextFormFieldMapWidget(
                                     textEditingController: tecOrigen,
                                     type: 'origen',
-                                    usuarioPedidoBloc: usuarioPedidoBloc,
+                                    usuarioPedidoBloc: _usuarioPedidoBloc,
                                     labelText: 'Lugar de origen',
-                                    initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
                                     suggestionsCallback: (String pattern) { 
-                                      return usuarioPedidoBloc.searchPlace(place: pattern);
+                                      return _usuarioPedidoBloc.searchPlace(place: pattern);
                                     }, 
                                     onChanged: (p0) {
-                                      usuarioPedidoBloc.searchPlace(place: p0);
+                                      _usuarioPedidoBloc.searchPlace(place: p0);
                                     },
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty){
@@ -105,11 +119,11 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   TextFormFieldMapWidget(
                                     textEditingController: tecDestino,
                                     type: 'destino',
-                                    usuarioPedidoBloc: usuarioPedidoBloc,
+                                    usuarioPedidoBloc: _usuarioPedidoBloc,
                                     labelText: 'Lugar de destino',
-                                    initPosition: usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
                                     suggestionsCallback: (String pattern) { 
-                                      return usuarioPedidoBloc.searchPlace(place: pattern);
+                                      return _usuarioPedidoBloc.searchPlace(place: pattern);
                                     }, 
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty){
@@ -157,7 +171,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                         },
                       ),
 
-                      _btnCalcularPedido(context, usuarioPedidoBloc, userBloc),
+                      _btnCalcularPedido(context, _usuarioPedidoBloc, userBloc),
                     ],
                   ),
                 ),

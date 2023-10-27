@@ -5,14 +5,19 @@ class ButtonApp extends StatelessWidget {
   //const ButtonApp({super.key});
   Color? color;
   Color? textColor;
-  String? text;
+  String text;
   Function? onPressed;
+  double paddingHorizontal;
+  IconData? icons;
 
   ButtonApp({
-     this.color,
-     this.textColor = Colors.black,
-     this.onPressed,
-     @required this.text
+    super.key, 
+    this.color,
+    this.paddingHorizontal = 0,
+    this.textColor = Colors.black,
+    this.onPressed,
+    this.icons,
+    required this.text,
   });
 
   @override
@@ -21,21 +26,53 @@ class ButtonApp extends StatelessWidget {
       onPressed: (){
         onPressed?.call();
       },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        )
+      ),
       child:
       Stack(
         children: [
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              height: 60,   // TAMAÑO DEL BOTON
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+            child: Align(
               alignment: Alignment.center,
-              child: Text(text!,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              )
+              child: Container(
+                height: 60,   // TAMAÑO DEL BOTON
+                alignment: Alignment.center,
+                child: (icons != null) ?
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        text,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(360),
+                          color: Colors.white,
+                        ),
+                        child: Icon(icons, color: Colors.black,)
+                      )
+                    ],
+                  ) : 
+                  Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+              ),
             ),
           ),
 /*          Align(
@@ -49,12 +86,6 @@ class ButtonApp extends StatelessWidget {
             ),
           )*/
         ],
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        shape: new RoundedRectangleBorder(
-          borderRadius: new BorderRadius.circular(15),
-        )
       ),
     );
   }

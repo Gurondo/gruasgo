@@ -4,8 +4,12 @@ import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorRegistro_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductor_bienvenida_view.dart';
+import 'package:gruasgo/src/pages/Conductor/finalizacion/conductor_finalizacion_view.dart';
+import 'package:gruasgo/src/pages/Conductor/notificacion/conductor_notificacion_view.dart';
+import 'package:gruasgo/src/pages/Conductor/pedido_aceptado/conductor_pedido_aceptado_view.dart';
 import 'package:gruasgo/src/pages/home/home_page.dart';
 import 'package:gruasgo/src/pages/login/login_usr.dart';
+import 'package:gruasgo/src/pages/usuario/finalizacion/usuario_finalizacion.dart';
 import 'package:gruasgo/src/pages/usuario/mapa_usuario_pedido.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
@@ -43,7 +47,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   
-  String initialRoute = "login";
+  String initialRoute = "ConductorFinalizacion";
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +79,13 @@ class _MyAppState extends State<MyApp> {
 
         
         'ConductorBienvenido' : (context) => const ConductorBienvenida(),
+        'ConductorNotificacion' : (context) => const ConductorNotificacion(),
+        'ConductorPedidoAceptado': (context) => const ConductorPedidoAceptado(),
+        'ConductorFinalizacion': (context) => const ConductorFinalizacion(),
+        
+        'UsuarioFinalizacion': (context) => const UsuarioFinalizacion(),
+
+        
         
 
        // 'home' : (BuildContext context) => LoginUsr(),

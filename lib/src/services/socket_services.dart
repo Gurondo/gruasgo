@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -16,6 +15,7 @@ class SocketService{
   static IO.Socket get socket => _socket!;
   static Function get emit => _socket!.emit;
   static Function get on => _socket!.on;
+  static Function get off => _socket!.off;
 
   SocketService._();
 
@@ -28,7 +28,6 @@ class SocketService{
     _socket!.on('connect', (_) {});
 
     _socket!.on('disconnect', (_) {});
-  
 
   }
 

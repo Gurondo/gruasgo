@@ -32,13 +32,13 @@ class loginController{
       // "bpassword": '6543',
 
       // conductor
-      // "busuario": 'gustavo',
-      // "bpassword": '12345',
+      "busuario": 'gustavo',
+      "bpassword": '12345',
       
       // usuairo: gustavo  pass: 12345 conductor
       
-      "busuario": emailController.text,
-      "bpassword": passwordController.text,
+      // "busuario": emailController.text,
+      // "bpassword": passwordController.text,
     });
 
     if (response.statusCode == 200) {
