@@ -20,15 +20,29 @@ class UsuarioMap extends StatefulWidget {
 class _UsuarioMapState extends State<UsuarioMap> {
 
   final UsuarioMapController _con = UsuarioMapController();
+  late UsuarioPedidoBloc _usuarioPedidoBloc;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
+    _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+
+
+
+    _usuarioPedidoBloc.respuesta(showAlert: showAlert);
+
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       _con.init(context, refresh);  //// REFRESH  PARA M3
     });
+  }
+
+  @override
+  void dispose() {
+    _usuarioPedidoBloc.clearSocket();
+    // TODO: implement dispose
+    super.dispose();
   }
 
   final LatLng origen = const LatLng(-17.7995132, -63.1924906);
@@ -38,16 +52,18 @@ class _UsuarioMapState extends State<UsuarioMap> {
 
   @override
   Widget build(BuildContext context) {
-    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     
-    LatLng origen = usuarioPedidoBloc.pedidoModel!.origen;
-    LatLng destino = usuarioPedidoBloc.pedidoModel!.destino;
+    
+
+    LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
+    LatLng destino = _usuarioPedidoBloc.pedidoModel!.destino;
     
     return Scaffold(
       key: _con.key,
       drawer: _drawer(),
       body: FutureBuilder(
-        future: usuarioPedidoBloc.getDirecion(origen: origen, destino: destino),
+        future: _usuarioPedidoBloc.getDirecion(origen: origen, destino: destino),
         builder: (context, snapshot) {
           return Stack(
             
@@ -67,12 +83,12 @@ class _UsuarioMapState extends State<UsuarioMap> {
                   )
                 },
                 polylines: {
-                  (usuarioPedidoBloc.polylines != null) ?
+                  (_usuarioPedidoBloc.polylines != null) ?
                     Polyline(
                       polylineId: const PolylineId('ruta'),
                       color: Colors.black,
                       width: 5,
-                      points: usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                      points: _usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
                     ) : 
                     const Polyline(
                       polylineId: PolylineId('ruta'),
@@ -98,7 +114,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Text(usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].distance.text ?? '')
+                            child: Text(_usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].distance.text ?? '')
                           ),
                         ),
                         Container(
@@ -109,7 +125,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Text(usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].duration.text ?? '')
+                            child: Text(_usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].duration.text ?? '')
                           ),
                         ),
                       ],
@@ -132,19 +148,19 @@ class _UsuarioMapState extends State<UsuarioMap> {
                       ListTile(
                         leading: const Icon(Icons.add_location),
                         title: const Text('Desde'),
-                        subtitle: Text(usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
+                        subtitle: Text(_usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
                       ),
                       ListTile(
                         leading: const Icon(Icons.my_location),
                         title: const Text('Hasta'),
-                        subtitle: Text(usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
+                        subtitle: Text(_usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
                       ),
                       ListTile(
                         leading: const Icon(Icons.attach_money),
                         title: const Text('Precio'),
-                        subtitle: Text('${usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
+                        subtitle: Text('${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
                       ),
-                      _buttonRequest(usuarioPedidoBloc),
+                      _buttonRequest(_usuarioPedidoBloc),
                     ],
                   ),
                 ),
@@ -297,6 +313,11 @@ class _UsuarioMapState extends State<UsuarioMap> {
             origen: usuarioPedidoBloc.state.origen!,
             destino: usuarioPedidoBloc.state.destino!,
             servicio: usuarioPedidoBloc.pedidoModel!.bservicio,
+            nombreOrigen: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
+            nombreDestino: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
+            descripcionDescarga: _usuarioPedidoBloc.pedidoModel?.bdescarga ?? '',
+            monto: double.parse((_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
+            referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega
           );
         },
         //onPressed: _alertDialogCosto
@@ -403,5 +424,25 @@ class _UsuarioMapState extends State<UsuarioMap> {
     setState(() {
     });
   }
+  
 
+  void showAlert(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

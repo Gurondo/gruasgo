@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/models/place_model.dart';
@@ -22,16 +23,20 @@ import 'package:uuid/uuid.dart';
 part 'usuario_pedido_event.dart';
 part 'usuario_pedido_state.dart';
 
+typedef ShowAlertCallback = void Function(String message);
 
 class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   
   PedidoModel? pedidoModel;
   GoogleMapDirection? googleMapDirection;
   List<PointLatLng>? polylines;
+  UserBloc userBloc;
 
   List<PlaceModel> placeModel = [];
 
-  UsuarioPedidoBloc() : super(UsuarioPedidoState()) {
+  UsuarioPedidoBloc({
+    required this.userBloc
+  }) : super(UsuarioPedidoState()) {
     on<OnSetOrigen>((event, emit) {
       emit(state.copyWitch(
         origen: event.origen,
@@ -211,19 +216,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   Future<bool> registrarPedido({
     required idUsuario,
-    required ubiInicial,
-    required ubiFinal,
-    required metodoPago,
+    required String ubiInicial,
+    required String ubiFinal,
+    required String metodoPago,
     required double monto,
-    required servicio,
-    required descarga,
-    required entrega
+    required String servicio,
+    required String descripcionDescarga,
+    required int celentrega
   }) async {
     
     const uuid = Uuid();
 
-    final String url = "${Enviroment().baseUrl}/pedido.php";
-    final Uri uri = Uri.parse(url);
+    // final String url = "${Enviroment().baseUrl}/pedido.php";
+    // final Uri uri = Uri.parse(url);
     final uuidPedido = uuid.v4();
     try {
 
@@ -236,8 +241,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       //   "bmetodopago": metodoPago,
       //   "bmonto": monto.toString(),
       //   "bservicio": servicio,
-      //   "bdescarga": descarga,
-      //   "bcelentrega": entrega
+      //   "bdescarga": descripcionDescarga,
+      //   "bcelentrega": celentrega
       // });
       
       // if (response.statusCode != 200) {
@@ -258,8 +263,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           bmetodopago: metodoPago, 
           bmonto: monto, 
           bservicio: servicio, 
-          bdescarga: descarga, 
-          bcelentrega: entrega, 
+          bdescarga: descripcionDescarga, 
+          bcelentrega: celentrega, 
           origen: state.origen!, 
           destino: state.destino!
         );
@@ -277,21 +282,40 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }
 
   // Socket
-  void solicitar({required LatLng origen, required LatLng destino, required String servicio}){
+  void solicitar({
+    required LatLng origen, 
+    required LatLng destino, 
+    required String servicio,
+    required String nombreOrigen,
+    required String nombreDestino,
+    required String descripcionDescarga,
+    required int referencia,
+    required double monto
+  }){
 
     SocketService.open();
     SocketService.emit('solicitar', {
       'origen': origen, 
       'destino': destino,
-      'servicio': servicio
+      'servicio': servicio,
+      'cliente': userBloc.user!.nombreusuario,
+      'cliente_id': userBloc.user!.idUsuario,
+      'nombre_origen': nombreOrigen,
+      'nombre_destino': nombreDestino,
+      'descripcionDescarga': descripcionDescarga,
+      'referencia': referencia,
+      'monto': monto
     });
 
   }
 
-  void respuesta(){
-
+  void respuesta({required ShowAlertCallback showAlert}){
+    print('paso por aqui');
     SocketService.on('respuesta solicitud usuario', (data) {
-      print(data);
+      final status = data['ok'];
+      if (!status){
+        showAlert(data['msg']);
+      }
     });
 
   }

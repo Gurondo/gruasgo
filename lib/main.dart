@@ -26,7 +26,9 @@ void main() {
         create: (context) => UserBloc(),
       ),
       BlocProvider(
-        create: (context) => UsuarioPedidoBloc(),
+        create: (context) => UsuarioPedidoBloc(
+          userBloc: BlocProvider.of<UserBloc>(context)
+        ),
       ),
       BlocProvider(
         create: (context) => ConductorBloc(
@@ -47,7 +49,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   
-  String initialRoute = "ConductorFinalizacion";
+  String initialRoute = "login";
 
   @override
   Widget build(BuildContext context) {

@@ -42,7 +42,8 @@ class _ConductorMapState extends State<ConductorMap> {
 
     });
 
-    _conductorBloc.respuestaSolicitudConductor();
+    final navigator = Navigator.of(context);
+    _conductorBloc.respuestaSolicitudConductor(navigator: navigator);
 
     // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
     //   _con.init(context, refresh);  //// REFRESH  PARA M3

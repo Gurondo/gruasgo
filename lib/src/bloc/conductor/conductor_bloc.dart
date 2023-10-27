@@ -1,6 +1,10 @@
+import 'dart:ffi';
+
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
@@ -66,10 +70,44 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
-  void respuestaSolicitudConductor(){
+  void respuestaSolicitudConductor({required NavigatorState navigator}){
 
     SocketService.on('solicitud pedido conductor', (data){
-      print('respuesta aqui');
+      
+      //     origen: [-17.8370698, -63.23666479999999], 
+      //     destino: [-17.83886896671317, -63.23904678225518], 
+      //     servicio: gruas, 
+      //     cliente: Jose Ferdando, 
+      //     cliente_id: 5, 
+      //     nombre_origen: Doble vía la guardias, 
+      //     nombre_destino: Distrito 10 Santa Cruz de la Sierra Andrés Ibáñez Province Santa Cruz Department Bolivia, 
+      //     descarga: fdsfdsfdsfds, 
+      //     referencia: 32165498, 
+      //     monto: 50, 
+      //     socketClientId: gSb207yjYJ__v9lbAAAD
+      
+      final payload = data['payload'];
+
+      print(payload['origen']);
+      print(payload['destino']);
+      print(payload['monto']);
+
+      final arguments = DetalleNotificacionConductor(
+        origen: LatLng(payload['origen'][0], payload['origen'][1]),
+        destino: LatLng(payload['destino'][0], payload['destino'][1]),
+        servicio: payload['servicio'],
+        cliente: payload['cliente'],
+        clienteId: payload['cliente_id'],
+        nombreOrigen: payload['nombre_origen'],
+        nombreDestino: payload['nombre_destino'],
+        descripcionDescarga: payload['descripcionDescarga'],
+        referencia: payload['referencia'],
+        monto: double.parse(payload['monto'].toString()),
+        socketClientId: payload['socketClientId'],
+      );
+
+      navigator.pushNamed('ConductorNotificacion', arguments: arguments);
+
     });
 
   }

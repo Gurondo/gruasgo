@@ -32,9 +32,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   void initState() {
     super.initState();
     //print('INIT STATE');
-    _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
-    
-    _usuarioPedidoBloc.respuesta();
     
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
      // _con.init(context);
@@ -42,10 +39,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
   @override
-  void dispose() {
-
-    _usuarioPedidoBloc.clearSocket();
-    
+  void dispose() {    
     // TODO: implement dispose
     super.dispose();
   }
@@ -231,10 +225,11 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               ubiInicial: tecOrigen.text.trim(), 
               ubiFinal: tecDestino.text.trim(), 
               metodoPago: 'efectivo', 
-              monto: precio, 
+              // monto: precio, 
+              monto: 20.12, 
               servicio: 'gruas', 
-              descarga: '-', 
-              entrega: '-'
+              descripcionDescarga: tecDescripcion.text.trim(), 
+              celentrega: int.parse(tecNroContrato.text.trim())
             );
 
             if (status){

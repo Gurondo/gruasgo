@@ -13,7 +13,7 @@ class PedidoModel{
   double bmonto;
   String bservicio;
   String bdescarga;
-  String bcelentrega;
+  int bcelentrega;
   LatLng origen;
   LatLng destino;
 
