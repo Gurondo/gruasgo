@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/widget.dart';
@@ -23,8 +24,9 @@ class _ConductorPedidoAceptadoState extends State<ConductorPedidoAceptado> {
   Widget build(BuildContext context) {
     
     final conductorBloc = BlocProvider.of<ConductorBloc>(context);
-    LatLng origen = const LatLng(-17.7945792, -63.1851922);
-    LatLng destino = const LatLng(-17.7924952, -63.1806647);
+    final args = ModalRoute.of(context)!.settings.arguments as DetalleNotificacionConductor;
+    LatLng origen = args.origen;
+    LatLng destino = args.destino;
 
     return SafeArea(
       child: Scaffold(

@@ -225,8 +225,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               ubiInicial: tecOrigen.text.trim(), 
               ubiFinal: tecDestino.text.trim(), 
               metodoPago: 'efectivo', 
-              // monto: precio, 
-              monto: 20.12, 
+              monto: precio, 
               servicio: 'gruas', 
               descripcionDescarga: tecDescripcion.text.trim(), 
               celentrega: int.parse(tecNroContrato.text.trim())

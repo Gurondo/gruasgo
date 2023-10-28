@@ -70,6 +70,33 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
+  void cancelarPedido({required DetalleNotificacionConductor detalleNotificacionConductor}){
+
+    // SocketService.emit('cancelar pedido', detalleNotificacionConductor);
+    SocketService.emit('cancelar pedido', {
+      'origen': detalleNotificacionConductor.origen, 
+      'destino': detalleNotificacionConductor.destino,
+      'servicio': detalleNotificacionConductor.servicio,
+      'cliente': detalleNotificacionConductor.cliente,
+      'cliente_id': detalleNotificacionConductor.clienteId,
+      'nombre_origen': detalleNotificacionConductor.nombreOrigen,
+      'nombre_destino': detalleNotificacionConductor.nombreDestino,
+      'descripcion_descarga': detalleNotificacionConductor.descripcionDescarga,
+      'referencia': detalleNotificacionConductor.referencia,
+      'monto': detalleNotificacionConductor.monto,
+      'socket_client_id': detalleNotificacionConductor.socketClientId
+    });
+
+  }
+
+  void aceptarPedido({required String socketClientId}){
+
+    SocketService.emit('aceptar pedido', {
+      'socket_client_id': socketClientId
+    });
+
+  }
+
   void respuestaSolicitudConductor({required NavigatorState navigator}){
 
     SocketService.on('solicitud pedido conductor', (data){
@@ -88,10 +115,6 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       
       final payload = data['payload'];
 
-      print(payload['origen']);
-      print(payload['destino']);
-      print(payload['monto']);
-
       final arguments = DetalleNotificacionConductor(
         origen: LatLng(payload['origen'][0], payload['origen'][1]),
         destino: LatLng(payload['destino'][0], payload['destino'][1]),
@@ -100,10 +123,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         clienteId: payload['cliente_id'],
         nombreOrigen: payload['nombre_origen'],
         nombreDestino: payload['nombre_destino'],
-        descripcionDescarga: payload['descripcionDescarga'],
+        descripcionDescarga: payload['descripcion_descarga'],
         referencia: payload['referencia'],
         monto: double.parse(payload['monto'].toString()),
-        socketClientId: payload['socketClientId'],
+        socketClientId: payload['socket_client_id'],
       );
 
       navigator.pushNamed('ConductorNotificacion', arguments: arguments);

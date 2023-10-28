@@ -12,6 +12,7 @@ import 'package:gruasgo/src/models/models/place_model.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/models/response/place_description.dart';
+import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
@@ -214,6 +215,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
+
   Future<bool> registrarPedido({
     required idUsuario,
     required String ubiInicial,
@@ -226,33 +228,32 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }) async {
     
     const uuid = Uuid();
-
-    // final String url = "${Enviroment().baseUrl}/pedido.php";
-    // final Uri uri = Uri.parse(url);
     final uuidPedido = uuid.v4();
+
     try {
 
-      // final response = await http.post(uri, body: {
-      //   "btip": 'addPedido',
-      //   "bidpedido": uuidPedido,
-      //   "bidusuario": idUsuario.toString(),
-      //   "bubinicial": ubiInicial,
-      //   "bubfinal": ubiFinal,
-      //   "bmetodopago": metodoPago,
-      //   "bmonto": monto.toString(),
-      //   "bservicio": servicio,
-      //   "bdescarga": descripcionDescarga,
-      //   "bcelentrega": celentrega
-      // });
-      
-      // if (response.statusCode != 200) {
-      //   print(response.body);
-      //   // TODO: Mensaje de error
-      //   return false;
-      // }
+      final response = await ClienteService().registrarPedido(
+        uuidPedido: uuidPedido, 
+        idUsuario: idUsuario, 
+        ubiInicial: ubiInicial, 
+        ubiFinal: ubiFinal, 
+        metodoPago: metodoPago, 
+        monto: monto, 
+        servicio: servicio, 
+        descripcionDescarga: 
+        descripcionDescarga, 
+        celentrega: celentrega
+      );
 
-      // dynamic jsonData = json.decode(response.body);
-      // if (jsonData['success'] == 'si') {
+
+      if (response.statusCode != 200) {
+        print(response.body);
+        // TODO: Mensaje de error
+        return false;
+      }
+
+      dynamic jsonData = json.decode(response.body);
+      if (jsonData['success'] == 'si') {
         
         pedidoModel = PedidoModel(
           btip: 'addPedido', 
@@ -270,10 +271,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         );
         
         return true;
-      // }else{
-      //   print(response.body);
-      //   return false;
-      // }
+      }else{
+        print(response.body);
+        return false;
+      }
     
     } catch (e) {
       print(e);
@@ -302,7 +303,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       'cliente_id': userBloc.user!.idUsuario,
       'nombre_origen': nombreOrigen,
       'nombre_destino': nombreDestino,
-      'descripcionDescarga': descripcionDescarga,
+      'descripcion_descarga': descripcionDescarga,
       'referencia': referencia,
       'monto': monto
     });
@@ -310,7 +311,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }
 
   void respuesta({required ShowAlertCallback showAlert}){
-    print('paso por aqui');
     SocketService.on('respuesta solicitud usuario', (data) {
       final status = data['ok'];
       if (!status){
@@ -318,6 +318,12 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       }
     });
 
+  }
+
+  void pedidoAceptado(){
+    SocketService.on('pedido aceptado', (data) {
+      print('pedido aceptado');
+    });
   }
 
   void clearSocket(){

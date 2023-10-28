@@ -21,14 +21,23 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
 
   final Completer <GoogleMapController> _mapController = Completer();
 
+  late ConductorBloc _conductorBloc;
+  late DetalleNotificacionConductor args;
 
+  @override
+  void dispose() {
+
+    _conductorBloc.cancelarPedido(detalleNotificacionConductor: args);
+    // TODO: implement dispose
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
 
-    final args = ModalRoute.of(context)!.settings.arguments as DetalleNotificacionConductor;
+    args = ModalRoute.of(context)!.settings.arguments as DetalleNotificacionConductor;
+    _conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
-    final conductorBloc = BlocProvider.of<ConductorBloc>(context);
     LatLng origen = args.origen;
     LatLng destino = args.destino;
     
@@ -40,7 +49,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               child: Stack(
                 children: [
                   FutureBuilder<List<PointLatLng>?>(
-                    future: conductorBloc.getPolylines(origen: origen, destino: destino),
+                    future: _conductorBloc.getPolylines(origen: origen, destino: destino),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting){
                         return const Text('Cargando');
@@ -143,7 +152,11 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         text: 'Cancelar',
                         color: Colors.amber,
                         textColor: Colors.black,
-                        icons: Icons.cancel_outlined
+                        icons: Icons.cancel_outlined,
+                        onPressed: (){
+                          _conductorBloc.cancelarPedido(detalleNotificacionConductor: args);
+                          Navigator.pop(context);
+                        },
                       ),
                       ButtonApp(
                         paddingHorizontal: 20,
@@ -151,6 +164,10 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         color: Colors.blue[400],
                         textColor: Colors.white,
                         icons: Icons.check,
+                        onPressed: (){
+                          _conductorBloc.aceptarPedido(socketClientId: args.socketClientId);
+                          Navigator.pushNamed(context, 'ConductorPedidoAceptado', arguments: args);
+                        },
                       ),
                     ],
                   );
