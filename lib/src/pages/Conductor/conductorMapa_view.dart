@@ -54,7 +54,7 @@ class _ConductorMapState extends State<ConductorMap> {
   void dispose() {
     
     _timer?.cancel();
-    _conductorBloc.clearSocket();
+    _conductorBloc.clearSocketSolicitudConductor();
 
     // TODO: implement dispose
     super.dispose();

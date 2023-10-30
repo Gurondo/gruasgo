@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/models/models/pedido_model.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
@@ -30,17 +31,18 @@ class _UsuarioMapState extends State<UsuarioMap> {
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
 
 
-
     _usuarioPedidoBloc.respuesta(showAlert: showAlert);
+    _usuarioPedidoBloc.actualizarContador();
 
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      _con.init(context, refresh);  //// REFRESH  PARA M3
-    });
+    // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+    //   _con.init(context, refresh);  //// REFRESH  PARA M3
+    // });
   }
 
   @override
   void dispose() {
-    _usuarioPedidoBloc.clearSocket();
+    _usuarioPedidoBloc.clearSocketRespuestaUsuario();
+    _usuarioPedidoBloc.clearSocketActualizarContador();
     // TODO: implement dispose
     super.dispose();
   }
@@ -54,7 +56,20 @@ class _UsuarioMapState extends State<UsuarioMap> {
   Widget build(BuildContext context) {
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     
-    
+    _usuarioPedidoBloc.pedidoModel = PedidoModel(
+      btip: 'nodsa', 
+      bidpedido: 'dsadsa', 
+      bidusuario: '0', 
+      bubinicial: 'aqui vcerca', 
+      bubfinal: 'aqui lejos', 
+      bmetodopago: 'efectivo', 
+      bmonto: 20.5, 
+      bservicio: 'gruas', 
+      bdescarga: 'toyota x', 
+      bcelentrega: 456789123, 
+      origen: const LatLng(-17.7922212, -63.1483421), 
+      destino: const LatLng(-17.7754632, -63.1467689)
+    );
 
     LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
     LatLng destino = _usuarioPedidoBloc.pedidoModel!.destino;
@@ -310,8 +325,10 @@ class _UsuarioMapState extends State<UsuarioMap> {
         textColor: Colors.black,
         onPressed: (){
           usuarioPedidoBloc.solicitar(
-            origen: usuarioPedidoBloc.state.origen!,
-            destino: usuarioPedidoBloc.state.destino!,
+            origen: usuarioPedidoBloc.pedidoModel!.origen,
+            destino: usuarioPedidoBloc.pedidoModel!.destino,
+            // origen: usuarioPedidoBloc.state.origen!,
+            // destino: usuarioPedidoBloc.state.destino!,
             servicio: usuarioPedidoBloc.pedidoModel!.bservicio,
             nombreOrigen: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
             nombreDestino: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
@@ -319,6 +336,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
             monto: double.parse((_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
             referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega
           );
+          Navigator.pushNamed(context, 'UsuarioBuscando');
         },
         //onPressed: _alertDialogCosto
 /*          onPressed: () {

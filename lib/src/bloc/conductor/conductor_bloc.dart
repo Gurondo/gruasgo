@@ -1,4 +1,3 @@
-import 'dart:ffi';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
-import 'package:meta/meta.dart';
 
 part 'conductor_event.dart';
 part 'conductor_state.dart';
@@ -23,6 +21,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }) : super(ConductorState()) {
     on<ConductorEvent>((event, emit) {
       // TODO: implement event handler
+    });
+    
+    on<OnSetTiempo>((event, emit) {
+      emit(state.copyWitch(tiempo: event.tiempo));
     });
   }
 
@@ -70,10 +72,11 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
-  void cancelarPedido({required DetalleNotificacionConductor detalleNotificacionConductor}){
+  void respuestaPedido({required DetalleNotificacionConductor detalleNotificacionConductor, required bool pedidoAceptado}){
 
     // SocketService.emit('cancelar pedido', detalleNotificacionConductor);
-    SocketService.emit('cancelar pedido', {
+    SocketService.emit('respuesta del conductor', {
+      'pedido_aceptado': pedidoAceptado,
       'origen': detalleNotificacionConductor.origen, 
       'destino': detalleNotificacionConductor.destino,
       'servicio': detalleNotificacionConductor.servicio,
@@ -89,13 +92,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
-  void aceptarPedido({required String socketClientId}){
+  // void aceptarPedido({required String socketClientId, required String clientId}){
 
-    SocketService.emit('aceptar pedido', {
-      'socket_client_id': socketClientId
-    });
+  //   SocketService.emit('aceptar pedido', {
+  //     'socket_client_id': socketClientId,
+  //     'client_id': clientId
+  //   });
 
-  }
+  // }
 
   void respuestaSolicitudConductor({required NavigatorState navigator}){
 
@@ -135,7 +139,18 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
-  void clearSocket(){
+  void solicitudCancelada({required NavigatorState navigator}){
+    SocketService.on('solicitud cancelada', (data){
+      navigator.pop();
+      // TODO: Aqui tiene que poner, el cliente a cancelado el pedido
+    });
+  }
+
+  void clearSolicitudCanceladaSocket(){
+    SocketService.off('solicitud cancelada');
+  }
+
+  void clearSocketSolicitudConductor(){
     SocketService.off('solicitud pedido conductor');
   }
   

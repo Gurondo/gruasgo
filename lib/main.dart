@@ -9,9 +9,11 @@ import 'package:gruasgo/src/pages/Conductor/notificacion/conductor_notificacion_
 import 'package:gruasgo/src/pages/Conductor/pedido_aceptado/conductor_pedido_aceptado_view.dart';
 import 'package:gruasgo/src/pages/home/home_page.dart';
 import 'package:gruasgo/src/pages/login/login_usr.dart';
+import 'package:gruasgo/src/pages/usuario/buscando/usuario_buscando.dart';
 import 'package:gruasgo/src/pages/usuario/finalizacion/usuario_finalizacion.dart';
 import 'package:gruasgo/src/pages/usuario/mapa_usuario_pedido.dart';
-import 'package:gruasgo/src/pages/usuario/usuarioMapa_view.dart';
+import 'package:gruasgo/src/pages/usuario/detallePedidoSolicitar/usuarioMapa_view.dart';
+import 'package:gruasgo/src/pages/usuario/pedido_aceptado/pedido_aceptado_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_view.dart';
@@ -86,6 +88,8 @@ class _MyAppState extends State<MyApp> {
         'ConductorFinalizacion': (context) => const ConductorFinalizacion(),
         
         'UsuarioFinalizacion': (context) => const UsuarioFinalizacion(),
+        'UsuarioBuscando': (context) => const UsuarioBuscando(),
+        'UsuarioPedidoAceptado': (context) => const UsuarioPedidoAceptado(),
 
         
         

@@ -18,3 +18,13 @@ class OnSelected extends UsuarioPedidoEvent{
   final String type;
   OnSelected(this.name, this.type);
 }
+
+class OnActualizarContador extends UsuarioPedidoEvent{
+  final int contador;
+  OnActualizarContador(this.contador);
+}
+
+class OnSetContador extends UsuarioPedidoEvent{
+  final int contador;
+  OnSetContador(this.contador);
+}

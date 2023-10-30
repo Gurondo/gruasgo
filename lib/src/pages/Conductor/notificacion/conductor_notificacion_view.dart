@@ -8,6 +8,9 @@ import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
+import 'package:timer_count_down/timer_count_down.dart';
+
+
 
 class ConductorNotificacion extends StatefulWidget {
   
@@ -24,10 +27,26 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
   late ConductorBloc _conductorBloc;
   late DetalleNotificacionConductor args;
 
+  final int _tiempo = 10;
+
+  var _pedidoAceptado = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _conductorBloc = BlocProvider.of<ConductorBloc>(context);
+
+    final navigator = Navigator.of(context);
+    _conductorBloc.solicitudCancelada(navigator: navigator);
+
+  }
+
   @override
   void dispose() {
-
-    _conductorBloc.cancelarPedido(detalleNotificacionConductor: args);
+    _conductorBloc.respuestaPedido(detalleNotificacionConductor: args, pedidoAceptado: _pedidoAceptado);
+    _conductorBloc.clearSolicitudCanceladaSocket();
     // TODO: implement dispose
     super.dispose();
   }
@@ -37,6 +56,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
 
     args = ModalRoute.of(context)!.settings.arguments as DetalleNotificacionConductor;
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
+
 
     LatLng origen = args.origen;
     LatLng destino = args.destino;
@@ -154,7 +174,6 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         textColor: Colors.black,
                         icons: Icons.cancel_outlined,
                         onPressed: (){
-                          _conductorBloc.cancelarPedido(detalleNotificacionConductor: args);
                           Navigator.pop(context);
                         },
                       ),
@@ -165,7 +184,9 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         textColor: Colors.white,
                         icons: Icons.check,
                         onPressed: (){
-                          _conductorBloc.aceptarPedido(socketClientId: args.socketClientId);
+                          // _conductorBloc.aceptarPedido(socketClientId: args.socketClientId, clientId: args.clienteId);
+                          _pedidoAceptado = true;
+                          Navigator.pop(context);
                           Navigator.pushNamed(context, 'ConductorPedidoAceptado', arguments: args);
                         },
                       ),
@@ -173,11 +194,76 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                   );
                 }
               ),
+            ),
+
+            Linea(
+              tiempo: _tiempo
+            ),
+
+            Countdown(
+              seconds: _tiempo,
+              build: (BuildContext context, double time) {
+                return Container();
+              },
+              onFinished: (){
+                Navigator.pop(context);
+              },
             )
+
             
           ],
         )
       )
+    );
+  }
+}
+
+class Linea extends StatefulWidget {
+
+  final int tiempo;
+
+  const Linea({
+    Key? key,
+    required this.tiempo
+  }) : super(key: key);
+
+
+  @override
+  State<Linea> createState() => _LineaState();
+}
+
+class _LineaState extends State<Linea> with TickerProviderStateMixin{
+
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _controller = AnimationController(
+    /// [AnimationController]s can be created with `vsync: this` because of
+    /// [TickerProviderStateMixin].
+    vsync: this,
+      duration: Duration(seconds: widget.tiempo),
+    )..addListener(() {
+        setState(() {});
+    });
+    _controller.reverse(from: 1.0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return LinearProgressIndicator(
+      minHeight: 20,
+      value: _controller.value
     );
   }
 }

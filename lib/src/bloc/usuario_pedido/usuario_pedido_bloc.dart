@@ -8,13 +8,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/models/models.dart';
-import 'package:gruasgo/src/models/models/place_model.dart';
-import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/models/response/place_description.dart';
-import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
-import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:gruasgo/src/models/response/place_response.dart';
@@ -47,6 +43,13 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       emit(state.copyWitch(
         destino: event.destino,
       ));
+    });
+    on<OnActualizarContador>((event, emit){
+      print('actualizando');
+      emit(state.copyWitch(contador: state.contador + event.contador));
+    });
+    on<OnSetContador>((event, emit){
+      emit(state.copyWitch(contador: event.contador));
     });
     on<OnSelected>((event, emit) {
       
@@ -230,30 +233,30 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     const uuid = Uuid();
     final uuidPedido = uuid.v4();
 
-    try {
+    // try {
 
-      final response = await ClienteService().registrarPedido(
-        uuidPedido: uuidPedido, 
-        idUsuario: idUsuario, 
-        ubiInicial: ubiInicial, 
-        ubiFinal: ubiFinal, 
-        metodoPago: metodoPago, 
-        monto: monto, 
-        servicio: servicio, 
-        descripcionDescarga: 
-        descripcionDescarga, 
-        celentrega: celentrega
-      );
+      // final response = await ClienteService().registrarPedido(
+      //   uuidPedido: uuidPedido, 
+      //   idUsuario: idUsuario, 
+      //   ubiInicial: ubiInicial, 
+      //   ubiFinal: ubiFinal, 
+      //   metodoPago: metodoPago, 
+      //   monto: monto, 
+      //   servicio: servicio, 
+      //   descripcionDescarga: 
+      //   descripcionDescarga, 
+      //   celentrega: celentrega
+      // );
 
       
-      if (response.statusCode != 200) {
-        print(response.body);
-        // TODO: Mensaje de error
-        return false;
-      }
+      // if (response.statusCode != 200) {
+      //   print(response.body);
+      //   // TODO: Mensaje de error
+      //   return false;
+      // }
 
-      dynamic jsonData = json.decode(response.body);
-      if (jsonData['success'] == 'si') {
+      // dynamic jsonData = json.decode(response.body);
+      // if (jsonData['success'] == 'si') {
         
         pedidoModel = PedidoModel(
           btip: 'addPedido', 
@@ -271,15 +274,15 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         );
         
         return true;
-      }else{
-        print(response.body);
-        return false;
-      }
+      // }else{
+      //   print(response.body);
+      //   return false;
+      // }
     
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   // Socket
@@ -310,23 +313,51 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
+  void cancelarPedido(){
+
+    SocketService.emit('cancelar pedido cliente', {
+      'cliente_id': userBloc.user!.idUsuario
+    });
+
+  }
+
   void respuesta({required ShowAlertCallback showAlert}){
     SocketService.on('respuesta solicitud usuario', (data) {
-      final status = data['ok'];
-      if (!status){
-        showAlert(data['msg']);
+      print(data);
+      // final status = data['ok'];
+      // if (!status){
+      //   showAlert(data['msg']);
+      // }
+    });
+
+  }
+
+  void actualizarContador(){
+    SocketService.on('actualizar contador', (data){
+      if (data['isReset']){
+        add(OnSetContador(data['contador']));
+      }else{
+        add(OnActualizarContador(data['contador']));
       }
     });
-
   }
 
-  void pedidoAceptado(){
-    SocketService.on('pedido aceptado', (data) {
-      print('pedido aceptado');
+  void listenPedidoAceptado({required NavigatorState navigator}){
+    SocketService.on('pedido aceptado por conductor', (data){
+      print(data);
+      navigator.pushNamed('UsuarioPedidoAceptado');
     });
   }
 
-  void clearSocket(){
+  void clearSocketActualizarContador(){
+    SocketService.off('actualizar contador');
+  }
+
+  void clearSocketRespuestaUsuario(){
     SocketService.off('respuesta solicitud usuario');
+  }
+
+  void clearSocketIsSuccessPedido(){
+    SocketService.off('pedido aceptado por conductor');
   }
 }

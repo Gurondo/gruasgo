@@ -96,7 +96,9 @@ class _LoginUsrState extends State<LoginUsr> {
              String userme = user.nombreusuario;
             //  TODO: Aqui simplemente agregue el usuario al estado
              userBloc.user = user;
-             Navigator.pushNamedAndRemoveUntil(currentContext, 'bienbendioUsuario', (route) => false,arguments: userme);
+            //  Navigator.pushNamedAndRemoveUntil(currentContext, 'bienbendioUsuario', (route) => false,arguments: userme);
+            // TODO: Aqui borrar para que vuelva a redireccionar donde siempre, este es solo para el modo desarrollo
+             Navigator.pushNamedAndRemoveUntil(currentContext, 'MapaUsuario', (route) => false,arguments: userme);
            }
            if (user.TipoUsuario == 'conduc'){
              userBloc.user = user;

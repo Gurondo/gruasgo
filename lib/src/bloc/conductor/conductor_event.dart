@@ -1,4 +1,8 @@
 part of 'conductor_bloc.dart';
 
-@immutable
 class ConductorEvent {}
+
+class OnSetTiempo extends ConductorEvent{
+  double tiempo;
+  OnSetTiempo(this.tiempo);
+}
