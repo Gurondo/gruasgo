@@ -1,10 +1,10 @@
 part of 'conductor_bloc.dart';
 
-class ConductorState {
+class ConductorState extends Equatable {
 
   final double tiempo;
 
-  ConductorState({
+  const ConductorState({
     this.tiempo = 0
   });
 
@@ -14,4 +14,6 @@ class ConductorState {
     tiempo: tiempo ?? this.tiempo
   );
 
+  @override
+  List<Object> get props => [tiempo];
 }

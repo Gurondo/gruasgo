@@ -1,15 +1,19 @@
 import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/arguments/informacion_conductor_cliente.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
 import 'package:gruasgo/src/models/response/place_description.dart';
+import 'package:gruasgo/src/services/http/cliente_service.dart';
+import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
 import 'package:http/http.dart' as http;
 
@@ -67,6 +71,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       }else{
         emit(state.copyWitch(destino: LatLng(position.lat, position.lng)));
       }
+    });
+    on<OnSetPositionConductor>((event, emit){
+      emit(state.copyWitch(conductor: event.position));
     });
   }
 
@@ -194,6 +201,25 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
+  Future<List<PointLatLng>?> getPolylines({
+    required LatLng origen,
+    required LatLng destino,
+  }) async{
+    
+    // const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
+    // var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
+    // final resp = await http.get(urlParce);
+
+    final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
+    
+    if (resp.statusCode == 200){
+      final googleMapDirection = googleMapDirectionFromJson(resp.body);
+      return PolylinePoints().decodePolyline(googleMapDirection.routes[0].overviewPolyline.points);
+    }
+    return null;
+
+  }
+
   Future<void> getDirecion({
     required LatLng origen,
     required LatLng destino,
@@ -233,30 +259,30 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     const uuid = Uuid();
     final uuidPedido = uuid.v4();
 
-    // try {
+    try {
 
-      // final response = await ClienteService().registrarPedido(
-      //   uuidPedido: uuidPedido, 
-      //   idUsuario: idUsuario, 
-      //   ubiInicial: ubiInicial, 
-      //   ubiFinal: ubiFinal, 
-      //   metodoPago: metodoPago, 
-      //   monto: monto, 
-      //   servicio: servicio, 
-      //   descripcionDescarga: 
-      //   descripcionDescarga, 
-      //   celentrega: celentrega
-      // );
+      final response = await ClienteService().registrarPedido(
+        uuidPedido: uuidPedido, 
+        idUsuario: idUsuario, 
+        ubiInicial: ubiInicial, 
+        ubiFinal: ubiFinal, 
+        metodoPago: metodoPago, 
+        monto: monto, 
+        servicio: servicio, 
+        descripcionDescarga: 
+        descripcionDescarga, 
+        celentrega: celentrega
+      );
 
       
-      // if (response.statusCode != 200) {
-      //   print(response.body);
-      //   // TODO: Mensaje de error
-      //   return false;
-      // }
+      if (response.statusCode != 200) {
+        print(response.body);
+        // TODO: Mensaje de error
+        return false;
+      }
 
-      // dynamic jsonData = json.decode(response.body);
-      // if (jsonData['success'] == 'si') {
+      dynamic jsonData = json.decode(response.body);
+      if (jsonData['success'] == 'si') {
         
         pedidoModel = PedidoModel(
           btip: 'addPedido', 
@@ -274,15 +300,15 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         );
         
         return true;
-      // }else{
-      //   print(response.body);
-      //   return false;
-      // }
+      }else{
+        print(response.body);
+        return false;
+      }
     
-    // } catch (e) {
-    //   print(e);
-    //   return false;
-    // }
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 
   // Socket
@@ -345,8 +371,24 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   void listenPedidoAceptado({required NavigatorState navigator}){
     SocketService.on('pedido aceptado por conductor', (data){
       print(data);
-      navigator.pushNamed('UsuarioPedidoAceptado');
+      add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
+      navigator.pushNamed('UsuarioPedidoAceptado', arguments: InformacionConductorCliente(
+        id: data['id'],
+        lat: data['lat'],
+        lng: data['lng']
+      ));
     });
+  }
+
+  void listenPosicionConductor(){
+    SocketService.on('actualizar posicion conductor', (data){
+      add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
+      print(data);
+    });
+  }
+
+  void clearSocketPosicionConductor(){
+    SocketService.off('actualizar posicion conductor');
   }
 
   void clearSocketActualizarContador(){

@@ -28,3 +28,8 @@ class OnSetContador extends UsuarioPedidoEvent{
   final int contador;
   OnSetContador(this.contador);
 }
+
+class OnSetPositionConductor extends UsuarioPedidoEvent{
+  final LatLng position;
+  OnSetPositionConductor(this.position);
+}

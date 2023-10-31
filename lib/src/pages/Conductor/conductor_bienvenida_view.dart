@@ -5,13 +5,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/conductor/conductor_bloc.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
-import 'package:gruasgo/src/widgets/google_map_widget.dart';
 
 class ConductorBienvenida extends StatefulWidget {
   const ConductorBienvenida({ Key? key }) : super(key: key);
@@ -21,10 +19,6 @@ class ConductorBienvenida extends StatefulWidget {
 }
 
 class _ConductorBienvenidaState extends State<ConductorBienvenida> {
-
-  Completer <GoogleMapController> _mapController = Completer();
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -48,45 +42,63 @@ class _ConductorBienvenidaState extends State<ConductorBienvenida> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(left: 40),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Bienvenido Conductor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
-              ),
-            ),
-            const Expanded(
-              child: Align(
-                alignment: Alignment.center,
-                child: Text('Imagen')
-              )
-            ),
-            Container(
-              height: 50,
-              alignment: Alignment.bottomCenter,
-              margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
-              child: ButtonApp(
-                text: 'Conectarse'.toUpperCase(),
-                color: Colors.amber,
-                textColor: Colors.black,
-                onPressed: () async {
-                    
-                    final navigator = Navigator.of(context);
-                    final position = await getPositionHelpers();
-                    
-                    conductorBloc.openSocket(
-                      lat: position.latitude, 
-                      lng: position.longitude
-                    );
+        body: Center(
+          child: FutureBuilder<bool>(
+            future: conductorBloc.buscarEstado(),
+            builder: (context, snapshot) {
+              
+              if (!snapshot.hasData) return const Text('Cargando');
+              if (!snapshot.data!) return const Text('Error');
 
-                    navigator.pushNamed('MapaConductor');
-                  
-                  },
-              ),
-            ),
-          ],
+              return Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 40),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Bienvenido Conductor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                    ),
+                  ),
+                  const Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text('Imagen')
+                    )
+                  ),
+                  Container(
+                    height: 50,
+                    alignment: Alignment.bottomCenter,
+                    margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+                    child: ButtonApp(
+                      text: 'Conectarse'.toUpperCase(),
+                      color: Colors.amber,
+                      textColor: Colors.black,
+                      onPressed: () async {
+                          
+                          final navigator = Navigator.of(context);
+                          final position = await getPositionHelpers();
+                          
+                          final status = await conductorBloc.crearEstado();
+
+                          if (status){
+                            conductorBloc.openSocket(
+                              lat: position.latitude, 
+                              lng: position.longitude
+                            );
+
+                            navigator.pushNamed('MapaConductor');
+                          
+                          }else{
+                            // TODO: Mensaje de error
+                          }
+                        },
+                    ),
+                  ),
+                ],
+              );
+
+            },
+          ),
         ),
       )
     );

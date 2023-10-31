@@ -3,7 +3,24 @@ import 'package:http/http.dart' as http;
 
 class ConductorService{
 
-  Future obtenerPedido({required String idConductor}) async{
+  Future agregarEstado({
+    required String idConductor,
+    required double lat,
+    required double lng,
+  }) async {
+    var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
+    final resp = await http.post(urlParce, body: {
+      'btip': 'ADD_ES',
+      'bidconductor': idConductor,
+      'bublatitud': lat.toString(),
+      'bublongitud': lng.toString(),
+      'bestado': ''
+    });
+
+    return resp;
+  }
+
+  Future obtenerEstado({required String idConductor}) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
     final resp = await http.post(urlParce, body: {
       'btip': 'BUCON',
@@ -13,7 +30,7 @@ class ConductorService{
     return resp;
   }
 
-  Future actualizarEstadoPedido({
+  Future actualizarEstado({
     required String idConductor,
     required String idPedido,
     required String estado
@@ -29,7 +46,7 @@ class ConductorService{
     return resp;
   }
 
-  Future actualizarUbicacion({
+  Future actualizarUbicacionEstado({
     required String idConductor,
     required double ubiLatitud,
     required double ubiLongitud
@@ -44,7 +61,7 @@ class ConductorService{
     return resp;
   }
 
-  Future eliminarConductor({
+  Future eliminarEstado({
     required String idConductor
   }) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');

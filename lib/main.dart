@@ -36,7 +36,7 @@ void main() {
         create: (context) => ConductorBloc(
           userBloc: BlocProvider.of<UserBloc>(context)
         ),
-      )
+      ),
     ], 
     child: const MyApp()
   ));
@@ -90,10 +90,6 @@ class _MyAppState extends State<MyApp> {
         'UsuarioFinalizacion': (context) => const UsuarioFinalizacion(),
         'UsuarioBuscando': (context) => const UsuarioBuscando(),
         'UsuarioPedidoAceptado': (context) => const UsuarioPedidoAceptado(),
-
-        
-        
-
        // 'home' : (BuildContext context) => LoginUsr(),
       },
     );

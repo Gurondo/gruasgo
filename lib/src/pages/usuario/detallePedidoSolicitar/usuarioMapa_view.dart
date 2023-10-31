@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/helpers/get_position.dart';
 import 'package:gruasgo/src/models/models/pedido_model.dart';
+import 'package:gruasgo/src/pages/controllers/map_controllers.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
@@ -56,6 +59,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
   Widget build(BuildContext context) {
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     
+    // TODO: Borrar solo es prueba
     _usuarioPedidoBloc.pedidoModel = PedidoModel(
       btip: 'nodsa', 
       bidpedido: 'dsadsa', 
@@ -73,7 +77,10 @@ class _UsuarioMapState extends State<UsuarioMap> {
 
     LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
     LatLng destino = _usuarioPedidoBloc.pedidoModel!.destino;
-    
+    // TODO: Borrar solo es prueba
+    _usuarioPedidoBloc.add(OnSetOrigen(origen));
+    _usuarioPedidoBloc.add(OnSetDestino(destino));
+
     return Scaffold(
       key: _con.key,
       drawer: _drawer(),
@@ -84,34 +91,51 @@ class _UsuarioMapState extends State<UsuarioMap> {
             
             children: [
 
-              GoogleMapWidget(
-                initPosition: origen, 
-                googleMapController: googleMapController,
-                markers: {
-                  Marker(
-                    markerId: const MarkerId('origen'),
-                    position: origen
-                  ),
-                  Marker(
-                    markerId: const MarkerId('destino'),
-                    position: destino
-                  )
+              FutureBuilder<Position>(
+                future: getPositionHelpers(),
+                builder: (context, snapshot) {
+
+                  if (snapshot.connectionState == ConnectionState.done){
+                    
+
+                    return GoogleMapWidget(
+                      initPosition: origen, 
+                      googleMapController: googleMapController,
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('origen'),
+                          position: origen,
+                          infoWindow: const InfoWindow(title: 'origen')
+                        ),
+                        Marker(
+                          markerId: const MarkerId('destino'),
+                          position: destino,
+                          infoWindow: const InfoWindow(title: 'destino')
+                        ),
+                      },
+                      polylines: {
+                        (_usuarioPedidoBloc.polylines != null) ?
+                          Polyline(
+                            polylineId: const PolylineId('ruta'),
+                            color: Colors.black,
+                            width: 5,
+                            points: _usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                          ) : 
+                          const Polyline(
+                            polylineId: PolylineId('ruta'),
+                            color: Colors.black,
+                            width: 5,
+                          )
+                        
+                      },
+                    );
+                  }else{
+                    return const Text('Cargando');
+                  }
+
+
                 },
-                polylines: {
-                  (_usuarioPedidoBloc.polylines != null) ?
-                    Polyline(
-                      polylineId: const PolylineId('ruta'),
-                      color: Colors.black,
-                      width: 5,
-                      points: _usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
-                    ) : 
-                    const Polyline(
-                      polylineId: PolylineId('ruta'),
-                      color: Colors.black,
-                      width: 5,
-                    )
-                  
-                },
+                
               ),
 
               SafeArea(

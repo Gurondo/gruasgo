@@ -40,14 +40,13 @@ class _ConductorMapState extends State<ConductorMap> {
       final position = await getPositionHelpers();
       _conductorBloc.updatePosition(lat: position.latitude, lng: position.longitude);
 
+      _conductorBloc.actualizarCoorEstado();
     });
 
     final navigator = Navigator.of(context);
     _conductorBloc.respuestaSolicitudConductor(navigator: navigator);
 
-    // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-    //   _con.init(context, refresh);  //// REFRESH  PARA M3
-    // });
+
   }
 
   @override
@@ -55,6 +54,7 @@ class _ConductorMapState extends State<ConductorMap> {
     
     _timer?.cancel();
     _conductorBloc.clearSocketSolicitudConductor();
+    _conductorBloc.eliminarEstado();
 
     // TODO: implement dispose
     super.dispose();
@@ -80,12 +80,7 @@ class _ConductorMapState extends State<ConductorMap> {
                 GoogleMapWidget(
                   initPosition: LatLng(snapshot.data!.latitude, snapshot.data!.longitude), 
                   googleMapController: googleMapController,
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('position'),
-                      position: LatLng(snapshot.data!.latitude, snapshot.data!.longitude)
-                    )
-                  },
+                  markers: const {},
                 ),
                 // _googleMapsWidget(),
                 SafeArea(

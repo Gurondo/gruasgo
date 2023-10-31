@@ -1,13 +1,22 @@
 
+import 'dart:convert';
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/helpers/helpers.dart';
+import 'package:gruasgo/src/models/response/estado_response.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart';
+import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
+
+import 'package:equatable/equatable.dart';
+import 'package:http/http.dart';
 
 part 'conductor_event.dart';
 part 'conductor_state.dart';
@@ -26,6 +35,97 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     on<OnSetTiempo>((event, emit) {
       emit(state.copyWitch(tiempo: event.tiempo));
     });
+  }
+
+  Future<bool> actualizarCoorEstado() async {
+    try {
+      
+      final Position position = await getPositionHelpers();
+
+      Response resp = await ConductorService().actualizarUbicacionEstado(
+        idConductor: userBloc.user!.idUsuario, 
+        ubiLatitud: position.latitude, 
+        ubiLongitud: position.longitude
+      );
+      
+      print('actualizando');
+      print(resp.body);
+      
+      dynamic jsonData = json.decode(resp.body);
+      if (jsonData['success'] != 'si') return false;
+      
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool> eliminarEstado() async {
+
+    try {
+      
+      Response resp = await ConductorService().eliminarEstado(idConductor: userBloc.user!.idUsuario);
+      print('eliminar estado');
+      print(resp.body);
+      if (resp.statusCode != 200) return false;
+      
+      dynamic jsonData = json.decode(resp.body);
+      if (jsonData['success'] != 'si') return false;
+      
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool> buscarEstado() async{
+
+    try {
+      
+      final Response resp = await ConductorService().obtenerEstado(idConductor: userBloc.user!.idUsuario);
+      print('buscar estado');
+      print(resp.body);
+      if (resp.statusCode != 200) return false;
+      
+      final responseEstado = responseEstadoFromJson(resp.body);
+
+      
+      if (responseEstado.isEmpty) return true;
+      
+      final status = await eliminarEstado();
+      return status;
+
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool> crearEstado() async {
+
+    try {
+      
+      Position position = await getPositionHelpers();
+
+      final Response resp = await ConductorService().agregarEstado(
+        idConductor: userBloc.user!.idUsuario, 
+        lat: position.latitude, 
+        lng: position.longitude
+      );
+      print('crear estado');
+      print(resp.body);
+      if (resp.statusCode != 200) {
+        return false;
+      }
+
+
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 
   Future<List<PointLatLng>?> getPolylines({
