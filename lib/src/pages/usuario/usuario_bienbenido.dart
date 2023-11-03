@@ -10,6 +10,9 @@ class UsarioBienbenido extends StatefulWidget {
 }
 
 class _UsarioBienbenidoState extends State<UsarioBienbenido> {
+  String selectedServicio = '';
+ // var arguments;
+  late final List<String> listaElementos;
 
   @override
   Widget build(BuildContext context) {
@@ -105,22 +108,22 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  _gruaA('assets/img/gruaA.png','GRUA','Grua Gancho','',''),
-                  _gruaA('assets/img/gruaB.png','GRUA','Grua Plancha','',''),
+                  _gruaA('assets/img/GruaGancho.png','GRUAS','Grua Gancho','',''),
+                  _gruaA('assets/img/GruaPlataforma.png','GRUAS','Grua Plataforma','',''),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  _gruaA('assets/img/gruaC.png','CAMION CON PLUMA','2 Toneladas','5 Toneladas',''),
-                  _gruaA('assets/img/gruaD.png','GRUA GRANE ALTO TONELAJE','10 Toneladas','20 Toneladas','50 Toneladas'),
+                  _gruaA('assets/img/GruaPluma.png','GRUAS','Grua Pluma','',''),
+                  _gruaA('assets/img/GruaGrane.png','GRUAS','Grua Crane 30 Ton','Grua Crane 50 Ton',''),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  _gruaA('assets/img/gruaE.png','MONTA CARGA','1 Tonelada','3 Toneladas',''),
-                  _gruaA('assets/img/gruaF.png','VOLQUETAS','3 Cubos','10 Cubos','25 Cubos'),
+                  _gruaA('assets/img/Montacarga.png','MONTA CARGA','Monta Carga 1 Tonelada','Monta Carga 2 Toneladas','Monta Carga 5 Toneladas'),
+                  _gruaA('assets/img/Volquetas.png','VOLQUETAS','Volqueta de 5cb','Volqueta de 8cb','Volqueta de 12cb'),
                 ],
               ),
             ],
@@ -191,19 +194,28 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.centerLeft,
                   child :Text('Selecciona una opcion'),
                   ),
                   ListTile(
                     title: Text(opcion1),
                     onTap: () {
+                      setState(() {
+                        selectedServicio = opcion1;
+                        listaElementos = [servicio, selectedServicio];
+
+                      });
                       // Acción para la opción 1
-                      Navigator.of(context).pop(); // Cierra el AlertDialog
-                      Navigator.pushNamedAndRemoveUntil(context, 'UsuarioPedido', (route) => true);
+                      if (selectedServicio.isNotEmpty && servicio.isNotEmpty) {
+                        Navigator.of(context).pop(); // Cierra el AlertDialog
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, 'UsuarioPedido', (route) => false,
+                            arguments: listaElementos);
+                      }
                     },
                   ),
-                  Divider(
+                  const Divider(
                     color: Colors.grey,
                     thickness: 1,
                     height: 0,
@@ -211,11 +223,19 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
                   ListTile(
                     title: Text(opcion2),
                     onTap: () {
-                      // Acción para la opción 2
-                      Navigator.of(context).pop(); // Cierra el AlertDialog
+                      setState(() {
+                        selectedServicio = opcion2;
+                        listaElementos = [servicio, selectedServicio];
+                      });
+                      if (selectedServicio.isNotEmpty && servicio.isNotEmpty) {
+                        Navigator.of(context).pop(); // Cierra el AlertDialog
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, 'UsuarioPedido', (route) => false,
+                            arguments: listaElementos);
+                      }
                     },
                   ),
-                  Divider(
+                  const Divider(
                     color: Colors.grey,
                     thickness: 1,
                     height: 0,
@@ -223,8 +243,16 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
                   ListTile(
                     title: Text(opcion3),
                     onTap: () {
-                      // Acción para la opción 3
-                      Navigator.of(context).pop(); // Cierra el AlertDialog
+                      setState(() {
+                        selectedServicio = opcion3;
+                        listaElementos = [servicio, selectedServicio];
+                      });
+                      if (selectedServicio.isNotEmpty && servicio.isNotEmpty) {
+                        Navigator.of(context).pop(); // Cierra el AlertDialog
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, 'UsuarioPedido', (route) => false,
+                            arguments: listaElementos);
+                      }
                     },
                   ),
                 ],
@@ -246,12 +274,18 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
           ),
         ),
         margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
-        child: Image.asset(
-          imagen,
+        // TODO: Quitar esto, solo lo puse porque no tenia las imagenes
+        child: const SizedBox(
           width: 140,
           height: 120,
         ),
+        // child: Image.asset(
+        //   imagen,
+        //   width: 140,
+        //   height: 120,
+        // ),
       ),
     );
   }
 }
+

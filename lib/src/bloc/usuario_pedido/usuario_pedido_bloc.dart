@@ -361,10 +361,14 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         ubiFinal: ubiFinal, 
         metodoPago: metodoPago, 
         monto: monto, 
-        servicio: servicio, 
         descripcionDescarga: 
         descripcionDescarga, 
-        celentrega: celentrega
+        celentrega: celentrega,
+        servicio: servicio, 
+        ubiInitLat: origen.position.latitude,
+        ubiInitLog: origen.position.longitude,
+        ubiFinLat: destino.position.latitude,
+        ubiFinLog: destino.position.longitude
       );
 
       

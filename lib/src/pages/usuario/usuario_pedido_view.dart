@@ -8,12 +8,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
-import 'package:gruasgo/src/enum/polyline_id_enum.dart';
-import 'package:gruasgo/src/models/models/pedido_model.dart';
+import 'package:gruasgo/src/helpers/get_position.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
-import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/widgets/widget.dart';
 
 
@@ -28,14 +26,18 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
   final _formKey = GlobalKey<FormState>();
 
+  static List<String> listDropdownMenu = <String>['RIPIO', 'ARENILLA', 'ARENA FINA', 'RELLENO'];
+
   TextEditingController tecOrigen = TextEditingController();
   TextEditingController tecDestino = TextEditingController();
   TextEditingController tecNroContrato = TextEditingController();
   TextEditingController tecDescripcion = TextEditingController();
+  String detalleServicio = listDropdownMenu.first;
 
   Completer <GoogleMapController> mapController = Completer();
 
   bool _isLoading = false;
+  
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
@@ -60,238 +62,263 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
     final List<String> listaRecibida = ModalRoute.of(context)!.settings.arguments as  List<String>;
 
+
+
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
 
-    listaRecibida.forEach((element) {
-      print(element);
-    });
 
     return Scaffold(
         appBar: AppBar(
           backgroundColor: utils.Colors.logoColor,
         ),
         backgroundColor: Colors.white,
-        body: FutureBuilder<Position>(
-          future: getPositionHelpers(),
-          builder: (context, snapshot) {
-            
-            if (snapshot.connectionState == ConnectionState.waiting){
+        body: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    _textDetallePedido(),
 
-              return const Center(child: Text('Cargando'),);
-            
-            }else{
-              
-              // _usuarioPedidoBloc.add(OnSetOrigen(LatLng(snapshot.data!.latitude, snapshot.data!.longitude)));
+                    Column(
+                      children: [
 
-              return SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      _textDetallePedido(),
+                        BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
+                          builder: (context, state) {
 
-                      Column(
-                        children: [
+                            return Column(
+                              children: [
 
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
+                                    height: 70, 
+                                    child: TextFormField(
+                                      readOnly: true,
+                                      initialValue: listaRecibida[1],
+                                      style: const TextStyle(fontSize: 17),
+                                        decoration: InputDecoration(
+                                          labelText: 'Detalle del servicio',
+                                          filled: true, // Habilita el llenado de color de fondo
+                                          fillColor: Colors.white,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                        ) ,
+                                    ),
+                                  ),
 
-                          BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
-                            builder: (context, state) {
+                                TextFormFieldMapWidget(
+                                  textEditingController: tecOrigen,
+                                  usuarioPedidoBloc: _usuarioPedidoBloc,
+                                  labelText: 'Lugar de origen',
+                                  // initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                  suggestionsCallback: (String pattern) { 
+                                    return _usuarioPedidoBloc.searchPlace(place: pattern);
+                                  }, 
+                                  onSuggestionSelected: (suggestion) {
+                                    tecOrigen.text = suggestion.toString();
+                                    // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
 
-                              return Column(
-                                children: [
-
-                                  
-                                  TextFormFieldMapWidget(
-                                    textEditingController: tecOrigen,
-                                    usuarioPedidoBloc: _usuarioPedidoBloc,
-                                    labelText: 'Lugar de origen',
-                                    // initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
-                                    suggestionsCallback: (String pattern) { 
-                                      return _usuarioPedidoBloc.searchPlace(place: pattern);
-                                    }, 
-                                    onSuggestionSelected: (suggestion) {
-                                      tecOrigen.text = suggestion.toString();
-                                      // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
-
-                                      PositionModel? position;
-                                      for (var element in _usuarioPedidoBloc.placeModel) {
-                                        if (element.name == suggestion.toString()){
-                                          if (element.position != null){
-                                            position = element.position!;
-                                          }
+                                    PositionModel? position;
+                                    for (var element in _usuarioPedidoBloc.placeModel) {
+                                      if (element.name == suggestion.toString()){
+                                        if (element.position != null){
+                                          position = element.position!;
                                         }
                                       }
-                                      
-                                      if (position != null){
-                                        _usuarioPedidoBloc.add(OnSetAddNewMarkets(
-                                          Marker(
-                                            markerId: MarkerId(MarkerIdEnum.origen.toString()),
-                                            position: LatLng(position.lat, position.lng)
-                                          )
-                                        ));
-                                      }
-
-
-                                    }, 
-                                    onChanged: (p0) {
-                                      _usuarioPedidoBloc.searchPlace(place: p0);
-                                    },
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty){
-                                        return 'Este campo es obligatorio';
-                                      }
-                                      return null;
-                                    },
-
-                                    onPressIcon: () {
-                                      
-                                      final String idMarker = MarkerIdEnum.origen.toString();
-                                      Marker? marker;
-                                      bool isClickPin = false;
-                                      for (var elementMarker in state.markers) {
-                                        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-                                          marker = elementMarker;
-                                          isClickPin = true;
-                                          break;
-                                        }
-                                      }
-
-                                      marker ??= Marker(
+                                    }
+                                    
+                                    if (position != null){
+                                      _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                                        Marker(
                                           markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                          position: LatLng(position.lat, position.lng)
+                                        )
+                                      ));
+                                    }
+
+
+                                  }, 
+                                  onChanged: (p0) {
+                                    _usuarioPedidoBloc.searchPlace(place: p0);
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty){
+                                      return 'Este campo es obligatorio';
+                                    }
+                                    return null;
+                                  },
+
+                                  onPressIcon: () async {
+                                    
+                                    final String idMarker = MarkerIdEnum.origen.toString();
+                                    Marker? marker;
+                                    bool isClickPin = false;
+                                    for (var elementMarker in state.markers) {
+                                      if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+                                        marker = elementMarker;
+                                        isClickPin = true;
+                                        break;
+                                      }
+                                    }
+
+                                    if (marker == null){
+                                      Position position = await getPositionHelpers();
+                                      marker = Marker(
+                                        markerId: MarkerId(MarkerIdEnum.origen.toString()),
                                           position: LatLng(
-                                            snapshot.data?.latitude ?? -17.7960352, 
-                                            snapshot.data?.longitude ?? -63.1867462
+                                            position.latitude, 
+                                            position.longitude
                                           )
                                         );
+                                    }
+                                    
+                                    if (!context.mounted) return;
+                                    _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
 
+                                  },
+                                ),
 
+                                TextFormFieldMapWidget(
+                                  onSuggestionSelected: (suggestion) {
+                                    tecDestino.text = suggestion.toString();
+                                    // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
 
-                                      _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
-
-                                    },
-                                  ),
-
-                                  TextFormFieldMapWidget(
-                                    onSuggestionSelected: (suggestion) {
-                                      tecDestino.text = suggestion.toString();
-                                      // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
-
-                                      PositionModel? position;
-                                      for (var element in _usuarioPedidoBloc.placeModel) {
-                                        if (element.name == suggestion.toString()){
-                                          if (element.position != null){
-                                            position = element.position!;
-                                          }
+                                    PositionModel? position;
+                                    for (var element in _usuarioPedidoBloc.placeModel) {
+                                      if (element.name == suggestion.toString()){
+                                        if (element.position != null){
+                                          position = element.position!;
                                         }
                                       }
-                                      
-                                      if (position != null){
-                                        _usuarioPedidoBloc.add(OnSetAddNewMarkets(
-                                          Marker(
-                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                                            position: LatLng(position.lat, position.lng)
-                                          )
-                                        ));
+                                    }
+                                    
+                                    if (position != null){
+                                      _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                                        Marker(
+                                          markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                          position: LatLng(position.lat, position.lng)
+                                        )
+                                      ));
+                                    }
+
+
+                                  }, 
+                                  textEditingController: tecDestino,
+                                  usuarioPedidoBloc: _usuarioPedidoBloc,
+                                  labelText: 'Lugar de destino',
+                                  suggestionsCallback: (String pattern) { 
+                                    return _usuarioPedidoBloc.searchPlace(place: pattern);
+                                  }, 
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty){
+                                      return 'Este campo es obligatorio';
+                                    }
+                                    return null;
+                                  },
+
+                                  onPressIcon: () async {
+
+                                    final String idMarker = MarkerIdEnum.destino.toString();
+                                    Marker? marker;
+                                    Marker? origen;
+                                    bool isClickPin = false;
+                                    for (var elementMarker in state.markers) {
+                                      if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
+                                        marker = elementMarker;
+                                        isClickPin = true;
                                       }
-
-
-                                    }, 
-                                    textEditingController: tecDestino,
-                                    usuarioPedidoBloc: _usuarioPedidoBloc,
-                                    labelText: 'Lugar de destino',
-                                    suggestionsCallback: (String pattern) { 
-                                      return _usuarioPedidoBloc.searchPlace(place: pattern);
-                                    }, 
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty){
-                                        return 'Este campo es obligatorio';
+                                      if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+                                        origen = elementMarker;
                                       }
-                                      return null;
-                                    },
+                                    }
+                                                                        
+                                    if (marker == null) {
+                                      if (origen != null){
+                                        marker = origen;
+                                      }else{
 
-                                    onPressIcon: () {
-
-                                      final String idMarker = MarkerIdEnum.destino.toString();
-                                      Marker? marker;
-                                      Marker? origen;
-                                      bool isClickPin = false;
-                                      for (var elementMarker in state.markers) {
-                                        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
-                                          marker = elementMarker;
-                                          isClickPin = true;
+                                        if (marker == null){
+                                          Position position = await getPositionHelpers();
+                                          marker = Marker(
+                                            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                              position: LatLng(
+                                                position.latitude, 
+                                                position.longitude
+                                              )
+                                            );
                                         }
-                                        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-                                          origen = elementMarker;
-                                        }
                                       }
+                                    }
 
-                                      if (marker == null) {
-                                        if (origen != null){
-                                          marker = origen;
-                                        }else{
-                                          marker ??= Marker(
-                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                                            position: LatLng(
-                                              snapshot.data?.latitude ?? -17.7960352, 
-                                              snapshot.data?.longitude ?? -63.1867462
-                                            )
-                                          );
-                                        }
-                                      }
+                                    if (!context.mounted) return;
+                                    _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
 
-
-                                      _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
-
-                                      // Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          )
-                  
-                        ],
-                      ),
-                      // Lugar de recogida
+                                    // Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                
+                      ],
+                    ),
+                    // Lugar de recogida
  
-                  
-                      //   const SizedBox(height: 15),
-                      TextFormFieldWidget(
-                        tecNroContrato: tecNroContrato,
-                        label: 'Numero de contacto para entrega',
-                        textInputType: TextInputType.number,
-                        maxLength: 8,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty){
-                            return 'Este campo es obligatorio';
-                          }
-                          return null;
-                        },
-                      ),
+                
+                    //   const SizedBox(height: 15),
+                    TextFormFieldWidget(
+                      tecNroContrato: tecNroContrato,
+                      label: 'Numero de contacto para entrega',
+                      textInputType: TextInputType.number,
+                      maxLength: 8,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty){
+                          return 'Este campo es obligatorio';
+                        }
+                        return null;
+                      },
+                    ),
+                    
+                    TextFormFieldWidget(
+                      label: 'Descripcion de la carga',
+                      tecNroContrato: tecDescripcion,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty){
+                          return 'Este campo es obligatorio';
+                        }
+                        return null;
+                      },
+                    ),
+
+
+                    // TODO: GropdownMenu
+                    (listaRecibida[0] == 'VOLQUETAS') ? 
+                    DropButtonWidget(
+                      label: 'Seleccione el detalle del servicio',
+                      detalleServicio: detalleServicio, 
+                      listDropdownMenu: listDropdownMenu,
+                      onChanged: (String? value){
+                        if (value != null){
+                          detalleServicio = value;
+                          setState(() {
+                          });
+                        }
+                      },
+                    ) : Container(),
+                    // DropdownMenu<String>(
                       
-                      TextFormFieldWidget(
-                        label: 'Descripcion de la carga',
-                        tecNroContrato: tecDescripcion,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty){
-                            return 'Este campo es obligatorio';
-                          }
-                          return null;
-                        },
-                      ),
+                    //   width: double.infinity,
+                    //   dropdownMenuEntries: listDropdownMenu.map<DropdownMenuEntry<String>>((String value) => DropdownMenuEntry(value: value, label: value)).toList()
+                    // ),
 
-                      _btnCalcularPedido(context, _usuarioPedidoBloc, userBloc),
-                    ],
-                  ),
+                    _btnCalcularPedido(context, _usuarioPedidoBloc, userBloc, listaRecibida),
+                  ],
                 ),
-              );
-
-            }
-
-          }
-        )
+              ),
+            )
     );
   }
 
@@ -379,7 +406,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
 
-  Widget _alertDialogCosto(double precio, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc) {
+  Widget _alertDialogCosto(double precio, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc, List<String> listaRecibida) {
     return AlertDialog(
       title: const Text('¿EL COSTO DEL SERVICIO SERA DE?'),
       content: Column(
@@ -404,6 +431,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             // Acción para "Aceptar"
 
             final navigator = Navigator.of(context);
+            final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
 
             final status = await usuarioPedidoBloc.registrarPedido(
               idUsuario: userBloc.user!.idUsuario, 
@@ -411,7 +439,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               ubiFinal: tecDestino.text.trim(), 
               metodoPago: 'efectivo', 
               monto: precio, 
-              servicio: 'gruas', 
+              servicio: servicio, 
               descripcionDescarga: tecDescripcion.text.trim(), 
               celentrega: int.parse(tecNroContrato.text.trim())
             );
@@ -444,7 +472,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
 
-  Widget _btnCalcularPedido(BuildContext context, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc){
+  Widget _btnCalcularPedido(BuildContext context, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc, List<String> listaRecibida){
     return (!_isLoading) ? Container(
       margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
 
@@ -518,7 +546,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             if (precio != null){
               showDialog(
                 context: context,
-                builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc),
+                builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc, listaRecibida),
               );
             }else{
               showAboutDialog(
@@ -569,6 +597,7 @@ class TextFormFieldWidget extends StatelessWidget {
       //height: 70, // Alto del segundo widget
       margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
       child: TextFormField(
+        
         keyboardType: textInputType,
         // inputFormatters: <TextInputFormatter> [
         //   FilteringTextInputFormatter.digitsOnly,
