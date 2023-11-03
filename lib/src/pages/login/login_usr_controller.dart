@@ -28,8 +28,8 @@ class loginController{
       // TODO: Cambiar esto
 
       // Cliente
-      // "busuario": 'jose',
-      // "bpassword": '6543',
+      "busuario": 'jose',
+      "bpassword": '6543',
 
       // conductor
       // "busuario": 'gustavo',
@@ -37,8 +37,8 @@ class loginController{
       
       // usuairo: gustavo  pass: 12345 conductor
       
-      "busuario": emailController.text,
-      "bpassword": passwordController.text,
+      // "busuario": emailController.text,
+      // "bpassword": passwordController.text,
     });
 
     if (response.statusCode == 200) {

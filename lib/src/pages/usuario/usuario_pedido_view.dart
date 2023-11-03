@@ -35,6 +35,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
   Completer <GoogleMapController> mapController = Completer();
 
+  bool _isLoading = false;
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
@@ -57,8 +58,14 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   @override
   Widget build(BuildContext context) {
 
+    final List<String> listaRecibida = ModalRoute.of(context)!.settings.arguments as  List<String>;
+
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
+
+    listaRecibida.forEach((element) {
+      print(element);
+    });
 
     return Scaffold(
         appBar: AppBar(
@@ -421,7 +428,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text('No pudo realizarse la solicitud')
               ));
-              print('un error');
             }
           },
           child: const Text('REALIZAR PEDIDO'),
@@ -439,7 +445,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
 
   Widget _btnCalcularPedido(BuildContext context, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc){
-    return Container(
+    return (!_isLoading) ? Container(
       margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
 
       child: ButtonApp(
@@ -451,79 +457,89 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
           
           // TODO: Borrar
 
-          _usuarioPedidoBloc.pedidoModel = PedidoModel(
-              btip: 'nodsa',
-              bidpedido: 'dsadsa',
-              bidusuario: '0',
-              bubinicial: 'aqui vcerca',
-              bubfinal: 'aqui lejos',
-              bmetodopago: 'efectivo',
-              bmonto: 20.5,
-              bservicio: 'gruas',
-              bdescarga: 'toyota x',
-              bcelentrega: 456789123,
-              origen: const LatLng(-17.7922212, -63.1483421),
-              destino: const LatLng(-17.7754632, -63.1467689)
-            );
+          // _usuarioPedidoBloc.pedidoModel = PedidoModel(
+          //     btip: 'nodsa',
+          //     bidpedido: 'dsadsa',
+          //     bidusuario: '0',
+          //     bubinicial: 'aqui vcerca',
+          //     bubfinal: 'aqui lejos',
+          //     bmetodopago: 'efectivo',
+          //     bmonto: 20.5,
+          //     bservicio: 'gruas',
+          //     bdescarga: 'toyota x',
+          //     bcelentrega: 456789123,
+          //     origen: const LatLng(-17.7922212, -63.1483421),
+          //     destino: const LatLng(-17.7754632, -63.1467689)
+          //   );
 
-            _usuarioPedidoBloc.add(OnSetAddNewMarkets(
-              Marker(
-                markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                position: const LatLng(-17.7754632, -63.1467689)
-              )
-            ));
-            _usuarioPedidoBloc.add(OnSetAddNewMarkets(
-              Marker(
-                markerId: MarkerId(MarkerIdEnum.origen.toString()),
-                position: const LatLng(-17.7922212, -63.1483421)
-              )
-            ));
+          //   _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+          //     Marker(
+          //       markerId: MarkerId(MarkerIdEnum.destino.toString()),
+          //       position: const LatLng(-17.7754632, -63.1467689)
+          //     )
+          //   ));
+          //   _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+          //     Marker(
+          //       markerId: MarkerId(MarkerIdEnum.origen.toString()),
+          //       position: const LatLng(-17.7922212, -63.1483421)
+          //     )
+          //   ));
 
-            _usuarioPedidoBloc.sendEventDistanciaDuracion(
-              origen: const LatLng(-17.7922212, -63.1483421), 
-              destino: const LatLng(-17.7754632, -63.1467689)
-            );
+          //   _usuarioPedidoBloc.sendEventDistanciaDuracion(
+          //     origen: const LatLng(-17.7922212, -63.1483421), 
+          //     destino: const LatLng(-17.7754632, -63.1467689)
+          //   );
 
-            _usuarioPedidoBloc.add(OnSetIdConductor(''));
+          //   _usuarioPedidoBloc.add(OnSetIdConductor(''));
 
-            final polyline = await _usuarioPedidoBloc.getPolylines(origen: const LatLng(-17.7922212, -63.1483421), destino: const LatLng(-17.7754632, -63.1467689));
-            if (polyline != null){
-              _usuarioPedidoBloc.add(OnSetAddNewPolylines(
-                Polyline(
-                  polylineId: PolylineId(PolylineIdEnum.origenToDestino.toString()),
-                  color: Colors.black,
-                  width: 4,
-                  points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
-                )
-              ));
-            }
-
-
-
-          Navigator.pushNamed(context, 'MapaUsuario');
-          
-
-          // if (_formKey.currentState!.validate()) {
-            
-          //   final precio = await usuarioPedidoBloc.calcularDistancia();
-
-          //   if (!mounted) return null;
-          //   if (precio != null){
-          //     showDialog(
-          //       context: context,
-          //       builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc),
-          //     );
-          //   }else{
-          //     showAboutDialog(
-          //       context: context, 
-          //       applicationName: 'Error',
-          //       applicationVersion: 'No existe un registros con los datos ingresados',
-          //     );
+          //   final polyline = await _usuarioPedidoBloc.getPolylines(origen: const LatLng(-17.7922212, -63.1483421), destino: const LatLng(-17.7754632, -63.1467689));
+          //   if (polyline != null){
+          //     _usuarioPedidoBloc.add(OnSetAddNewPolylines(
+          //       Polyline(
+          //         polylineId: PolylineId(PolylineIdEnum.origenToDestino.toString()),
+          //         color: Colors.black,
+          //         width: 4,
+          //         points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+          //       )
+          //     ));
           //   }
 
-          // }
+
+
+          // Navigator.pushNamed(context, 'MapaUsuario');
+          
+
+          if (_formKey.currentState!.validate()) {
+
+            final precio = await usuarioPedidoBloc.calcularDistancia();
+
+          
+            if (!mounted) return null;
+            if (precio != null){
+              showDialog(
+                context: context,
+                builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc),
+              );
+            }else{
+              showAboutDialog(
+                context: context, 
+                applicationName: 'Error',
+                applicationVersion: 'No existe un registros con los datos ingresados',
+              );
+            }
+
+          }
 
         },
+
+      ),
+    ) : Container(
+      margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
+
+      child: ButtonApp(
+        text: 'Cargando',
+        color: Colors.amber[200],
+        textColor: Colors.black,
 
       ),
     );

@@ -119,6 +119,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                             textColor: Colors.black,
                                             onPressed: (){
                                               
+                                              // TODO: Cancelar Pedido
                                               _conductorBloc.respuestaPedidoProcesoCancelado();
                                               _conductorBloc.add(OnSetLimpiarPedidos());
 
@@ -149,6 +150,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                             textColor: Colors.black,
                                             onPressed: (){
 
+                                              // TODO: Comenzar Ruta
                                               _conductorBloc.add(OnSetClearPolylines());
                                               _getPolylines(state);
 
@@ -164,7 +166,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                             color: Colors.amber,
                                             textColor: Colors.black,
                                             onPressed: (){
-                                              
+                                              // TODO: Finalizar viaje
                                             },
                                           ),
                                         ),

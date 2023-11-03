@@ -24,6 +24,7 @@ class ClienteService{
       "bidusuario": idUsuario,
       "bubinicial": ubiInicial,
       "bubfinal": ubiFinal,
+      "bbestado": '-',
       "bmetodopago": metodoPago,
       "bmonto": monto.toString(),
       "bservicio": servicio,
