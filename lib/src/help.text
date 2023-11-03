@@ -1,0 +1,173 @@
+              FutureBuilder<Position>(
+                future: getPositionHelpers(),
+                builder: (context, snapshot) {
+
+                  if (snapshot.connectionState == ConnectionState.done){
+                    
+
+                    return GoogleMapWidget(
+                      initPosition: origen, 
+                      googleMapController: googleMapController,
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('origen'),
+                          position: origen,
+                          infoWindow: const InfoWindow(title: 'origen')
+                        ),
+                        Marker(
+                          markerId: const MarkerId('destino'),
+                          position: destino,
+                          infoWindow: const InfoWindow(title: 'destino')
+                        ),
+                      },
+                      polylines: {
+                        (_usuarioPedidoBloc.polylines != null) ?
+                          Polyline(
+                            polylineId: const PolylineId('ruta'),
+                            color: Colors.black,
+                            width: 5,
+                            points: _usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                          ) : 
+                          const Polyline(
+                            polylineId: PolylineId('ruta'),
+                            color: Colors.black,
+                            width: 5,
+                          )
+                        
+                      },
+                    );
+                  }else{
+                    return const Text('Cargando');
+                  }
+
+
+                },
+                
+              ),
+
+
+
+
+
+
+
+
+
+
+
+
+OPTENER LAS DIRECCIONES
+
+
+
+
+                    body: FutureBuilder(
+        future: _usuarioPedidoBloc.getDirecion(origen: origen, destino: destino),
+        builder: (context, snapshot) {
+          return Stack(
+            
+            children: [
+
+              GoogleMapWidget(
+                initPosition: origen, 
+                googleMapController: googleMapController,
+                markers: {},
+              ),
+
+
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 20),
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.yellow,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                            child: Text(_usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].distance.text ?? '')
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.yellow,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                            child: Text(_usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].duration.text ?? '')
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+                    color: Colors.white,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.add_location),
+                        title: const Text('Desde'),
+                        subtitle: Text(_usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.my_location),
+                        title: const Text('Hasta'),
+                        subtitle: Text(_usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.attach_money),
+                        title: const Text('Precio'),
+                        subtitle: Text('${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
+                      ),
+                      _buttonRequest(_usuarioPedidoBloc),
+                    ],
+                  ),
+                ),
+              )
+
+              // Column(
+              //   mainAxisSize: MainAxisSize.min,
+              //   children: [
+              //     // const Row(
+              //     //   children: [
+              //     //     Text('Distancia: '),
+              //     //     Text(': 123 Km'),
+              //     //   ],
+              //     // ),
+              //     // const Row(
+              //     //   children: [
+              //     //     Text('Tiempo: '),
+              //     //     Text(': 123 mins'),
+              //     //   ],
+              //     // ),
+
+              //     _buttonDrawer(),
+              //     // _buttonCenterPosition(),
+              //     Expanded(child: Container()),
+              //     //_cardGooglePlaces(),
+              //     _buttonRequest(),
+              //   ],
+              // ),
+
+            ],
+          );
+        },
+
+      ),

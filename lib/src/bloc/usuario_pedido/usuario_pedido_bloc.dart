@@ -6,16 +6,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:gruasgo/src/arguments/informacion_conductor_cliente.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/models/models.dart';
-import 'package:gruasgo/src/models/response/google_map_direction.dart';
+import 'package:gruasgo/src/models/response/google_map_direction.dart' as data;
 import 'package:gruasgo/src/models/response/place_description.dart';
-import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
 import 'package:http/http.dart' as http;
+
+
 
 import 'package:gruasgo/src/models/response/place_response.dart';
 
@@ -29,52 +31,84 @@ typedef ShowAlertCallback = void Function(String message);
 class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   
   PedidoModel? pedidoModel;
-  GoogleMapDirection? googleMapDirection;
-  List<PointLatLng>? polylines;
+  // List<PointLatLng>? polylines;
   UserBloc userBloc;
 
   List<PlaceModel> placeModel = [];
 
   UsuarioPedidoBloc({
     required this.userBloc
-  }) : super(UsuarioPedidoState()) {
-    on<OnSetOrigen>((event, emit) {
-      emit(state.copyWitch(
-        origen: event.origen,
-      ));
-    });
-    on<OnSetDestino>((event, emit) {
-      emit(state.copyWitch(
-        destino: event.destino,
-      ));
-    });
+  }) : super(const UsuarioPedidoState()) {
+    
     on<OnActualizarContador>((event, emit){
       print('actualizando');
       emit(state.copyWitch(contador: state.contador + event.contador));
     });
+    
     on<OnSetContador>((event, emit){
       emit(state.copyWitch(contador: event.contador));
     });
-    on<OnSelected>((event, emit) {
-      
-      PositionModel position = PositionModel(lat: 0, lng: 0);
-      for (var element in placeModel) {
-        if (element.name == event.name){
-          if (element.position != null){
-            position = element.position!;
-          }
+
+    on<OnSetAddNewMarkets>((event, emit){
+
+      Set<Marker> markers = Set.from(state.markers);
+
+      Marker? marker;
+
+      for (var elementMarker in markers) {
+        if (elementMarker.markerId.value == event.marker.markerId.value){
+          marker = elementMarker;
+          break;
         }
       }
+      if (marker != null) markers.remove(marker);
+      markers.add(event.marker);
+      emit(state.copyWitch(markers: markers));
+    });
+  
+    on<OnDeleteMarkerById>((event, emit){
 
-      if (event.type == 'origen'){
-        emit(state.copyWitch(origen: LatLng(position.lat, position.lng)));
-      }else{
-        emit(state.copyWitch(destino: LatLng(position.lat, position.lng)));
+      Set<Marker> markers = Set.from(state.markers);
+
+      Marker? marker;
+
+      for (var elementMarker in markers) {
+        if (elementMarker.markerId.value == event.markerIdEnum.toString()){
+          marker = elementMarker;
+          break;
+        }
       }
+      if (marker != null) markers.remove(marker);
+
+      emit(state.copyWitch(markers: markers));
     });
-    on<OnSetPositionConductor>((event, emit){
-      emit(state.copyWitch(conductor: event.position));
+
+    on<OnSetAddNewPolylines>((event, emit){
+
+      Set<Polyline> polylines = Set.from(state.polylines);
+
+      Polyline? polyline;
+
+      for (var elementPolyline in polylines) {
+        if (elementPolyline.polylineId.value == event.polyline.polylineId.value){
+          polyline = elementPolyline;
+          break;
+        }
+      }
+      if (polyline != null) polylines.remove(polyline);
+      polylines.add(event.polyline);
+      emit(state.copyWitch(polylines: polylines));
     });
+
+    on<OnSetIdConductor>((event, emit){
+      emit(state.copyWitch(idConductor: event.idConductor));
+    });
+
+    on<OnUpdateDistanciaDuracion>((event, emit){
+      emit(state.copyWitch(distancia: event.distancia, duracion: event.duracion));
+    });
+
+
   }
 
   Future<String?> searchPlaceByCoors({required LatLng coors}) async {
@@ -157,15 +191,33 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       //   'bserv': 'gruas'
       // });
 
+      Marker? origen;
+      Marker? destino;
+
+      for (var elementMarker in state.markers) {
+        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+          origen = elementMarker;
+        }
+        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
+          destino = elementMarker;
+        }
+      }
+
+      if (origen == null || destino == null){
+        return -999;
+      }
+
       final data = {
-        'lat_origen': state.origen!.latitude,
-        'lng_origen': state.origen!.longitude,
-        'lat_destino': state.destino!.latitude,
-        'lng_destino': state.destino!.longitude,
+        'lat_origen': origen.position.latitude,
+        'lng_origen': origen.position.longitude,
+        'lat_destino': destino.position.latitude,
+        'lng_destino': destino.position.longitude,
         'servicio': 'gruas'
       };
 
       var urlParse = Uri.parse('${Enviroment().server}/map');
+
+      print(jsonEncode(data));
 
       final response = await http.post(
         urlParse, 
@@ -174,6 +226,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           'Content-Type': 'application/json'
         }
       );
+
+      print(response.body);
 
       Map<String, dynamic> jsonData = json.decode(response.body);
       String distanceValue = jsonData['distancia'];
@@ -213,36 +267,55 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
     
     if (resp.statusCode == 200){
-      final googleMapDirection = googleMapDirectionFromJson(resp.body);
+      final googleMapDirection = data.googleMapDirectionFromJson(resp.body);
       return PolylinePoints().decodePolyline(googleMapDirection.routes[0].overviewPolyline.points);
     }
     return null;
 
   }
 
-  Future<void> getDirecion({
+  Future<bool> sendEventDistanciaDuracion({
     required LatLng origen,
     required LatLng destino,
-  }) async{
-    
-    const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
-    var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
-    final resp = await http.get(urlParce);
+  }) async {
+
+    final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
     
     if (resp.statusCode == 200){
-      googleMapDirection = googleMapDirectionFromJson(resp.body);
-
-      print('-----------------------');
-      print(googleMapDirection!.routes[0].bounds.toJson());
-      print(googleMapDirection!.routes[0].legs[0].distance.text);
-      print(googleMapDirection!.routes[0].legs[0].duration.text);
-      polylines = PolylinePoints().decodePolyline(googleMapDirection!.routes[0].overviewPolyline.points);
-      // print(googleMapDirection!.routes[0].overviewPolyline.points);
-      // print(polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList());
-
+      final googleMapDirection = data.googleMapDirectionFromJson(resp.body);
+      add(OnUpdateDistanciaDuracion(
+        distancia: googleMapDirection.routes[0].legs[0].distance.text, 
+        duracion: googleMapDirection.routes[0].legs[0].duration.text
+      ));
+      return true;
     }
+    return false;
 
   }
+
+  // Future<void> getDirecion({
+  //   required LatLng origen,
+  //   required LatLng destino,
+  // }) async{
+    
+  //   const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
+  //   var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
+  //   final resp = await http.get(urlParce);
+    
+  //   if (resp.statusCode == 200){
+  //     googleMapDirection = googleMapDirectionFromJson(resp.body);
+
+  //     print('-----------------------');
+  //     print(googleMapDirection!.routes[0].bounds.toJson());
+  //     print(googleMapDirection!.routes[0].legs[0].distance.text);
+  //     print(googleMapDirection!.routes[0].legs[0].duration.text);
+  //     polylines = PolylinePoints().decodePolyline(googleMapDirection!.routes[0].overviewPolyline.points);
+  //     // print(googleMapDirection!.routes[0].overviewPolyline.points);
+  //     // print(polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList());
+
+  //   }
+
+  // }
 
 
   Future<bool> registrarPedido({
@@ -258,31 +331,50 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     
     const uuid = Uuid();
     final uuidPedido = uuid.v4();
-
+  
     try {
 
-      final response = await ClienteService().registrarPedido(
-        uuidPedido: uuidPedido, 
-        idUsuario: idUsuario, 
-        ubiInicial: ubiInicial, 
-        ubiFinal: ubiFinal, 
-        metodoPago: metodoPago, 
-        monto: monto, 
-        servicio: servicio, 
-        descripcionDescarga: 
-        descripcionDescarga, 
-        celentrega: celentrega
-      );
 
       
-      if (response.statusCode != 200) {
-        print(response.body);
-        // TODO: Mensaje de error
+      Marker? origen;
+      Marker? destino;
+
+      for (var elementMarker in state.markers) {
+        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+          origen = elementMarker;
+        }
+        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
+          destino = elementMarker;
+        }
+      }
+
+      if (origen == null || destino == null){
         return false;
       }
 
-      dynamic jsonData = json.decode(response.body);
-      if (jsonData['success'] == 'si') {
+
+      // final response = await ClienteService().registrarPedido(
+      //   uuidPedido: uuidPedido, 
+      //   idUsuario: idUsuario, 
+      //   ubiInicial: ubiInicial, 
+      //   ubiFinal: ubiFinal, 
+      //   metodoPago: metodoPago, 
+      //   monto: monto, 
+      //   servicio: servicio, 
+      //   descripcionDescarga: 
+      //   descripcionDescarga, 
+      //   celentrega: celentrega
+      // );
+
+      
+      // print(response.body);
+      // if (response.statusCode != 200) {
+      //   // TODO: Mensaje de error
+      //   return false;
+      // }
+
+      // dynamic jsonData = json.decode(response.body);
+      // if (jsonData['success'] == 'si') {
         
         pedidoModel = PedidoModel(
           btip: 'addPedido', 
@@ -295,15 +387,28 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           bservicio: servicio, 
           bdescarga: descripcionDescarga, 
           bcelentrega: celentrega, 
-          origen: state.origen!, 
-          destino: state.destino!
+          origen: origen.position, 
+          destino: destino.position
         );
-        
+        sendEventDistanciaDuracion(origen: origen.position, destino: destino.position);
+
+        final polyline = await getPolylines(origen: origen.position, destino: destino.position);
+        if (polyline != null){
+          add(OnSetAddNewPolylines(
+            Polyline(
+              polylineId: PolylineId(PolylineIdEnum.origenToDestino.toString()),
+              color: Colors.black,
+              width: 4,
+              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+            )
+          ));
+        }
+
         return true;
-      }else{
-        print(response.body);
-        return false;
-      }
+      // }else{
+      //   print(response.body);
+      //   return false;
+      // }
     
     } catch (e) {
       print(e);
@@ -370,21 +475,46 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   void listenPedidoAceptado({required NavigatorState navigator}){
     SocketService.on('pedido aceptado por conductor', (data){
-      print(data);
-      add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
-      navigator.pushNamed('UsuarioPedidoAceptado', arguments: InformacionConductorCliente(
-        id: data['id'],
-        lat: data['lat'],
-        lng: data['lng']
+      add(OnSetIdConductor(data['id']));
+
+      add(OnSetAddNewMarkets(
+        Marker(
+          markerId: MarkerId(MarkerIdEnum.conductor.toString()),
+          position: LatLng(data['lat'], data['lng'])
+        )
       ));
+      navigator.pop();
+      print(data['id']);
+      
     });
   }
 
   void listenPosicionConductor(){
     SocketService.on('actualizar posicion conductor', (data){
-      add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
-      print(data);
+      // TODO: Aqui actualizar la posicion del conductor
+
+      add(OnSetAddNewMarkets(
+        Marker(
+          markerId: MarkerId(MarkerIdEnum.conductor.toString()),
+          position: LatLng(data['lat'], data['lng'])
+        )
+      ));
+
+      // add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
+      // print(data);
     });
+  }
+
+  void listenPedidoProcesoCancelado(){
+    SocketService.on('pedido en proceso cancelado', (data){
+      print('Pedido cancelado por el conductor');
+      add(OnSetIdConductor(''));
+      add(OnDeleteMarkerById(MarkerIdEnum.conductor));
+    });
+  }
+
+  void clearSocketPedidoProcesadoCancelado(){
+    SocketService.off('pedido en proceso cancelado');
   }
 
   void clearSocketPosicionConductor(){

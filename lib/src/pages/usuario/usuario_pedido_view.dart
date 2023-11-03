@@ -1,9 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
+import 'package:gruasgo/src/models/models/pedido_model.dart';
+import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
@@ -25,6 +32,9 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   TextEditingController tecDestino = TextEditingController();
   TextEditingController tecNroContrato = TextEditingController();
   TextEditingController tecDescripcion = TextEditingController();
+
+  Completer <GoogleMapController> mapController = Completer();
+
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
@@ -59,13 +69,13 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
           future: getPositionHelpers(),
           builder: (context, snapshot) {
             
-            if (!snapshot.hasData){
+            if (snapshot.connectionState == ConnectionState.waiting){
 
               return const Center(child: Text('Cargando'),);
             
             }else{
               
-              _usuarioPedidoBloc.add(OnSetOrigen(LatLng(snapshot.data!.latitude, snapshot.data!.longitude)));
+              // _usuarioPedidoBloc.add(OnSetOrigen(LatLng(snapshot.data!.latitude, snapshot.data!.longitude)));
 
               return SingleChildScrollView(
                 child: Form(
@@ -88,12 +98,35 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   
                                   TextFormFieldMapWidget(
                                     textEditingController: tecOrigen,
-                                    type: 'origen',
                                     usuarioPedidoBloc: _usuarioPedidoBloc,
                                     labelText: 'Lugar de origen',
-                                    initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    // initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
                                     suggestionsCallback: (String pattern) { 
                                       return _usuarioPedidoBloc.searchPlace(place: pattern);
+                                    }, 
+                                    onSuggestionSelected: (suggestion) {
+                                      tecOrigen.text = suggestion.toString();
+                                      // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
+
+                                      PositionModel? position;
+                                      for (var element in _usuarioPedidoBloc.placeModel) {
+                                        if (element.name == suggestion.toString()){
+                                          if (element.position != null){
+                                            position = element.position!;
+                                          }
+                                        }
+                                      }
+                                      
+                                      if (position != null){
+                                        _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                                          Marker(
+                                            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                            position: LatLng(position.lat, position.lng)
+                                          )
+                                        ));
+                                      }
+
+
                                     }, 
                                     onChanged: (p0) {
                                       _usuarioPedidoBloc.searchPlace(place: p0);
@@ -106,16 +139,61 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                     },
 
                                     onPressIcon: () {
-                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'origen', 'controller': tecOrigen});
+                                      
+                                      final String idMarker = MarkerIdEnum.origen.toString();
+                                      Marker? marker;
+                                      bool isClickPin = false;
+                                      for (var elementMarker in state.markers) {
+                                        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+                                          marker = elementMarker;
+                                          isClickPin = true;
+                                          break;
+                                        }
+                                      }
+
+                                      marker ??= Marker(
+                                          markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                          position: LatLng(
+                                            snapshot.data?.latitude ?? -17.7960352, 
+                                            snapshot.data?.longitude ?? -63.1867462
+                                          )
+                                        );
+
+
+
+                                      _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
+
                                     },
                                   ),
 
                                   TextFormFieldMapWidget(
+                                    onSuggestionSelected: (suggestion) {
+                                      tecDestino.text = suggestion.toString();
+                                      // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
+
+                                      PositionModel? position;
+                                      for (var element in _usuarioPedidoBloc.placeModel) {
+                                        if (element.name == suggestion.toString()){
+                                          if (element.position != null){
+                                            position = element.position!;
+                                          }
+                                        }
+                                      }
+                                      
+                                      if (position != null){
+                                        _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                                          Marker(
+                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                            position: LatLng(position.lat, position.lng)
+                                          )
+                                        ));
+                                      }
+
+
+                                    }, 
                                     textEditingController: tecDestino,
-                                    type: 'destino',
                                     usuarioPedidoBloc: _usuarioPedidoBloc,
                                     labelText: 'Lugar de destino',
-                                    initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
                                     suggestionsCallback: (String pattern) { 
                                       return _usuarioPedidoBloc.searchPlace(place: pattern);
                                     }, 
@@ -127,7 +205,39 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                     },
 
                                     onPressIcon: () {
-                                      Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
+
+                                      final String idMarker = MarkerIdEnum.destino.toString();
+                                      Marker? marker;
+                                      Marker? origen;
+                                      bool isClickPin = false;
+                                      for (var elementMarker in state.markers) {
+                                        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
+                                          marker = elementMarker;
+                                          isClickPin = true;
+                                        }
+                                        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+                                          origen = elementMarker;
+                                        }
+                                      }
+
+                                      if (marker == null) {
+                                        if (origen != null){
+                                          marker = origen;
+                                        }else{
+                                          marker ??= Marker(
+                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                            position: LatLng(
+                                              snapshot.data?.latitude ?? -17.7960352, 
+                                              snapshot.data?.longitude ?? -63.1867462
+                                            )
+                                          );
+                                        }
+                                      }
+
+
+                                      _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
+
+                                      // Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
                                     },
                                   ),
                                 ],
@@ -176,6 +286,74 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
           }
         )
     );
+  }
+
+  Future<dynamic> _showModal(BuildContext context, Marker? marker, Completer<GoogleMapController> mapController, String idMarker, bool isClickPin, TextEditingController tec) {
+    return showDialog(context: context, builder: (context) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            GoogleMapWidget(
+              initPosition: marker!.position,
+              googleMapController: mapController,
+              onTap: (p0) async {
+                final navigator = Navigator.of(context);
+                _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                  Marker(
+                    markerId: MarkerId(idMarker),
+                    position: p0
+                  )
+                ));
+                  final place = await _usuarioPedidoBloc.searchPlaceByCoors(coors: p0);
+                if (place!=null){
+                  tec.text = place;
+                }
+                navigator.pop();
+              },
+              markers: {
+                (isClickPin) ? 
+                marker :
+                const Marker(markerId: MarkerId('none'))
+              },
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
+                child: const Text('Seleccione un punto en el mapa')
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: SizedBox(
+                  width: 150,
+                  height: 50,
+                  child: ButtonApp(
+                    text: 'Cancelar',
+                    color: Colors.amber,
+                    textColor: Colors.black,
+                    //onPressed: _con.registerUsuario,
+                    onPressed: () async {
+                      
+                      Navigator.pop(context);
+                
+                    },
+                
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      );
+    },);
   }
 
   Widget _textDetallePedido(){
@@ -271,25 +449,79 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
         //onPressed: _con.registerUsuario,
         onPressed: () async {
           
-          if (_formKey.currentState!.validate()) {
-            
-            final precio = await usuarioPedidoBloc.calcularDistancia();
+          // TODO: Borrar
 
-            if (!mounted) return null;
-            if (precio != null){
-              showDialog(
-                context: context,
-                builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc),
-              );
-            }else{
-              showAboutDialog(
-                context: context, 
-                applicationName: 'Error',
-                applicationVersion: 'No existe un registros con los datos ingresados',
-              );
+          _usuarioPedidoBloc.pedidoModel = PedidoModel(
+              btip: 'nodsa',
+              bidpedido: 'dsadsa',
+              bidusuario: '0',
+              bubinicial: 'aqui vcerca',
+              bubfinal: 'aqui lejos',
+              bmetodopago: 'efectivo',
+              bmonto: 20.5,
+              bservicio: 'gruas',
+              bdescarga: 'toyota x',
+              bcelentrega: 456789123,
+              origen: const LatLng(-17.7922212, -63.1483421),
+              destino: const LatLng(-17.7754632, -63.1467689)
+            );
+
+            _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+              Marker(
+                markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                position: const LatLng(-17.7754632, -63.1467689)
+              )
+            ));
+            _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+              Marker(
+                markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                position: const LatLng(-17.7922212, -63.1483421)
+              )
+            ));
+
+            _usuarioPedidoBloc.sendEventDistanciaDuracion(
+              origen: const LatLng(-17.7922212, -63.1483421), 
+              destino: const LatLng(-17.7754632, -63.1467689)
+            );
+
+            _usuarioPedidoBloc.add(OnSetIdConductor(''));
+
+            final polyline = await _usuarioPedidoBloc.getPolylines(origen: const LatLng(-17.7922212, -63.1483421), destino: const LatLng(-17.7754632, -63.1467689));
+            if (polyline != null){
+              _usuarioPedidoBloc.add(OnSetAddNewPolylines(
+                Polyline(
+                  polylineId: PolylineId(PolylineIdEnum.origenToDestino.toString()),
+                  color: Colors.black,
+                  width: 4,
+                  points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                )
+              ));
             }
 
-          }
+
+
+          Navigator.pushNamed(context, 'MapaUsuario');
+          
+
+          // if (_formKey.currentState!.validate()) {
+            
+          //   final precio = await usuarioPedidoBloc.calcularDistancia();
+
+          //   if (!mounted) return null;
+          //   if (precio != null){
+          //     showDialog(
+          //       context: context,
+          //       builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc),
+          //     );
+          //   }else{
+          //     showAboutDialog(
+          //       context: context, 
+          //       applicationName: 'Error',
+          //       applicationVersion: 'No existe un registros con los datos ingresados',
+          //     );
+          //   }
+
+          // }
 
         },
 

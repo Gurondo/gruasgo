@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/pages/login/login_usr_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 
@@ -96,9 +96,9 @@ class _LoginUsrState extends State<LoginUsr> {
              String userme = user.nombreusuario;
             //  TODO: Aqui simplemente agregue el usuario al estado
              userBloc.user = user;
-            //  Navigator.pushNamedAndRemoveUntil(currentContext, 'bienbendioUsuario', (route) => false,arguments: userme);
+             Navigator.pushNamedAndRemoveUntil(currentContext, 'bienbendioUsuario', (route) => false,arguments: userme);
             // TODO: Aqui borrar para que vuelva a redireccionar donde siempre, este es solo para el modo desarrollo
-             Navigator.pushNamedAndRemoveUntil(currentContext, 'MapaUsuario', (route) => false,arguments: userme);
+            //  Navigator.pushNamedAndRemoveUntil(currentContext, 'MapaUsuario', (route) => false,arguments: userme);
            }
            if (user.TipoUsuario == 'conduc'){
              userBloc.user = user;

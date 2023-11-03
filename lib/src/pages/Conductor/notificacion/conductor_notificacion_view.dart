@@ -3,9 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
+import 'package:gruasgo/src/global/enviroment.dart';
+import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
 import 'package:timer_count_down/timer_count_down.dart';
@@ -27,7 +32,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
   late ConductorBloc _conductorBloc;
   late DetalleNotificacionConductor args;
 
-  final int _tiempo = 10;
+  final int _tiempo = Enviroment().tiempoEspera;
 
   var _pedidoAceptado = false;
 
@@ -38,15 +43,24 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
 
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
+    _conductorBloc.solicitudYaTomada();
+
     final navigator = Navigator.of(context);
     _conductorBloc.solicitudCancelada(navigator: navigator);
 
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     _conductorBloc.respuestaPedido(detalleNotificacionConductor: args, pedidoAceptado: _pedidoAceptado);
+    if (!_pedidoAceptado){
+      _conductorBloc.add(OnSetDetallePedido(null));
+      _conductorBloc.add(OnSetNewMarkets({}));
+    }
+
+    // Limpiar de memoria
     _conductorBloc.clearSolicitudCanceladaSocket();
+    _conductorBloc.clearSolicitudYaTomadaSocket();
     // TODO: implement dispose
     super.dispose();
   }
@@ -158,7 +172,19 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               ),
             ),
 
-            Text('${args.monto.toString()} Bs.', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),),
+            Countdown(
+              seconds: _tiempo,
+              build: (BuildContext context, double time) {
+                return Text(
+                  time.toStringAsFixed(time.truncateToDouble() == time ? 0 : 1),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                );
+              },
+              onFinished: (){
+                Navigator.pop(context);
+              },
+            ),
+            // Text('${args.monto.toString()} Bs.', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),),
 
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 18),
@@ -183,11 +209,24 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         color: Colors.blue[400],
                         textColor: Colors.white,
                         icons: Icons.check,
-                        onPressed: (){
+                        onPressed: () async {
                           // _conductorBloc.aceptarPedido(socketClientId: args.socketClientId, clientId: args.clienteId);
+                          _conductorBloc.add(OnSetNewMarkets({
+                            Marker(
+                              markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                              position: args.origen
+                            ),
+                            Marker(
+                              markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                              position: args.destino
+                            ),
+                          }));
+                          
+                          _getPolylines();
+
                           _pedidoAceptado = true;
                           Navigator.pop(context);
-                          Navigator.pushNamed(context, 'ConductorPedidoAceptado', arguments: args);
+                          _conductorBloc.add(OnSetDetallePedido(args));
                         },
                       ),
                     ],
@@ -196,74 +235,84 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               ),
             ),
 
-            Linea(
-              tiempo: _tiempo
-            ),
-
-            Countdown(
-              seconds: _tiempo,
-              build: (BuildContext context, double time) {
-                return Container();
-              },
-              onFinished: (){
-                Navigator.pop(context);
-              },
-            )
-
+            // Linea(
+            //   tiempo: _tiempo
+            // ),
             
           ],
         )
       )
     );
   }
-}
 
-class Linea extends StatefulWidget {
+  Future _getPolylines() async {
+      Position position = await getPositionHelpers();
+      
+      List<PointLatLng>? polyline = await _conductorBloc.getPolylines(
+        origen: LatLng(position.latitude, position.longitude), 
+        destino: args.origen
+      );
 
-  final int tiempo;
-
-  const Linea({
-    Key? key,
-    required this.tiempo
-  }) : super(key: key);
-
-
-  @override
-  State<Linea> createState() => _LineaState();
-}
-
-class _LineaState extends State<Linea> with TickerProviderStateMixin{
-
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    _controller = AnimationController(
-    /// [AnimationController]s can be created with `vsync: this` because of
-    /// [TickerProviderStateMixin].
-    vsync: this,
-      duration: Duration(seconds: widget.tiempo),
-    )..addListener(() {
-        setState(() {});
-    });
-    _controller.reverse(from: 1.0);
+      if (polyline != null){
+        _conductorBloc.add(OnSetAddPolyline(
+          Polyline(
+            polylineId: PolylineId(PolylineIdEnum.posicionToOrigen.toString()),
+            color: Colors.black,
+            width: 4,
+            points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+          )
+        ));
+      }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    return LinearProgressIndicator(
-      minHeight: 20,
-      value: _controller.value
-    );
-  }
 }
+
+// class Linea extends StatefulWidget {
+
+//   final int tiempo;
+
+//   const Linea({
+//     Key? key,
+//     required this.tiempo
+//   }) : super(key: key);
+
+
+//   @override
+//   State<Linea> createState() => _LineaState();
+// }
+
+// class _LineaState extends State<Linea> with TickerProviderStateMixin{
+
+//   late AnimationController _controller;
+
+//   @override
+//   void initState() {
+//     // TODO: implement initState
+//     super.initState();
+
+//     _controller = AnimationController(
+//     /// [AnimationController]s can be created with `vsync: this` because of
+//     /// [TickerProviderStateMixin].
+//     vsync: this,
+//       duration: Duration(seconds: widget.tiempo),
+//     )..addListener(() {
+//         setState(() {});
+//     });
+//     _controller.reverse(from: 1.0);
+//   }
+
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
+
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return LinearProgressIndicator(
+//       minHeight: 20,
+//       value: _controller.value
+//     );
+//   }
+// }

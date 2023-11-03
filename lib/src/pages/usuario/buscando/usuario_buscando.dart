@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
-import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 
 class UsuarioBuscando extends StatefulWidget {
@@ -15,10 +14,14 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
+
   @override
   void dispose() {
     
-    _usuarioPedidoBloc.cancelarPedido();
+    if (_usuarioPedidoBloc.state.idConductor == ''){
+      _usuarioPedidoBloc.cancelarPedido();
+    }
+    
     _usuarioPedidoBloc.clearSocketIsSuccessPedido();
 
     super.dispose();

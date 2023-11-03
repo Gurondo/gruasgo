@@ -1,15 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
-import 'package:gruasgo/src/helpers/get_position.dart';
-import 'package:gruasgo/src/models/models/pedido_model.dart';
-import 'package:gruasgo/src/pages/controllers/map_controllers.dart';
+import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
@@ -22,7 +19,6 @@ class UsuarioMap extends StatefulWidget {
 }
 
 class _UsuarioMapState extends State<UsuarioMap> {
-
   final UsuarioMapController _con = UsuarioMapController();
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
@@ -31,11 +27,14 @@ class _UsuarioMapState extends State<UsuarioMap> {
     // TODO: implement initState
     super.initState();
 
+    
+
+
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
-
-
+    _usuarioPedidoBloc.listenPedidoProcesoCancelado();
     _usuarioPedidoBloc.respuesta(showAlert: showAlert);
     _usuarioPedidoBloc.actualizarContador();
+    _usuarioPedidoBloc.listenPosicionConductor();
 
     // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
     //   _con.init(context, refresh);  //// REFRESH  PARA M3
@@ -45,99 +44,41 @@ class _UsuarioMapState extends State<UsuarioMap> {
   @override
   void dispose() {
     _usuarioPedidoBloc.clearSocketRespuestaUsuario();
+    _usuarioPedidoBloc.clearSocketPedidoProcesadoCancelado();
     _usuarioPedidoBloc.clearSocketActualizarContador();
+    _usuarioPedidoBloc.clearSocketPosicionConductor();
+    
     // TODO: implement dispose
     super.dispose();
   }
 
   final LatLng origen = const LatLng(-17.7995132, -63.1924906);
   final LatLng destino = const LatLng(-17.8005504, -63.1786198);
-  Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
-
+  Completer<GoogleMapController> googleMapController =
+      Completer<GoogleMapController>();
 
   @override
   Widget build(BuildContext context) {
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
-    
-    // TODO: Borrar solo es prueba
-    _usuarioPedidoBloc.pedidoModel = PedidoModel(
-      btip: 'nodsa', 
-      bidpedido: 'dsadsa', 
-      bidusuario: '0', 
-      bubinicial: 'aqui vcerca', 
-      bubfinal: 'aqui lejos', 
-      bmetodopago: 'efectivo', 
-      bmonto: 20.5, 
-      bservicio: 'gruas', 
-      bdescarga: 'toyota x', 
-      bcelentrega: 456789123, 
-      origen: const LatLng(-17.7922212, -63.1483421), 
-      destino: const LatLng(-17.7754632, -63.1467689)
-    );
 
-    LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
-    LatLng destino = _usuarioPedidoBloc.pedidoModel!.destino;
-    // TODO: Borrar solo es prueba
-    _usuarioPedidoBloc.add(OnSetOrigen(origen));
-    _usuarioPedidoBloc.add(OnSetDestino(destino));
+
+    // LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
 
     return Scaffold(
       key: _con.key,
       drawer: _drawer(),
-      body: FutureBuilder(
-        future: _usuarioPedidoBloc.getDirecion(origen: origen, destino: destino),
-        builder: (context, snapshot) {
+      body: BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
+        builder: (context, state) {
           return Stack(
-            
             children: [
 
-              FutureBuilder<Position>(
-                future: getPositionHelpers(),
-                builder: (context, snapshot) {
-
-                  if (snapshot.connectionState == ConnectionState.done){
-                    
-
-                    return GoogleMapWidget(
-                      initPosition: origen, 
-                      googleMapController: googleMapController,
-                      markers: {
-                        Marker(
-                          markerId: const MarkerId('origen'),
-                          position: origen,
-                          infoWindow: const InfoWindow(title: 'origen')
-                        ),
-                        Marker(
-                          markerId: const MarkerId('destino'),
-                          position: destino,
-                          infoWindow: const InfoWindow(title: 'destino')
-                        ),
-                      },
-                      polylines: {
-                        (_usuarioPedidoBloc.polylines != null) ?
-                          Polyline(
-                            polylineId: const PolylineId('ruta'),
-                            color: Colors.black,
-                            width: 5,
-                            points: _usuarioPedidoBloc.polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList()
-                          ) : 
-                          const Polyline(
-                            polylineId: PolylineId('ruta'),
-                            color: Colors.black,
-                            width: 5,
-                          )
-                        
-                      },
-                    );
-                  }else{
-                    return const Text('Cargando');
-                  }
-
-
-                },
-                
+              GoogleMapWidget(
+                initPosition: getMarkerHelper(markers: _usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)!.position,
+                googleMapController: googleMapController,
+                markers: state.markers,
+                polylines: state.polylines,
               ),
-
+              
               SafeArea(
                 child: Align(
                   alignment: Alignment.topRight,
@@ -152,10 +93,10 @@ class _UsuarioMapState extends State<UsuarioMap> {
                             color: Colors.yellow,
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Text(_usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].distance.text ?? '')
-                          ),
-                        ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 5),
+                              child: Text(state.distancia),
+                        )),
                         Container(
                           margin: const EdgeInsets.only(top: 12),
                           decoration: BoxDecoration(
@@ -163,22 +104,27 @@ class _UsuarioMapState extends State<UsuarioMap> {
                             color: Colors.yellow,
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                            child: Text(_usuarioPedidoBloc.googleMapDirection?.routes[0].legs[0].duration.text ?? '')
-                          ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 5),
+                              child: Text(state.duracion)),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-              
+
+              (state.idConductor == '') ? 
+
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
+                  padding: const EdgeInsets.only(top: 18),
                   margin: const EdgeInsets.symmetric(horizontal: 5),
                   decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(25),
+                        topRight: Radius.circular(25)),
                     color: Colors.white,
                   ),
                   child: Column(
@@ -187,23 +133,26 @@ class _UsuarioMapState extends State<UsuarioMap> {
                       ListTile(
                         leading: const Icon(Icons.add_location),
                         title: const Text('Desde'),
-                        subtitle: Text(_usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
+                        subtitle: Text(
+                            _usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
                       ),
                       ListTile(
                         leading: const Icon(Icons.my_location),
                         title: const Text('Hasta'),
-                        subtitle: Text(_usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
+                        subtitle: Text(
+                            _usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
                       ),
                       ListTile(
                         leading: const Icon(Icons.attach_money),
                         title: const Text('Precio'),
-                        subtitle: Text('${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
+                        subtitle: Text(
+                            '${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
                       ),
                       _buttonRequest(_usuarioPedidoBloc),
                     ],
                   ),
                 ),
-              )
+              ) : Container(),
 
               // Column(
               //   mainAxisSize: MainAxisSize.min,
@@ -228,19 +177,14 @@ class _UsuarioMapState extends State<UsuarioMap> {
               //     _buttonRequest(),
               //   ],
               // ),
-
             ],
           );
         },
-
       ),
     );
   }
 
-
-
-
-  Widget _iconMyLocation(){
+  Widget _iconMyLocation() {
     return Image.asset(
       'assets/img/my_location.png',
       width: 40,
@@ -254,9 +198,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
-                color: Colors.amber
-            ),
+            decoration: const BoxDecoration(color: Colors.amber),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,8 +208,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                   style: TextStyle(
                       fontSize: 18,
                       color: Colors.black,
-                      fontWeight: FontWeight.bold
-                  ),
+                      fontWeight: FontWeight.bold),
                   maxLines: 1,
                 ),
                 Text(
@@ -275,8 +216,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                   style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[800],
-                      fontWeight: FontWeight.bold
-                  ),
+                      fontWeight: FontWeight.bold),
                   maxLines: 1,
                 ),
                 const SizedBox(height: 10),
@@ -304,7 +244,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
     );
   }
 
-  Widget _buttonCenterPosition(){
+  Widget _buttonCenterPosition() {
     return GestureDetector(
       onTap: _con.centerPosition,
       child: Container(
@@ -327,18 +267,20 @@ class _UsuarioMapState extends State<UsuarioMap> {
     );
   }
 
-  Widget _buttonDrawer(){
-    return  Container(
+  Widget _buttonDrawer() {
+    return Container(
       alignment: Alignment.centerLeft,
       child: IconButton(
         onPressed: _con.openDrawer,
-        icon: const Icon(Icons.menu, color: Colors.white,) ,
+        icon: const Icon(
+          Icons.menu,
+          color: Colors.white,
+        ),
       ),
     );
   }
 
-
-  Widget _buttonRequest(UsuarioPedidoBloc usuarioPedidoBloc){
+  Widget _buttonRequest(UsuarioPedidoBloc usuarioPedidoBloc) {
     return Container(
       height: 50,
       alignment: Alignment.bottomCenter,
@@ -347,19 +289,20 @@ class _UsuarioMapState extends State<UsuarioMap> {
         text: 'SOLICITAR',
         color: Colors.amber,
         textColor: Colors.black,
-        onPressed: (){
+        onPressed: () {
           usuarioPedidoBloc.solicitar(
-            origen: usuarioPedidoBloc.pedidoModel!.origen,
-            destino: usuarioPedidoBloc.pedidoModel!.destino,
-            // origen: usuarioPedidoBloc.state.origen!,
-            // destino: usuarioPedidoBloc.state.destino!,
-            servicio: usuarioPedidoBloc.pedidoModel!.bservicio,
-            nombreOrigen: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
-            nombreDestino: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
-            descripcionDescarga: _usuarioPedidoBloc.pedidoModel?.bdescarga ?? '',
-            monto: double.parse((_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
-            referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega
-          );
+              origen: usuarioPedidoBloc.pedidoModel!.origen,
+              destino: usuarioPedidoBloc.pedidoModel!.destino,
+              // origen: usuarioPedidoBloc.state.origen!,
+              // destino: usuarioPedidoBloc.state.destino!,
+              servicio: usuarioPedidoBloc.pedidoModel!.bservicio,
+              nombreOrigen: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
+              nombreDestino: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
+              descripcionDescarga:
+                  _usuarioPedidoBloc.pedidoModel?.bdescarga ?? '',
+              monto: double.parse(
+                  (_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
+              referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega);
           Navigator.pushNamed(context, 'UsuarioBuscando');
         },
         //onPressed: _alertDialogCosto
@@ -374,25 +317,23 @@ class _UsuarioMapState extends State<UsuarioMap> {
     );
   }
 
-  Widget _googleMapsWidget(){
-    return GoogleMap (
+  Widget _googleMapsWidget() {
+    return GoogleMap(
       mapType: MapType.normal,
       initialCameraPosition: _con.initialPosition,
       onMapCreated: _con.onMapCreated,
       myLocationEnabled: false,
-      myLocationButtonEnabled: false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
+      myLocationButtonEnabled:
+          false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
       markers: Set<Marker>.of(_con.markers.values),
     );
   }
 
   Widget _cardGooglePlaces() {
     return Container(
-
       width: MediaQuery.of(context).size.width * 0.9,
       child: Card(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
@@ -400,19 +341,15 @@ class _UsuarioMapState extends State<UsuarioMap> {
             children: [
               const Text(
                 'Desde',
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 10
-                ),
+                style: TextStyle(color: Colors.grey, fontSize: 10),
               ),
               const Text(
                 //_con.from ??
-                    'Av. San Martin calle curi',
+                'Av. San Martin calle curi',
                 style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,
-                    fontWeight: FontWeight.bold
-                ),
+                    fontWeight: FontWeight.bold),
                 maxLines: 2,
               ),
               const SizedBox(height: 5),
@@ -420,19 +357,15 @@ class _UsuarioMapState extends State<UsuarioMap> {
               const SizedBox(height: 5),
               const Text(
                 'Hasta',
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 10
-                ),
+                style: TextStyle(color: Colors.grey, fontSize: 10),
               ),
               const Text(
                 // _con.to ??
-                    'Villa 1ro de mayo calle cusis 34',
+                'Villa 1ro de mayo calle cusis 34',
                 style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,
-                    fontWeight: FontWeight.bold
-                ),
+                    fontWeight: FontWeight.bold),
                 maxLines: 2,
               ),
               const SizedBox(height: 20),
@@ -451,7 +384,7 @@ class _UsuarioMapState extends State<UsuarioMap> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                ) ,
+                ),
               ),
             ],
           ),
@@ -460,13 +393,10 @@ class _UsuarioMapState extends State<UsuarioMap> {
     );
   }
 
-
   //// UTLIZADO PARA M3
-  void refresh (){
-    setState(() {
-    });
+  void refresh() {
+    setState(() {});
   }
-  
 
   void showAlert(String message) {
     showDialog(

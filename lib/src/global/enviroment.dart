@@ -4,6 +4,8 @@ class Enviroment {
   
   final server = 'http://192.168.0.4:4000/api';
   final serverSocket = 'http://192.168.0.4:4000';
+
+  final tiempoEspera = 30;
   
   // final server = 'https://socketcarlosdev.fly.dev/api';
   // final serverSocket = 'https://socketcarlosdev.fly.dev';

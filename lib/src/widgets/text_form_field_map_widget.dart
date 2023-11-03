@@ -2,30 +2,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 
 class TextFormFieldMapWidget extends StatelessWidget {
 
   final String labelText;
   final String? Function(String?)? validator;
-  final LatLng initPosition;
   final Function() onPressIcon;
   final Function(String)? onChanged;
   final UsuarioPedidoBloc usuarioPedidoBloc;
   final Future<Iterable<String>> Function(String) suggestionsCallback;
-  final String type;
   final TextEditingController textEditingController;
+  final void Function(String) onSuggestionSelected;
 
   const TextFormFieldMapWidget({
     super.key,
     this.onChanged,
     required this.labelText,
-    required this.initPosition,
     required this.onPressIcon,
     required this.suggestionsCallback,
     required this.usuarioPedidoBloc,
-    required this.type,
     required this.textEditingController,
+    required this.onSuggestionSelected,
     this.validator,
   });
 
@@ -56,10 +54,11 @@ class TextFormFieldMapWidget extends StatelessWidget {
                   ),
                 ) ,
               ),
-              onSuggestionSelected: (suggestion) {
-                textEditingController.text = suggestion.toString();
-                usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
-              }, 
+              onSuggestionSelected: onSuggestionSelected,
+              // onSuggestionSelected: (suggestion) {
+              //   textEditingController.text = suggestion.toString();
+              //   usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
+              // }, 
               itemBuilder: (context, String itemData) {
                 return Padding(
                   padding: const EdgeInsets.all(12.0),

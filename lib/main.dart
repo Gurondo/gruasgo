@@ -1,26 +1,36 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorRegistro_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductor_bienvenida_view.dart';
 import 'package:gruasgo/src/pages/Conductor/finalizacion/conductor_finalizacion_view.dart';
 import 'package:gruasgo/src/pages/Conductor/notificacion/conductor_notificacion_view.dart';
-import 'package:gruasgo/src/pages/Conductor/pedido_aceptado/conductor_pedido_aceptado_view.dart';
 import 'package:gruasgo/src/pages/home/home_page.dart';
 import 'package:gruasgo/src/pages/login/login_usr.dart';
 import 'package:gruasgo/src/pages/usuario/buscando/usuario_buscando.dart';
 import 'package:gruasgo/src/pages/usuario/finalizacion/usuario_finalizacion.dart';
-import 'package:gruasgo/src/pages/usuario/mapa_usuario_pedido.dart';
 import 'package:gruasgo/src/pages/usuario/detallePedidoSolicitar/usuarioMapa_view.dart';
-import 'package:gruasgo/src/pages/usuario/pedido_aceptado/pedido_aceptado_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_view.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
 
 
-void main() {
+void main() async {
+
+  // TODO: Posible solucion para evitar que el mapa haga un crash cuando cambia rapido de ventana
+  // TODO: Mantener desabilitado en el desarrollo, ya que puede generar problemas
+  // TODO: Antes de poner a produccion, hacer muchas pruebas para verificar que esta solucion funciona y no hace cosas extrañas
+  // if (Platform.isAndroid){
+  //   WidgetsFlutterBinding.ensureInitialized(); 
+  //   await GoogleMapsFlutterAndroid().initializeWithRenderer(AndroidMapRenderer.latest);
+  // }
 
   runApp(MultiBlocProvider(
     providers: [
@@ -79,17 +89,14 @@ class _MyAppState extends State<MyApp> {
         'MapaConductor' : (BuildContext context) => const ConductorMap(),
         'MapaUsuario' : (BuildContext context) => const UsuarioMap(),
         'UsuarioPedido' : (BuildContext context) => const UsuarioPedido(),
-        'VistaMapaUsuarioPedido' : (BuildContext context) => const MapaUsuarioPedido(),
 
         
         'ConductorBienvenido' : (context) => const ConductorBienvenida(),
         'ConductorNotificacion' : (context) => const ConductorNotificacion(),
-        'ConductorPedidoAceptado': (context) => const ConductorPedidoAceptado(),
         'ConductorFinalizacion': (context) => const ConductorFinalizacion(),
         
         'UsuarioFinalizacion': (context) => const UsuarioFinalizacion(),
         'UsuarioBuscando': (context) => const UsuarioBuscando(),
-        'UsuarioPedidoAceptado': (context) => const UsuarioPedidoAceptado(),
        // 'home' : (BuildContext context) => LoginUsr(),
       },
     );

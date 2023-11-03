@@ -7,10 +7,10 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/models/response/estado_response.dart';
-import 'package:gruasgo/src/models/response/google_map_direction.dart';
+import 'package:gruasgo/src/models/response/google_map_direction.dart' as polyline;
 import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
@@ -27,13 +27,49 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   ConductorBloc({
     required this.userBloc
-  }) : super(ConductorState()) {
+  }) : super(const ConductorState()) {
     on<ConductorEvent>((event, emit) {
       // TODO: implement event handler
     });
     
     on<OnSetTiempo>((event, emit) {
       emit(state.copyWitch(tiempo: event.tiempo));
+    });
+
+    on<OnSetDetallePedido>((event, emit){
+      emit(state.copyWitch(detallePedido: event.detallePedido));
+    });
+
+    on<OnSetNewMarkets>((event, emit){
+      Set<Marker> markers = event.markets;
+      emit(state.copyWitch(markers: markers));
+    });
+
+    on<OnSetAddPolyline>((event, emit) {
+
+      Set<Polyline> polylines = Set.from(state.polylines);
+
+      Polyline? polyline;
+  
+      for (var elementPolyline in polylines) {
+        if (elementPolyline.polylineId.value == event.polyline.polylineId.value){
+          polyline = elementPolyline;
+        }
+      }
+
+      if (polyline != null) polylines.remove(polyline);
+
+      polylines.add(event.polyline);
+
+      emit(state.copyWitch(polylines: polylines));
+    });
+
+    on<OnSetLimpiarPedidos>((event, emit){
+      emit(state.copyWitch(polylines: {}, markers: {}, detallePedido: null));
+    });
+
+    on<OnSetClearPolylines>((event, emit){
+      emit(state.copyWitch(polylines: {}));
     });
   }
 
@@ -140,7 +176,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
     
     if (resp.statusCode == 200){
-      final googleMapDirection = googleMapDirectionFromJson(resp.body);
+      final googleMapDirection = polyline.googleMapDirectionFromJson(resp.body);
       return PolylinePoints().decodePolyline(googleMapDirection.routes[0].overviewPolyline.points);
     }
     return null;
@@ -170,6 +206,22 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       'lng': lng
     });
 
+  }
+
+  void respuestaPedidoProcesoCancelado(){
+    SocketService.emit('pedido proceso cancelado conductor', {
+      'origen': state.detallePedido!.origen, 
+      'destino': state.detallePedido!.destino, 
+      'servicio': state.detallePedido!.servicio,
+      'cliente': state.detallePedido!.cliente,
+      'cliente_id': state.detallePedido!.clienteId,
+      'nombre_origen': state.detallePedido!.nombreOrigen,
+      'nombre_destino': state.detallePedido!.nombreDestino,
+      'descripcion_descarga': state.detallePedido!.descripcionDescarga,
+      'referencia': state.detallePedido!.referencia,
+      'monto': state.detallePedido!.monto,
+      'socket_client_id': state.detallePedido!.socketClientId,
+    });
   }
 
   void respuestaPedido({required DetalleNotificacionConductor detalleNotificacionConductor, required bool pedidoAceptado}){
@@ -239,11 +291,24 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
+  void solicitudYaTomada(){
+
+    SocketService.on('pedido ya tomado', (data){
+      print('La solicitud ya ha sido tomada');
+    });
+
+  }
+
+
   void solicitudCancelada({required NavigatorState navigator}){
     SocketService.on('solicitud cancelada', (data){
       navigator.pop();
       // TODO: Aqui tiene que poner, el cliente a cancelado el pedido
     });
+  }
+
+  void clearSolicitudYaTomadaSocket(){
+    SocketService.off('pedido ya tomado');
   }
 
   void clearSolicitudCanceladaSocket(){

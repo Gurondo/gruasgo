@@ -2,16 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/conductor/conductor_bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/widget.dart';
 
 class ConductorMap extends StatefulWidget {
-
   const ConductorMap({super.key});
 
   @override
@@ -19,39 +21,34 @@ class ConductorMap extends StatefulWidget {
 }
 
 class _ConductorMapState extends State<ConductorMap> {
-
-
   final DriverMapController _con = DriverMapController();
 
-  Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
+  Completer<GoogleMapController> googleMapController =
+      Completer<GoogleMapController>();
 
   Timer? _timer;
   late ConductorBloc _conductorBloc;
 
   @override
   void initState() {
-    
     // TODO: implement initState
     super.initState();
 
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
     _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
-
       final position = await getPositionHelpers();
-      _conductorBloc.updatePosition(lat: position.latitude, lng: position.longitude);
+      _conductorBloc.updatePosition(
+          lat: position.latitude, lng: position.longitude);
 
       _conductorBloc.actualizarCoorEstado();
     });
 
     final navigator = Navigator.of(context);
     _conductorBloc.respuestaSolicitudConductor(navigator: navigator);
-
-
   }
 
   @override
   void dispose() {
-    
     _timer?.cancel();
     _conductorBloc.clearSocketSolicitudConductor();
     _conductorBloc.eliminarEstado();
@@ -60,55 +57,165 @@ class _ConductorMapState extends State<ConductorMap> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
     return Scaffold(
       key: _con.key,
       drawer: _drawer(),
       body: FutureBuilder<Position>(
-        future: getPositionHelpers(),
-        builder : (context, snapshot) {
-
-          
-          if (snapshot.connectionState == ConnectionState.done){
-            return Stack(
-              children: [
-                GoogleMapWidget(
-                  initPosition: LatLng(snapshot.data!.latitude, snapshot.data!.longitude), 
-                  googleMapController: googleMapController,
-                  markers: const {},
-                ),
-                // _googleMapsWidget(),
-                SafeArea(
-                  child: Column(
+          future: getPositionHelpers(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return BlocBuilder<ConductorBloc, ConductorState>(
+                builder: (context, state) {
+                  return Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buttonDrawer(),
-                          _buttonCenterPosition()
-                        ],
+                      GoogleMapWidget(
+                        initPosition: LatLng(
+                            snapshot.data!.latitude, snapshot.data!.longitude),
+                        googleMapController: googleMapController,
+                        markers: state.markers,
+                        polylines: state.polylines,
                       ),
-                      Expanded(child: Container()),
-                      _buttonDesconectar(_conductorBloc),
+                      // _googleMapsWidget(),
+                      SafeArea(
+
+                        child: WidgetDetailMap(
+                          builder: (){
+                            if (state.markers.isEmpty) {
+                              return Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      _buttonDrawer(),
+                                      _buttonCenterPosition()
+                                    ],
+                                  ),
+                                  Expanded(child: Container()),
+                                  _buttonDesconectar(_conductorBloc),
+                                ],
+                              );
+                            } else {
+                              // Con pedido pendiente
+                              return Column(
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 15),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 100),
+                                    child: Align(
+                                      alignment: Alignment.topCenter,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ButtonApp(
+                                            text: 'Cancelar',
+                                            color: Colors.amber,
+                                            textColor: Colors.black,
+                                            onPressed: (){
+                                              
+                                              _conductorBloc.respuestaPedidoProcesoCancelado();
+                                              _conductorBloc.add(OnSetLimpiarPedidos());
+
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(),
+                                  ),
+                                  Container(
+                                    color: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 15),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Expanded(
+                                          child: ButtonApp(
+                                            text: 'Estoy aqui',
+                                            color: Colors.amber,
+                                            textColor: Colors.black,
+                                            onPressed: (){
+
+                                              _conductorBloc.add(OnSetClearPolylines());
+                                              _getPolylines(state);
+
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Expanded(
+                                          child: ButtonApp(
+                                            text: 'Finalizar Viaje',
+                                            color: Colors.amber,
+                                            textColor: Colors.black,
+                                            onPressed: (){
+                                              
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              );
+                            }
+
+                          },
+                        ),
+                        
+                      )
                     ],
-                  ),
-                )
-
-              ],
-            );
-          } else{
-            return Container();
-          }
-
-         
-        }
-      ),
+                  );
+                },
+              );
+            } else {
+              return Container();
+            }
+          }),
     );
+  }
+
+  Future _getPolylines(ConductorState state) async {
+
+
+    Position position = await getPositionHelpers();
+    Marker? marker = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
+
+    if (marker == null) return;
+
+    List<PointLatLng>? polyline = await _conductorBloc.getPolylines(
+      origen: LatLng(position.latitude, position.longitude), 
+      destino: marker.position
+    );
+
+    if (polyline != null){
+      _conductorBloc.add(OnSetAddPolyline(
+        Polyline(
+          polylineId: PolylineId(PolylineIdEnum.posicionToOrigen.toString()),
+          color: Colors.black,
+          width: 4,
+          points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+        )
+      ));
+    }
   }
 
   Widget _drawer() {
@@ -117,9 +224,7 @@ class _ConductorMapState extends State<ConductorMap> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
-                color: Colors.amber
-            ),
+            decoration: const BoxDecoration(color: Colors.amber),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,8 +234,7 @@ class _ConductorMapState extends State<ConductorMap> {
                   style: TextStyle(
                       fontSize: 18,
                       color: Colors.black,
-                      fontWeight: FontWeight.bold
-                  ),
+                      fontWeight: FontWeight.bold),
                   maxLines: 1,
                 ),
                 Text(
@@ -138,8 +242,7 @@ class _ConductorMapState extends State<ConductorMap> {
                   style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[800],
-                      fontWeight: FontWeight.bold
-                  ),
+                      fontWeight: FontWeight.bold),
                   maxLines: 1,
                 ),
                 const SizedBox(height: 10),
@@ -167,7 +270,7 @@ class _ConductorMapState extends State<ConductorMap> {
     );
   }
 
-  Widget _buttonCenterPosition(){
+  Widget _buttonCenterPosition() {
     return GestureDetector(
       onTap: _con.centerPosition,
       child: Container(
@@ -190,26 +293,28 @@ class _ConductorMapState extends State<ConductorMap> {
     );
   }
 
-  Widget _buttonDrawer(){
-    return  Container(
-        alignment: Alignment.centerLeft,
-        child: IconButton(
-          onPressed: _con.openDrawer,
-          icon: const Icon(Icons.menu, color: Colors.white,) ,
+  Widget _buttonDrawer() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: IconButton(
+        onPressed: _con.openDrawer,
+        icon: const Icon(
+          Icons.menu,
+          color: Colors.white,
         ),
-      );
+      ),
+    );
   }
 
-
-  Widget _buttonDesconectar(ConductorBloc conductorBloc){
+  Widget _buttonDesconectar(ConductorBloc conductorBloc) {
     return Container(
       height: 50,
       alignment: Alignment.bottomCenter,
-      margin: const EdgeInsets.symmetric(horizontal: 60,vertical: 30),
+      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 30),
       child: ButtonApp(
         text: 'Desconectarse'.toUpperCase(),
         color: Colors.amber,
-        onPressed: (){
+        onPressed: () {
           conductorBloc.closeSocket();
           Navigator.pop(context);
         },
@@ -217,13 +322,14 @@ class _ConductorMapState extends State<ConductorMap> {
     );
   }
 
-  Widget _googleMapsWidget(){
-    return GoogleMap (
+  Widget _googleMapsWidget() {
+    return GoogleMap(
       mapType: MapType.normal,
       initialCameraPosition: _con.initialPosition,
       onMapCreated: _con.onMapCreated,
       myLocationEnabled: false,
-      myLocationButtonEnabled: false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
+      myLocationButtonEnabled:
+          false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
       markers: Set<Marker>.of(_con.markers.values),
     );
   }
@@ -233,7 +339,16 @@ class _ConductorMapState extends State<ConductorMap> {
   //   setState(() {
   //   });
   // }
+}
 
 
+class WidgetDetailMap extends StatelessWidget {
+  final Function builder;
 
+  const WidgetDetailMap({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    return builder();
+  }
 }

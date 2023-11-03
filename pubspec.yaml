@@ -50,6 +50,8 @@ dependencies:
   timer_count_down: ^2.2.2
   uuid: ^3.0.7
 
+  google_maps_flutter_android: '>=2.4.15'
+
 dev_dependencies:
   flutter_lints: ^2.0.0
   flutter_test:

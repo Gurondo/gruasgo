@@ -3,22 +3,6 @@ part of 'usuario_pedido_bloc.dart';
 @immutable
 class UsuarioPedidoEvent {}
 
-class OnSetOrigen extends UsuarioPedidoEvent{
-  final LatLng origen;
-  OnSetOrigen(this.origen);
-}
-
-class OnSetDestino extends UsuarioPedidoEvent{
-  final LatLng destino;
-  OnSetDestino(this.destino);
-}
-
-class OnSelected extends UsuarioPedidoEvent{
-  final String name;
-  final String type;
-  OnSelected(this.name, this.type);
-}
-
 class OnActualizarContador extends UsuarioPedidoEvent{
   final int contador;
   OnActualizarContador(this.contador);
@@ -29,7 +13,28 @@ class OnSetContador extends UsuarioPedidoEvent{
   OnSetContador(this.contador);
 }
 
-class OnSetPositionConductor extends UsuarioPedidoEvent{
-  final LatLng position;
-  OnSetPositionConductor(this.position);
+class OnSetAddNewMarkets extends UsuarioPedidoEvent{
+  final Marker marker;
+  OnSetAddNewMarkets(this.marker);
+}
+
+class OnSetAddNewPolylines extends UsuarioPedidoEvent{
+  final Polyline polyline;
+  OnSetAddNewPolylines(this.polyline);
+}
+
+class OnSetIdConductor extends UsuarioPedidoEvent{
+  final String idConductor;
+  OnSetIdConductor(this.idConductor);
+}
+
+class OnUpdateDistanciaDuracion extends UsuarioPedidoEvent{
+  final String distancia;
+  final String duracion;
+  OnUpdateDistanciaDuracion({required this.distancia, required this.duracion});
+}
+
+class OnDeleteMarkerById extends UsuarioPedidoEvent{
+  final MarkerIdEnum markerIdEnum;
+  OnDeleteMarkerById(this.markerIdEnum);
 }

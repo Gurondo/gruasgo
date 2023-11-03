@@ -20,6 +20,8 @@ class ConductorBienvenida extends StatefulWidget {
 
 class _ConductorBienvenidaState extends State<ConductorBienvenida> {
 
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
 
@@ -65,7 +67,7 @@ class _ConductorBienvenidaState extends State<ConductorBienvenida> {
                       child: Text('Imagen')
                     )
                   ),
-                  Container(
+                  (!_isLoading) ? Container(
                     height: 50,
                     alignment: Alignment.bottomCenter,
                     margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
@@ -75,6 +77,9 @@ class _ConductorBienvenidaState extends State<ConductorBienvenida> {
                       textColor: Colors.black,
                       onPressed: () async {
                           
+                          setState(() {
+                            _isLoading = true;
+                          });
                           final navigator = Navigator.of(context);
                           final position = await getPositionHelpers();
                           
@@ -86,14 +91,30 @@ class _ConductorBienvenidaState extends State<ConductorBienvenida> {
                               lng: position.longitude
                             );
 
-                            navigator.pushNamed('MapaConductor');
-                          
+                            await navigator.pushNamed('MapaConductor');
+
+                            setState(() {
+                              _isLoading = false;
+                            });
                           }else{
+                            setState(() {
+                              _isLoading = false;
+                            });
                             // TODO: Mensaje de error
                           }
+                       
                         },
                     ),
-                  ),
+                  ) : Container(
+                    height: 50,
+                    alignment: Alignment.bottomCenter,
+                    margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+                    child: ButtonApp(
+                      text: 'Conectandose...'.toUpperCase(),
+                      color: Colors.amber[200],
+                      textColor: Colors.black,
+                    ),
+                  )
                 ],
               );
 

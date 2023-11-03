@@ -2,35 +2,44 @@ part of 'usuario_pedido_bloc.dart';
 
 class UsuarioPedidoState extends Equatable{
 
-  final LatLng? origen;
-  final LatLng? destino;  
+  final Set<Marker> markers;
+  final Set<Polyline> polylines;
 
-
-  final LatLng? conductor;
+  // detalle pedido
+  final String distancia;
+  final String duracion;
 
   // Cuando se busca un conductor
   final int contador;
 
+  // Cuando el pedido es aceptado
+  final String idConductor;
 
   const UsuarioPedidoState({
-    this.origen,
-    this.destino,
-    this.conductor,
-    this.contador = 0
+    this.markers = const {},
+    this.polylines = const {},
+    this.contador = 0,
+    this.idConductor = '',
+    this.distancia = '',
+    this.duracion = ''
   });
 
   UsuarioPedidoState copyWitch({
-    LatLng? origen,
-    LatLng? destino,
     int? contador,
-    LatLng? conductor,
+    Set<Marker>? markers,
+    Set<Polyline>? polylines,
+    String? idConductor,
+    String? distancia,
+    String? duracion
   }) => UsuarioPedidoState(
-    origen: origen ?? this.origen,
-    destino: destino ?? this.destino,
     contador: contador ?? this.contador,
-    conductor: conductor ?? this.conductor
+    markers: markers ?? this.markers,
+    idConductor: idConductor ?? this.idConductor,
+    distancia: distancia ?? this.distancia,
+    duracion: duracion ?? this.duracion,
+    polylines: polylines ?? this.polylines
   );
 
   @override
-  List<Object?> get props => [origen, destino, conductor, contador];
+  List<Object?> get props => [contador, markers, idConductor, distancia, duracion, polylines];
 }
