@@ -33,6 +33,7 @@ class GoogleMapWidget extends StatelessWidget {
     return GoogleMap(
       myLocationEnabled: true,
       zoomControlsEnabled: false,
+      buildingsEnabled: false,
       polylines: polylines,
       initialCameraPosition: CameraPosition(
         target: LatLng(initPosition.latitude, initPosition.longitude),

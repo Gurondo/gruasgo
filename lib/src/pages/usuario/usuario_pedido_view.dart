@@ -303,17 +303,20 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
  
                 
                     //   const SizedBox(height: 15),
-                    TextFormFieldWidget(
-                      tecNroContrato: tecNroContrato,
-                      label: 'Numero de contacto para entrega',
-                      textInputType: TextInputType.number,
-                      maxLength: 8,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty){
-                          return 'Este campo es obligatorio';
-                        }
-                        return null;
-                      },
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: TextFormFieldWidget(
+                        tecNroContrato: tecNroContrato,
+                        label: 'Numero de contacto para entrega',
+                        textInputType: TextInputType.number,
+                        maxLength: 8,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty){
+                            return 'Este campo es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                     
 
