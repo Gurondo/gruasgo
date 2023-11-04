@@ -62,7 +62,11 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
     final List<String> listaRecibida = ModalRoute.of(context)!.settings.arguments as  List<String>;
 
-
+    print('------------------------');
+    print(listaRecibida[1]);
+    listaRecibida.forEach((element) {
+      print(element);
+    });
 
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
@@ -109,6 +113,13 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   ),
 
                                 TextFormFieldMapWidget(
+                                  suffixIcon: IconButton(
+                                    onPressed: (){
+                                      tecOrigen.text = '';
+                                      _usuarioPedidoBloc.add(OnDeleteMarkerById(MarkerIdEnum.origen));
+                                    }, 
+                                    icon: const Icon(Icons.cancel_outlined)
+                                  ),
                                   textEditingController: tecOrigen,
                                   usuarioPedidoBloc: _usuarioPedidoBloc,
                                   labelText: 'Lugar de origen',
@@ -116,6 +127,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                   suggestionsCallback: (String pattern) { 
                                     return _usuarioPedidoBloc.searchPlace(place: pattern);
                                   }, 
+                                  
                                   onSuggestionSelected: (suggestion) {
                                     tecOrigen.text = suggestion.toString();
                                     // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
@@ -181,6 +193,13 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                 ),
 
                                 TextFormFieldMapWidget(
+                                  suffixIcon: IconButton(
+                                    onPressed: (){
+                                      tecDestino.text = '';
+                                      _usuarioPedidoBloc.add(OnDeleteMarkerById(MarkerIdEnum.destino));
+                                    }, 
+                                    icon: const Icon(Icons.cancel_outlined)
+                                  ),
                                   onSuggestionSelected: (suggestion) {
                                     tecDestino.text = suggestion.toString();
                                     // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
@@ -282,7 +301,20 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                       },
                     ),
                     
-                    TextFormFieldWidget(
+
+                    (listaRecibida[0] == 'VOLQUETAS') ? 
+                      DropButtonWidget(
+                        label: 'Seleccione el tipo de carga',
+                        detalleServicio: detalleServicio, 
+                        listDropdownMenu: listDropdownMenu,
+                        onChanged: (String? value){
+                          if (value != null){
+                            detalleServicio = value;
+                            setState(() {
+                            });
+                          }
+                        },
+                      ) : TextFormFieldWidget(
                       label: 'Descripcion de la carga',
                       tecNroContrato: tecDescripcion,
                       validator: (value) {
@@ -294,20 +326,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                     ),
 
 
-                    // TODO: GropdownMenu
-                    (listaRecibida[0] == 'VOLQUETAS') ? 
-                    DropButtonWidget(
-                      label: 'Seleccione el detalle del servicio',
-                      detalleServicio: detalleServicio, 
-                      listDropdownMenu: listDropdownMenu,
-                      onChanged: (String? value){
-                        if (value != null){
-                          detalleServicio = value;
-                          setState(() {
-                          });
-                        }
-                      },
-                    ) : Container(),
                     // DropdownMenu<String>(
                       
                     //   width: double.infinity,
@@ -406,7 +424,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
 
-  Widget _alertDialogCosto(double precio, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc, List<String> listaRecibida) {
+  Widget _alertDialogCosto(String precio, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc, List<String> listaRecibida) {
     return AlertDialog(
       title: const Text('¿EL COSTO DEL SERVICIO SERA DE?'),
       content: Column(
@@ -431,7 +449,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             // Acción para "Aceptar"
 
             final navigator = Navigator.of(context);
-            final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
 
             final status = await usuarioPedidoBloc.registrarPedido(
               idUsuario: userBloc.user!.idUsuario, 
@@ -439,7 +456,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               ubiFinal: tecDestino.text.trim(), 
               metodoPago: 'efectivo', 
               monto: precio, 
-              servicio: servicio, 
+              servicio: listaRecibida[1], 
               descripcionDescarga: tecDescripcion.text.trim(), 
               celentrega: int.parse(tecNroContrato.text.trim())
             );
@@ -536,10 +553,13 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
           // Navigator.pushNamed(context, 'MapaUsuario');
           
+          if (listaRecibida[0] == 'VOLQUETAS'){
+            tecDescripcion.text = detalleServicio;
+          } 
 
           if (_formKey.currentState!.validate()) {
-
-            final precio = await usuarioPedidoBloc.calcularDistancia();
+            
+            final precio = await usuarioPedidoBloc.calcularDistancia(detalleServicio: listaRecibida[1]);
 
           
             if (!mounted) return null;
@@ -595,7 +615,7 @@ class TextFormFieldWidget extends StatelessWidget {
     return Container(
       //width: 233, // Ancho del segundo widget
       //height: 70, // Alto del segundo widget
-      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
+      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 0),
       child: TextFormField(
         
         keyboardType: textInputType,

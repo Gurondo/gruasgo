@@ -1,5 +1,8 @@
 
+import 'dart:convert';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:http/http.dart' as http;
 
 class GoogleMapServices{
@@ -11,6 +14,33 @@ class GoogleMapServices{
     var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
     final resp = await http.get(urlParce);
     return resp;
+  }
+
+  static Future<http.Response> getDistancia({
+    required LatLng origen,
+    required LatLng destino
+  }) async {
+
+    final data = {
+      'lat_origen': origen.latitude,
+      'lng_origen': origen.longitude,
+      'lat_destino': destino.latitude,
+      'lng_destino': destino.longitude,
+    };
+
+    var urlParse = Uri.parse('${Enviroment().server}/map');
+
+    final response = await http.post(
+      urlParse, 
+      body: jsonEncode(data),       
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    );
+
+
+    return response;
+  
   }
 
 }

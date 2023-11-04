@@ -17,23 +17,38 @@ class DropButtonWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
-      child: Column(
+      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
+      child: Stack(
         children: [
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black54),
+              
+              borderRadius: BorderRadius.circular(9)
+            ),
+            margin: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            child: DropdownButton(
+              underline: const SizedBox(),
+              value: detalleServicio,
+              isExpanded: true,
+              items: listDropdownMenu.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: onChanged
+            ),
+          ),
           Align(
             alignment: Alignment.topLeft,
-            child: Text(label)
-          ),
-          DropdownButton(
-            value: detalleServicio,
-            isExpanded: true,
-            items: listDropdownMenu.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: onChanged
+            child: Container(
+              color: Colors.white,
+              margin: EdgeInsets.only(left: 5),
+              padding: const EdgeInsets.all(8),
+              child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13),)
+            )
           ),
         ],
       ),

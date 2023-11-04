@@ -14,6 +14,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
   final Future<Iterable<String>> Function(String) suggestionsCallback;
   final TextEditingController textEditingController;
   final void Function(String) onSuggestionSelected;
+  final Widget? suffixIcon;
 
   const TextFormFieldMapWidget({
     super.key,
@@ -24,6 +25,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
     required this.usuarioPedidoBloc,
     required this.textEditingController,
     required this.onSuggestionSelected,
+    this.suffixIcon,
     this.validator,
   });
 
@@ -38,6 +40,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
           Expanded(
             child: TypeAheadFormField(
               
+              
               validator: validator,
               textFieldConfiguration: TextFieldConfiguration(
                 controller: textEditingController,
@@ -46,6 +49,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
                   fontStyle: FontStyle.italic
                 ),
                 decoration: InputDecoration(
+                  suffixIcon: suffixIcon,
                   labelText: labelText,
                   filled: true, // Habilita el llenado de color de fondo
                   fillColor: Colors.white,

@@ -10,6 +10,7 @@ import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
+import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as data;
 import 'package:gruasgo/src/models/response/place_description.dart';
@@ -174,81 +175,32 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
-  Future<double?> calcularDistancia() async {
+  Future<String?> calcularDistancia({
+    required String detalleServicio
+  }) async {
       
     try {
-      
-      // var urlParse = Uri.parse('https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${state.destino!.latitude},${state.destino!.longitude}&origins=${state.origen!.latitude},${state.origen!.longitude}&key=${Enviroment().apiKeyGoogleMap}');
-      // final resp = await http.post(urlParse);
-      // Map<String, dynamic> jsonData = json.decode(resp.body);
-      // int distanceValue = jsonData['rows'][0]['elements'][0]['distance']['value'];
-      // String distanceString = jsonData['rows'][0]['elements'][0]['distance']['text'];
-      
-      // print(distanceString);
-      // print(distanceValue);
 
-      //   'btip': 'costo',
-      //   'bkilometros': '2.0',
-      //   'bserv': 'gruas'
-      // });
-
-      Marker? origen;
-      Marker? destino;
-
-      for (var elementMarker in state.markers) {
-        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-          origen = elementMarker;
-        }
-        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
-          destino = elementMarker;
-        }
-      }
+      // Obtener el origen y el destino de mi lista de Markers
+      Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
+      Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
 
       if (origen == null || destino == null){
-        return -999;
+        return '';
       }
 
-      final data = {
-        'lat_origen': origen.position.latitude,
-        'lng_origen': origen.position.longitude,
-        'lat_destino': destino.position.latitude,
-        'lng_destino': destino.position.longitude,
-        'servicio': 'gruas'
-      };
+      // Hacer consulta para obtener la distancia entre dos puntos
+      final responseDistancia = await GoogleMapServices.getDistancia(origen: origen.position, destino: destino.position);
 
-      var urlParse = Uri.parse('${Enviroment().server}/map');
+      Map<String, dynamic> jsonData = json.decode(responseDistancia.body);
+      String distanciaValue = jsonData['distancia'];
 
-      print(jsonEncode(data));
-
-      final response = await http.post(
-        urlParse, 
-        body: jsonEncode(data),       
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      );
-
-      print(response.body);
-
-      Map<String, dynamic> jsonData = json.decode(response.body);
-      String distanceValue = jsonData['distancia'];
-
-      const String url = "https://nesasbolivia.com/gruasgo/pedido.php";
-      final Uri uri = Uri.parse(url);
-
-      final responsePrecio = await http.post(uri, body: {
-        "btip": 'costo',
-        "bkilometros": distanceValue,
-        "bserv": 'gruas'
-      });
-
-      if (responsePrecio.body == '[]'){
-        return null;
-      }
-      List<dynamic> jsonDataPrecio = json.decode(responsePrecio.body);
-      String precioData = jsonDataPrecio[0]['costo'];
+      // Consultar para obtener el costo
+      final responsePrecio = await ClienteService.getPrecio(distancia: distanciaValue.toString(), detalleServicio: detalleServicio);
       
-      return double.parse(precioData);
+      var jsonData1 = json.decode(responsePrecio.body);
+      
+      return jsonData1["costo"].toString();
     } catch (e) {
       print(e);
       return null;
@@ -260,10 +212,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required LatLng origen,
     required LatLng destino,
   }) async{
-    
-    // const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
-    // var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
-    // final resp = await http.get(urlParce);
 
     final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
     
@@ -324,7 +272,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String ubiInicial,
     required String ubiFinal,
     required String metodoPago,
-    required double monto,
+    required String monto,
     required String servicio,
     required String descripcionDescarga,
     required int celentrega
@@ -335,26 +283,13 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   
     try {
 
+      Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
+      Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
 
+      if (origen == null || destino == null) return false;
       
-      Marker? origen;
-      Marker? destino;
 
-      for (var elementMarker in state.markers) {
-        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-          origen = elementMarker;
-        }
-        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
-          destino = elementMarker;
-        }
-      }
-
-      if (origen == null || destino == null){
-        return false;
-      }
-
-
-      final response = await ClienteService().registrarPedido(
+      final response = await ClienteService.registrarPedido(
         uuidPedido: uuidPedido, 
         idUsuario: idUsuario, 
         ubiInicial: ubiInicial, 
@@ -372,11 +307,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       );
 
       
-      print(response.body);
-      if (response.statusCode != 200) {
-        // TODO: Mensaje de error
-        return false;
-      }
+      
+      print('Respuesta despues de registrar el pedido ${response.body}');
+      if (response.statusCode != 200) return false;
+      
 
       dynamic jsonData = json.decode(response.body);
       if (jsonData['success'] == 'si') {
