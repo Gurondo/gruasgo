@@ -173,15 +173,12 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
                                   onPressIcon: () async {
                                     
-                                    final String idMarker = MarkerIdEnum.origen.toString();
                                     Marker? marker;
                                     userBloc.add(OnSetIsClicPin(false));
-                                    bool isClickPin = false;
                                     for (var elementMarker in state.markers) {
                                       if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
                                         marker = elementMarker;
                                         userBloc.add(OnSetIsClicPin(true));
-                                        isClickPin = true;
                                         break;
                                       }
                                     }
@@ -253,16 +250,13 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
                                   onPressIcon: () async {
 
-                                    final String idMarker = MarkerIdEnum.destino.toString();
                                     Marker? marker;
                                     Marker? origen;
                                     userBloc.add(OnSetIsClicPin(false));
-                                    bool isClickPin = false;
                                     for (var elementMarker in state.markers) {
                                       if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
                                         marker = elementMarker;
                                         userBloc.add(OnSetIsClicPin(true));
-                                        isClickPin = true;
                                       }
                                       if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
                                         origen = Marker(
