@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -124,15 +125,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         }
       );
       
-      var place = '';
-      final placesDescriptionResponse = placesDescriptionResponseFromJson(response.body);
-      for (var element in placesDescriptionResponse.place) {
-        if (!element.types.contains('plus_code')){
-          place = '$place ${element.longName}';
-        }
-      }
+      final responseEncode = jsonDecode(response.body);
       
-      return place;
+      return responseEncode['place'];
            
     } catch (e) {
       print(e);
