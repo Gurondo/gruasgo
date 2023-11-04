@@ -208,7 +208,10 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
                       });
                       // Acción para la opción 1
                       if (selectedServicio.isNotEmpty && servicio.isNotEmpty) {
+                        
                         Navigator.of(context).pop(); // Cierra el AlertDialog
+                        
+                        // Navigator.pushNamed(context, 'UsuarioPedido', arguments: listaElementos);
                         Navigator.pushNamedAndRemoveUntil(
                             context, 'UsuarioPedido', (route) => false,
                             arguments: listaElementos);
