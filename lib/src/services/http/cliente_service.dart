@@ -24,17 +24,17 @@ class ClienteService{
     final String url = "${Enviroment().baseUrl}/pedido.php";
     final Uri uri = Uri.parse(url);
 
-    int timestampInMilliseconds = DateTime.now().millisecondsSinceEpoch;
-    String idString = timestampInMilliseconds.toString();
+    // int timestampInMilliseconds = DateTime.now().millisecondsSinceEpoch;
+    // String idString = timestampInMilliseconds.toString();
 
 
-    DateTime now = DateTime.now();
-    int year = now.year % 100;
-    int month = now.month;
+    // DateTime now = DateTime.now();
+    // int year = now.year % 100;
+    // int month = now.month;
 
-    String codigo = '${year.toString()}${month.toString()}${idString.substring(idString.length - 4)}';
+    // String codigo = '${year.toString()}${month.toString()}${idString.substring(idString.length - 4)}';
 
-    print('bidpedido: $codigo');
+    print('bidpedido: $uuidPedido');
     print('bidusuario : $idUsuario');
     print('bubinicial: $ubiInicial');
     print('bubfinal: $ubiFinal');
@@ -50,7 +50,7 @@ class ClienteService{
 
     final response = await http.post(uri, body: {
       'btip': 'addPedido',
-      'bidpedido': codigo,
+      'bidpedido': uuidPedido,
       'bidusuario': idUsuario,
       'bidvehiculo': '',
       'bidconductor': '',
@@ -88,11 +88,26 @@ class ClienteService{
     final response = await http.post(uri, body: {
       "btip": 'costo',
       "bkilometros": distancia.toString(),
+      // "bminutos": "60",
       "bserv": servicio
     });
 
     return response;
     
   }
+
+  static Future<http.Response> getId () async{
+    
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+
+    final response = await http.post(uri, body: {
+      "btip": 'genId',
+    });
+
+    return response;
+    
+  }
+  
 
 }

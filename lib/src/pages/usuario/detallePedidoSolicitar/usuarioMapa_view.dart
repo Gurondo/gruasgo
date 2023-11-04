@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
@@ -59,7 +60,8 @@ class _UsuarioMapState extends State<UsuarioMap> {
 
   @override
   Widget build(BuildContext context) {
-    _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    final _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    final _userBloc = BlocProvider.of<UserBloc>(context);
 
 
     // LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
@@ -148,7 +150,20 @@ class _UsuarioMapState extends State<UsuarioMap> {
                         subtitle: Text(
                             '${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
                       ),
-                      _buttonRequest(_usuarioPedidoBloc),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(child: _buttonRequest(
+                              usuarioPedidoBloc: _usuarioPedidoBloc,
+                              userBloc: _userBloc
+                            )),
+                            const SizedBox(width: 12,),
+                            Expanded(child: _buttonCancel(_usuarioPedidoBloc))
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -280,16 +295,33 @@ class _UsuarioMapState extends State<UsuarioMap> {
     );
   }
 
-  Widget _buttonRequest(UsuarioPedidoBloc usuarioPedidoBloc) {
+  Widget _buttonRequest({
+    required UsuarioPedidoBloc usuarioPedidoBloc,
+    required UserBloc userBloc
+  }) {
     return Container(
       height: 50,
       alignment: Alignment.bottomCenter,
-      margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+      // margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
       child: ButtonApp(
         text: 'SOLICITAR',
         color: Colors.amber,
         textColor: Colors.black,
         onPressed: () {
+          
+
+
+          usuarioPedidoBloc.registrarPedido(
+            idUsuario: userBloc.user!.idUsuario, 
+            ubiInicial: usuarioPedidoBloc.pedidoModel!.bubinicial, 
+            ubiFinal: usuarioPedidoBloc.pedidoModel!.bubfinal, 
+            metodoPago: usuarioPedidoBloc.pedidoModel!.bmetodopago, 
+            monto: usuarioPedidoBloc.pedidoModel!.bmonto, 
+            servicio: usuarioPedidoBloc.pedidoModel!.bservicio, 
+            descripcionDescarga: usuarioPedidoBloc.pedidoModel!.bdescarga, 
+            celentrega: usuarioPedidoBloc.pedidoModel!.bcelentrega
+          );
+
           usuarioPedidoBloc.solicitar(
               origen: usuarioPedidoBloc.pedidoModel!.origen,
               destino: usuarioPedidoBloc.pedidoModel!.destino,
@@ -305,14 +337,22 @@ class _UsuarioMapState extends State<UsuarioMap> {
               referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega);
           Navigator.pushNamed(context, 'UsuarioBuscando');
         },
-        //onPressed: _alertDialogCosto
-/*          onPressed: () {
-    showDialog(
-    context: context,
-    builder: (context) => _alertDialogCosto(),
+      ),
     );
-    },*/
-        //child: Text('Mostrar AlertDialog'),,
+  }
+
+  Widget _buttonCancel(UsuarioPedidoBloc usuarioPedidoBloc) {
+    return Container(
+      height: 50,
+      alignment: Alignment.bottomCenter,
+      // margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+      child: ButtonApp(
+        text: 'Cancelar'.toUpperCase(),
+        color: Colors.amber,
+        textColor: Colors.black,
+        onPressed: () {
+          Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false);
+        },
       ),
     );
   }

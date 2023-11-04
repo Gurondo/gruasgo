@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -17,6 +19,10 @@ class UserBloc extends Bloc<UserEvent, UserState> {
 
     on<OnSetMarker>((event, emit){
       emit(state.copyWitch(markerSeleccionado: event.marker));
+    });
+
+    on<OnSetIsClicPin>((event, emit){
+      emit(state.copyWitch(isClickPin: event.isClickPin));
     });
   }
 }

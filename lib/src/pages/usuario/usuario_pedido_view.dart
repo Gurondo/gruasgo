@@ -8,6 +8,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
+import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/helpers/get_position.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
@@ -76,6 +78,12 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: utils.Colors.logoColor,
+          leading: IconButton(
+            onPressed: (){
+              Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false);
+            }, 
+            icon: const Icon(Icons.arrow_back_ios_new_outlined)
+          ),
         ),
         backgroundColor: Colors.white,
         body: SingleChildScrollView(
@@ -167,10 +175,12 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                     
                                     final String idMarker = MarkerIdEnum.origen.toString();
                                     Marker? marker;
+                                    userBloc.add(OnSetIsClicPin(false));
                                     bool isClickPin = false;
                                     for (var elementMarker in state.markers) {
                                       if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
                                         marker = elementMarker;
+                                        userBloc.add(OnSetIsClicPin(true));
                                         isClickPin = true;
                                         break;
                                       }
@@ -187,8 +197,11 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                         );
                                     }
                                     
+                                    userBloc.add(OnSetMarker(marker));
                                     if (!context.mounted) return;
-                                    _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
+                                    Navigator.pushNamed(context, 'SelectMapUser', arguments: tecOrigen);
+                                    // if (!context.mounted) return;
+                                    // _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
 
                                   },
                                 ),
@@ -243,14 +256,19 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                     final String idMarker = MarkerIdEnum.destino.toString();
                                     Marker? marker;
                                     Marker? origen;
+                                    userBloc.add(OnSetIsClicPin(false));
                                     bool isClickPin = false;
                                     for (var elementMarker in state.markers) {
                                       if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
                                         marker = elementMarker;
+                                        userBloc.add(OnSetIsClicPin(true));
                                         isClickPin = true;
                                       }
                                       if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-                                        origen = elementMarker;
+                                        origen = Marker(
+                                          markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                          position: elementMarker.position
+                                        );
                                       }
                                     }
                                                                         
@@ -262,7 +280,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                         if (marker == null){
                                           Position position = await getPositionHelpers();
                                           marker = Marker(
-                                            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
                                               position: LatLng(
                                                 position.latitude, 
                                                 position.longitude
@@ -272,8 +290,10 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                                       }
                                     }
 
+                                    userBloc.add(OnSetMarker(marker));
                                     if (!context.mounted) return;
-                                    _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
+                                    Navigator.pushNamed(context, 'SelectMapUser', arguments: tecDestino);
+                                    // _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
 
                                     // Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
                                   },
@@ -357,7 +377,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                     position: p0
                   )
                 ));
-                  final place = await _usuarioPedidoBloc.searchPlaceByCoors(coors: p0);
+                final place = await _usuarioPedidoBloc.searchPlaceByCoors(coors: p0);
                 if (place!=null){
                   tec.text = place;
                 }
@@ -452,31 +472,53 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             final navigator = Navigator.of(context);
 
             final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
-            final status = await usuarioPedidoBloc.registrarPedido(
-              idUsuario: userBloc.user!.idUsuario, 
-              ubiInicial: tecOrigen.text.trim(), 
-              ubiFinal: tecDestino.text.trim(), 
-              metodoPago: 'efectivo', 
-              monto: precio, 
-              // servicio: listaRecibida[1], 
-              servicio: servicio, 
-              descripcionDescarga: tecDescripcion.text.trim(), 
-              celentrega: int.parse(tecNroContrato.text.trim())
-            );
 
-            if (status){
-              navigator.pop();
-              navigator.pushNamedAndRemoveUntil(
-                'MapaUsuario', 
-                (route) => false);
-              
-            }else{
-              navigator.pop();
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('No pudo realizarse la solicitud')
-              ));
+            Marker? origen = getMarkerHelper(markers: usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen);
+            Marker? destino = getMarkerHelper(markers: usuarioPedidoBloc.state.markers, id: MarkerIdEnum.destino);
+
+            if (!(origen == null || destino == null)){
+              final status = usuarioPedidoBloc.guardarPedido(
+                idUsuario: userBloc.user!.idUsuario,
+                ubiInicial: tecOrigen.text.trim(),  
+                ubiFinal: tecDestino.text.trim(),  
+                metodoPago: 'QR',  
+                monto: precio, 
+                servicio: servicio, 
+                descripcionDescarga: tecDescripcion.text.trim(), 
+                celentrega: int.parse(tecNroContrato.text.trim()),
+                origen: origen,
+                destino: destino
+              );
+
+              usuarioPedidoBloc.sendEventDistanciaDuracion(origen: origen.position, destino: destino.position);
+
+              final polyline = await usuarioPedidoBloc.getPolylines(origen: origen.position, destino: destino.position);
+                if (polyline != null){
+                  usuarioPedidoBloc.add(OnSetAddNewPolylines(
+                    Polyline(
+                      polylineId: PolylineId(PolylineIdEnum.origenToDestino.toString()),
+                      color: Colors.black,
+                      width: 4,
+                      points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                    )
+                  ));
+                }
+
+              if (status){
+                navigator.pop();
+                navigator.pushNamedAndRemoveUntil(
+                  'MapaUsuario', 
+                  (route) => false);
+                
+              }else{
+                navigator.pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('No pudo realizarse la solicitud')
+                ));
+              }
             }
+
           },
           child: const Text('REALIZAR PEDIDO'),
         ),
@@ -562,8 +604,9 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
           if (_formKey.currentState!.validate()) {
             
-            // final servicio = if (listaRecibida[0] == 'VOLQUETAS')
-            final precio = await usuarioPedidoBloc.calcularDistancia(servicio: listaRecibida[1]);
+            final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
+            final precio = await usuarioPedidoBloc.calcularDistancia(servicio: servicio);
+            // final precio = await usuarioPedidoBloc.calcularDistancia(servicio: '${listaRecibida[1]} ${detalleServicio}');
 
           
             if (!mounted) return null;

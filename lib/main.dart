@@ -14,6 +14,7 @@ import 'package:gruasgo/src/pages/login/login_usr.dart';
 import 'package:gruasgo/src/pages/usuario/buscando/usuario_buscando.dart';
 import 'package:gruasgo/src/pages/usuario/finalizacion/usuario_finalizacion.dart';
 import 'package:gruasgo/src/pages/usuario/detallePedidoSolicitar/usuarioMapa_view.dart';
+import 'package:gruasgo/src/pages/usuario/select_map_user.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_bienbenido.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_pedido_view.dart';
 import 'package:gruasgo/src/pages/usuario/usuario_view.dart';
@@ -96,7 +97,7 @@ class _MyAppState extends State<MyApp> {
         'UsuarioFinalizacion': (context) => const UsuarioFinalizacion(),
         'UsuarioBuscando': (context) => const UsuarioBuscando(),
         
-        // 'SelectMapUser': (context) => const SelecM(),
+        'SelectMapUser': (context) => const SelectMapUser(),
  
        // 'home' : (BuildContext context) => LoginUsr(),
       },

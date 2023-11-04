@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 
 class UsarioBienbenido extends StatefulWidget {
@@ -17,7 +19,10 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
   @override
   Widget build(BuildContext context) {
     // print('METODO BUILD');
-    final String username = ModalRoute.of(context)!.settings.arguments as String;
+
+    final userBloc = BlocProvider.of<UserBloc>(context);
+
+    // final String username = ModalRoute.of(context)!.settings.arguments as String;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: utils.Colors.logoColor,
@@ -102,7 +107,7 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              _textBienbenido(username),
+              _textBienbenido(userBloc.user!.nombreusuario),
               _textoServicio(),
               const SizedBox(height: 15),
               Row(

@@ -185,6 +185,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
       Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
 
+      print(origen);
+      print(destino);
+
       if (origen == null || destino == null){
         return '';
       }
@@ -275,6 +278,36 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   // }
 
+  bool guardarPedido({
+    required idUsuario,
+    required String ubiInicial,
+    required String ubiFinal,
+    required String metodoPago,
+    required String monto,
+    required String servicio,
+    required String descripcionDescarga,
+    required int celentrega,
+    required Marker origen,
+    required Marker destino
+  }){
+    pedidoModel = PedidoModel(
+      btip: 'addPedido', 
+      bidpedido: '-1', 
+      bidusuario: idUsuario.toString(), 
+      bubinicial: ubiInicial, 
+      bubfinal: ubiFinal, 
+      bmetodopago: metodoPago, 
+      bmonto: monto, 
+      bservicio: servicio, 
+      bdescarga: descripcionDescarga, 
+      bcelentrega: celentrega, 
+      origen: origen.position, 
+      destino: destino.position
+    );
+
+    return true;
+
+  }
 
   Future<bool> registrarPedido({
     required idUsuario,
@@ -287,9 +320,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required int celentrega
   }) async {
     
-    const uuid = Uuid();
-    final uuidPedido = uuid.v4();
-  
     try {
 
       Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
@@ -298,8 +328,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       if (origen == null || destino == null) return false;
       
 
+      final idResponse = await ClienteService.getId();
+      print('-----------GET ID-----------------------------');
+      print(idResponse.body);
+      dynamic jsonDataId = json.decode(idResponse.body);
+      print(jsonDataId);
+      final id = jsonDataId[0]['genId'];
+      print(id);
+      print('----------------------------------------');
+
+
+
       final response = await ClienteService.registrarPedido(
-        uuidPedido: uuidPedido, 
+        uuidPedido: id, 
         idUsuario: idUsuario, 
         ubiInicial: ubiInicial, 
         ubiFinal: ubiFinal, 
@@ -315,42 +356,14 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         ubiFinLog: destino.position.longitude
       );
 
-      
-      
       print('Respuesta despues de registrar el pedido ${response.body}');
       if (response.statusCode != 200) return false;
       
-
       dynamic jsonData = json.decode(response.body);
       if (jsonData['success'] == 'si') {
         
-        pedidoModel = PedidoModel(
-          btip: 'addPedido', 
-          bidpedido: uuidPedido, 
-          bidusuario: idUsuario.toString(), 
-          bubinicial: ubiInicial, 
-          bubfinal: ubiFinal, 
-          bmetodopago: metodoPago, 
-          bmonto: monto, 
-          bservicio: servicio, 
-          bdescarga: descripcionDescarga, 
-          bcelentrega: celentrega, 
-          origen: origen.position, 
-          destino: destino.position
-        );
-        sendEventDistanciaDuracion(origen: origen.position, destino: destino.position);
-
-        final polyline = await getPolylines(origen: origen.position, destino: destino.position);
-        if (polyline != null){
-          add(OnSetAddNewPolylines(
-            Polyline(
-              polylineId: PolylineId(PolylineIdEnum.origenToDestino.toString()),
-              color: Colors.black,
-              width: 4,
-              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
-            )
-          ));
-        }
+        // Cuando se registre, poner el id al id del pedido, ya que antes estaba con 0
+        pedidoModel!.bidpedido = id;
 
         return true;
       }else{
