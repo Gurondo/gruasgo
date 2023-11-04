@@ -26,8 +26,15 @@ class ClienteService{
 
     int timestampInMilliseconds = DateTime.now().millisecondsSinceEpoch;
     String idString = timestampInMilliseconds.toString();
-  
-    print('bidpedido: ${idString.substring(idString.length - 6)}');
+
+
+    DateTime now = DateTime.now();
+    int year = now.year % 100;
+    int month = now.month;
+
+    String codigo = '${year.toString()}${month.toString()}${idString.substring(idString.length - 4)}';
+
+    print('bidpedido: $codigo');
     print('bidusuario : $idUsuario');
     print('bubinicial: $ubiInicial');
     print('bubfinal: $ubiFinal');
@@ -43,7 +50,7 @@ class ClienteService{
 
     final response = await http.post(uri, body: {
       'btip': 'addPedido',
-      'bidpedido': idString.substring(idString.length - 6),
+      'bidpedido': codigo,
       'bidusuario': idUsuario,
       'bidvehiculo': '',
       'bidconductor': '',

@@ -451,13 +451,15 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
             final navigator = Navigator.of(context);
 
+            final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
             final status = await usuarioPedidoBloc.registrarPedido(
               idUsuario: userBloc.user!.idUsuario, 
               ubiInicial: tecOrigen.text.trim(), 
               ubiFinal: tecDestino.text.trim(), 
               metodoPago: 'efectivo', 
               monto: precio, 
-              servicio: listaRecibida[1], 
+              // servicio: listaRecibida[1], 
+              servicio: servicio, 
               descripcionDescarga: tecDescripcion.text.trim(), 
               celentrega: int.parse(tecNroContrato.text.trim())
             );

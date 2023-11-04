@@ -95,6 +95,9 @@ class _MyAppState extends State<MyApp> {
         
         'UsuarioFinalizacion': (context) => const UsuarioFinalizacion(),
         'UsuarioBuscando': (context) => const UsuarioBuscando(),
+        
+        // 'SelectMapUser': (context) => const SelecM(),
+ 
        // 'home' : (BuildContext context) => LoginUsr(),
       },
     );
