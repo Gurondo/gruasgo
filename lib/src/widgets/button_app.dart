@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 
 class ButtonApp extends StatelessWidget {
   //const ButtonApp({super.key});
-  Color? color;
-  Color? textColor;
-  String text;
-  Function? onPressed;
-  double paddingHorizontal;
-  IconData? icons;
+  final Color? color;
+  final Color? textColor;
+  final String text;
+  final Function? onPressed;
+  final double paddingHorizontal;
+  final IconData? icons;
 
-  ButtonApp({
+  const ButtonApp({
     super.key, 
     this.color,
     this.paddingHorizontal = 0,
