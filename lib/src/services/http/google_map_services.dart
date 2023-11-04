@@ -18,7 +18,8 @@ class GoogleMapServices{
 
   static Future<http.Response> getDistancia({
     required LatLng origen,
-    required LatLng destino
+    required LatLng destino,
+    required String servicio
   }) async {
 
     final data = {
@@ -26,6 +27,7 @@ class GoogleMapServices{
       'lng_origen': origen.longitude,
       'lat_destino': destino.latitude,
       'lng_destino': destino.longitude,
+      'servicio': servicio
     };
 
     var urlParse = Uri.parse('${Enviroment().server}/map');

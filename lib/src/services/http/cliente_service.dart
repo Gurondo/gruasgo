@@ -27,38 +27,38 @@ class ClienteService{
     int timestampInMilliseconds = DateTime.now().millisecondsSinceEpoch;
     String idString = timestampInMilliseconds.toString();
   
-    print(idString.substring(idString.length - 6));
-    print(idUsuario);
-    print(ubiInicial);
-    print(ubiFinal);
-    print(metodoPago);
-    print(monto);
-    print(servicio);
-    print(descripcionDescarga);
-    print(celentrega);
-    print(ubiInitLat);
-    print(ubiInitLog);
-    print(ubiFinLat);
-    print(ubiFinLog);
+    print('bidpedido: ${idString.substring(idString.length - 6)}');
+    print('bidusuario : $idUsuario');
+    print('bubinicial: $ubiInicial');
+    print('bubfinal: $ubiFinal');
+    print('metodoPago: $metodoPago');
+    print('bmonto: $monto');
+    print('bservicio: $servicio');
+    print('bdescarga: $descripcionDescarga');
+    print('bcelentrega: $celentrega');
+    print('bubinilat: $ubiInitLat');
+    print('bubinilog: $ubiInitLog');
+    print('bubfinlat: $ubiFinLat');
+    print('bubfinlog: $ubiFinLog');
 
     final response = await http.post(uri, body: {
-      "btip": idString.substring(idString.length - 6),
-      "bidpedido": '123',
-      "bidusuario": idUsuario,
-      "bidvehiculo": "",
-      "bidconductor": "",
-      "bubinicial": ubiInicial,
-      "bubinilat": ubiInitLat.toString(),
-      "bubinilog": ubiInitLog.toString(),
-      "bubfinal": ubiFinal,
-      "bubfinlat": ubiFinLat.toString(),
-      "bubfinlog": ubiFinLog.toString(),
-      "bestado": "SOCL",
-      "bmetodopago": metodoPago,
-      "bmonto": monto.toString(),
-      "bservicio": servicio,
-      "bdescarga": descripcionDescarga,
-      "bcelentrega": celentrega.toString()
+      'btip': 'addPedido',
+      'bidpedido': idString.substring(idString.length - 6),
+      'bidusuario': idUsuario,
+      'bidvehiculo': '',
+      'bidconductor': '',
+      'bubinicial': ubiInicial,
+      'bubinilat': ubiInitLat.toString(),
+      'bubinilog': ubiInitLog.toString(),
+      'bubfinal': ubiFinal,
+      'bubfinlat': ubiFinLat.toString(),
+      'bubfinlog': ubiFinLog.toString(),
+      'bestado': "SOCL",
+      'bmetodopago': metodoPago,
+      'bmonto': monto.toString(),
+      'bservicio': servicio,
+      'bdescarga': descripcionDescarga,
+      'bcelentrega': celentrega.toString()
     });
 
     return response;
@@ -67,16 +67,21 @@ class ClienteService{
 
   static Future<http.Response> getPrecio ({
     required String distancia,
-    required String detalleServicio
+    required String servicio
   }) async{
+    
+    print('---------------LO QUE SE ENVIA PARA OBTENER EL PRECIO--------------------------');
+    print("bkilometros: $distancia");
+    print("bserv: $servicio");
+    print('--------------------------------------------------------');
 
-    final String url = '${Enviroment().apiKeyGoogleMap}/pedido.php';
+    final String url = "${Enviroment().baseUrl}/pedido.php";
     final Uri uri = Uri.parse(url);
 
     final response = await http.post(uri, body: {
       "btip": 'costo',
       "bkilometros": distancia.toString(),
-      "bserv": detalleServicio
+      "bserv": servicio
     });
 
     return response;

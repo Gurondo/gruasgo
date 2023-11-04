@@ -559,7 +559,8 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
           if (_formKey.currentState!.validate()) {
             
-            final precio = await usuarioPedidoBloc.calcularDistancia(detalleServicio: listaRecibida[1]);
+            // final servicio = if (listaRecibida[0] == 'VOLQUETAS')
+            final precio = await usuarioPedidoBloc.calcularDistancia(servicio: listaRecibida[1]);
 
           
             if (!mounted) return null;
