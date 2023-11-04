@@ -8,7 +8,6 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
-import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/models/models.dart';
@@ -23,7 +22,6 @@ import 'package:http/http.dart' as http;
 
 import 'package:gruasgo/src/models/response/place_response.dart';
 
-import 'package:uuid/uuid.dart';
 
 part 'usuario_pedido_event.dart';
 part 'usuario_pedido_state.dart';
@@ -175,7 +173,26 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
-  Future<String?> calcularDistancia({
+  Future<String?> calcularPrecioPorHora({
+    required String servicio
+  }) async{
+    
+    try {
+      
+      final responsePrecio = await ClienteService.getPrecioHoras(servicio: servicio);
+      
+      var jsonData1 = json.decode(responsePrecio.body);
+      
+      return jsonData1["costo"].toString();
+
+    } catch (e) {
+      print(e);
+      return '';
+    }
+
+  }
+
+  Future<String?> calcularPrecioDistancia({
     required String servicio
   }) async {
       
@@ -189,7 +206,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       print(destino);
 
       if (origen == null || destino == null){
-        return '';
+        return null;
       }
 
       // Hacer consulta para obtener la distancia entre dos puntos
@@ -200,7 +217,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       String distanciaValue = jsonData['distancia'];
 
       // Consultar para obtener el costo
-      final responsePrecio = await ClienteService.getPrecio(distancia: distanciaValue.toString(), servicio: servicio);
+      final responsePrecio = await ClienteService.getPrecioKilometro(distancia: distanciaValue.toString(), servicio: servicio);
       
       print('--------RESPUESTA DESPUES DE LA CONSULTA PARA OBTENER EL PRECIO EN JSON--------');
       print(responsePrecio.body);

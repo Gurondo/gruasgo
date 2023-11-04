@@ -445,9 +445,15 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   }
 
 
-  Widget _alertDialogCosto(String precio, UsuarioPedidoBloc usuarioPedidoBloc, UserBloc userBloc, List<String> listaRecibida) {
+  Widget _alertDialogCosto({
+    required String precio, 
+    required UsuarioPedidoBloc usuarioPedidoBloc, 
+    required UserBloc userBloc, 
+    required List<String> listaRecibida,
+    required String title
+  }) {
     return AlertDialog(
-      title: const Text('¿EL COSTO DEL SERVICIO SERA DE?'),
+      title: Text(title.toUpperCase()),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -604,16 +610,38 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
           if (_formKey.currentState!.validate()) {
             
-            final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
-            final precio = await usuarioPedidoBloc.calcularDistancia(servicio: servicio);
-            // final precio = await usuarioPedidoBloc.calcularDistancia(servicio: '${listaRecibida[1]} ${detalleServicio}');
+            String? precio;
+            String title = '';
+
+            // Aqui es donde se decide a donde cunsultar, para calcular el precio por minuto o por kilometros
+            if ([
+              'Grua Pluma', 
+              'Grua Crane 30 Ton', 
+              'Grua Crane 50 Ton', 
+              'Monta Carga 1 Tonelada', 
+              'Monta Carga 2 Tonelada', 
+              'Monta Carga 5 Tonelada',
+            ].contains(listaRecibida[1])){
+              precio = await usuarioPedidoBloc.calcularPrecioPorHora(servicio: listaRecibida[1]);
+              title = 'el costo del servicio por hora sera: ';
+            }else{
+              final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
+              precio = await usuarioPedidoBloc.calcularPrecioDistancia(servicio: servicio);
+              title = '¿El costo del servicio sera de?';
+            }
 
           
             if (!mounted) return null;
             if (precio != null){
               showDialog(
                 context: context,
-                builder: (context) => _alertDialogCosto(precio, usuarioPedidoBloc, userBloc, listaRecibida),
+                builder: (context) => _alertDialogCosto(
+                  usuarioPedidoBloc: usuarioPedidoBloc,
+                  title: title,
+                  listaRecibida: listaRecibida,
+                  precio: precio ?? '', 
+                  userBloc: userBloc,
+                ),
               );
             }else{
               showAboutDialog(

@@ -72,7 +72,23 @@ class ClienteService{
 
   }
 
-  static Future<http.Response> getPrecio ({
+  static Future<http.Response> getPrecioHoras({
+    required String servicio
+  }) async{
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+
+    final response = await http.post(uri, body: {
+      "btip": 'costo',
+      "bminutos": "60",
+      "bserv": servicio
+    });
+    
+    print(response.body);
+    return response;
+  }
+
+  static Future<http.Response> getPrecioKilometro ({
     required String distancia,
     required String servicio
   }) async{
