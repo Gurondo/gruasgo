@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 
+// Un diseño facil para cuando finaliza el pedido y el conductor puede ver el detalle, valorar al usuario.
+
 class ConductorFinalizacion extends StatelessWidget {
   const ConductorFinalizacion({ Key? key }) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context) {
     return SafeArea(

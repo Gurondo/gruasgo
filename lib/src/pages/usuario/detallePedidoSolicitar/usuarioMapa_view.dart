@@ -64,8 +64,6 @@ class _UsuarioMapState extends State<UsuarioMap> {
     final userBloc = BlocProvider.of<UserBloc>(context);
 
 
-    // LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
-
     return WillPopScope(
       onWillPop: () => Future(() => false),
       child: Scaffold(
@@ -172,42 +170,11 @@ class _UsuarioMapState extends State<UsuarioMap> {
                   ),
                 ) : Container(),
     
-                // Column(
-                //   mainAxisSize: MainAxisSize.min,
-                //   children: [
-                //     // const Row(
-                //     //   children: [
-                //     //     Text('Distancia: '),
-                //     //     Text(': 123 Km'),
-                //     //   ],
-                //     // ),
-                //     // const Row(
-                //     //   children: [
-                //     //     Text('Tiempo: '),
-                //     //     Text(': 123 mins'),
-                //     //   ],
-                //     // ),
-    
-                //     _buttonDrawer(),
-                //     // _buttonCenterPosition(),
-                //     Expanded(child: Container()),
-                //     //_cardGooglePlaces(),
-                //     _buttonRequest(),
-                //   ],
-                // ),
               ],
             );
           },
         ),
       ),
-    );
-  }
-
-  Widget _iconMyLocation() {
-    return Image.asset(
-      'assets/img/my_location.png',
-      width: 40,
-      height: 40,
     );
   }
 
@@ -259,42 +226,6 @@ class _UsuarioMapState extends State<UsuarioMap> {
             onTap: _con.cerrarSession,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buttonCenterPosition() {
-    return GestureDetector(
-      onTap: _con.centerPosition,
-      child: Container(
-        alignment: Alignment.centerRight,
-        margin: const EdgeInsets.symmetric(horizontal: 5),
-        child: Card(
-          shape: const CircleBorder(),
-          color: Colors.amber[300],
-          elevation: 4.0,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child: Icon(
-              Icons.location_searching,
-              color: Colors.grey[600],
-              size: 20,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buttonDrawer() {
-    return Container(
-      alignment: Alignment.centerLeft,
-      child: IconButton(
-        onPressed: _con.openDrawer,
-        icon: const Icon(
-          Icons.menu,
-          color: Colors.white,
-        ),
       ),
     );
   }
@@ -359,87 +290,6 @@ class _UsuarioMapState extends State<UsuarioMap> {
         },
       ),
     );
-  }
-
-  Widget _googleMapsWidget() {
-    return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: _con.initialPosition,
-      onMapCreated: _con.onMapCreated,
-      myLocationEnabled: false,
-      myLocationButtonEnabled:
-          false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
-      markers: Set<Marker>.of(_con.markers.values),
-    );
-  }
-
-  Widget _cardGooglePlaces() {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.9,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Desde',
-                style: TextStyle(color: Colors.grey, fontSize: 10),
-              ),
-              const Text(
-                //_con.from ??
-                'Av. San Martin calle curi',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 5),
-              const Divider(color: Colors.grey, height: 10),
-              const SizedBox(height: 5),
-              const Text(
-                'Hasta',
-                style: TextStyle(color: Colors.grey, fontSize: 10),
-              ),
-              const Text(
-                // _con.to ??
-                'Villa 1ro de mayo calle cusis 34',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                //controller: _con.monbreapellidoController,
-                maxLength: 30,
-                style: const TextStyle(fontSize: 14),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
-                ],
-                decoration: InputDecoration(
-                  // hintText: 'Correo Electronico',
-                  labelText: 'Referencia',
-                  filled: true, // Habilita el llenado de color de fondo
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  //// UTLIZADO PARA M3
-  void refresh() {
-    setState(() {});
   }
 
   void showAlert(String message) {

@@ -29,6 +29,7 @@ class _ConductorMapState extends State<ConductorMap> {
   Timer? _timer;
   late ConductorBloc _conductorBloc;
 
+  // inicializacion para estar pendiendo los eventos en Socket, escuchar a los nuevos pedidos
   @override
   void initState() {
     // TODO: implement initState
@@ -47,6 +48,8 @@ class _ConductorMapState extends State<ConductorMap> {
     _conductorBloc.respuestaSolicitudConductor(navigator: navigator);
   }
 
+  // limpiar en la memoria estos eventos, ya que son listener, estara guardado en memoria, cuando esta ventana de destruye, ya no es necesario escuchar ya que
+  // el conductor se ha desconectado, por eso, ya no necesita estar escuchando cualquier evento de un nuevo pedido
   @override
   void dispose() {
     _timer?.cancel();
@@ -59,6 +62,8 @@ class _ConductorMapState extends State<ConductorMap> {
 
   @override
   Widget build(BuildContext context) {
+
+    // inicializacion del bloc para poder emitir, o cambiar un estado
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
     return Scaffold(
@@ -195,6 +200,7 @@ class _ConductorMapState extends State<ConductorMap> {
     );
   }
 
+  // para obtener las rutas de dos puntos, y poder dibujarlo en el mapa, para que el conductor vea las rutas
   Future _getPolylines(ConductorState state) async {
 
 
@@ -323,24 +329,6 @@ class _ConductorMapState extends State<ConductorMap> {
       ),
     );
   }
-
-  Widget _googleMapsWidget() {
-    return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: _con.initialPosition,
-      onMapCreated: _con.onMapCreated,
-      myLocationEnabled: false,
-      myLocationButtonEnabled:
-          false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
-      markers: Set<Marker>.of(_con.markers.values),
-    );
-  }
-
-  //// UTLIZADO PARA M3
-  // void refresh (){
-  //   setState(() {
-  //   });
-  // }
 }
 
 

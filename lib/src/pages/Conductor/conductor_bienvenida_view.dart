@@ -18,13 +18,19 @@ class ConductorBienvenida extends StatefulWidget {
 
 class _ConductorBienvenidaState extends State<ConductorBienvenida> {
 
+
+  // Bandera para controlar el estado de esta app, si esta cargando, el boton se bloquea mostrando un mensaje de cargando,, para evitar que el conductor 
+  // haga muchas veces click al boton realizando muchas peticiones al servidor
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
 
+    // inicializacion del Bloc, para conectar al coductor al servidor, si este se quiere conectar o no, para que este en linea y este atento para cualquier notificacion
+    // como envio de un nuevo pedido, etc, etc
     final conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
+    // diseño del conductor
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -75,6 +81,8 @@ class _ConductorBienvenidaState extends State<ConductorBienvenida> {
                       textColor: Colors.black,
                       onPressed: () async {
                           
+                          // logica cuando se hace click al boton de conectarse, primero cambia el estado a CARGANDO, para que el conductor vea que la app esta
+                          // realizando la solicitud y asi evitar que de click muchas veces al boton
                           setState(() {
                             _isLoading = true;
                           });
@@ -83,6 +91,7 @@ class _ConductorBienvenidaState extends State<ConductorBienvenida> {
                           
                           final status = await conductorBloc.crearEstado();
 
+                          // enviar la lat y lng del conductor que esta ahora mismo
                           if (status){
                             conductorBloc.openSocket(
                               lat: position.latitude, 

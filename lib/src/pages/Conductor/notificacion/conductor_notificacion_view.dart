@@ -36,6 +36,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
 
   var _pedidoAceptado = false;
 
+  // Para estar escuchando eventos, si el cliente cancela el pedido o ya a sido aceptado por un conductor, este conductor puede ver el mensaje.
   @override
   void initState() {
     // TODO: implement initState
@@ -49,7 +50,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
     _conductorBloc.solicitudCancelada(navigator: navigator);
 
   }
-
+   // Para limpiar de la memoria
   @override
   void dispose() async {
     _conductorBloc.respuestaPedido(detalleNotificacionConductor: args, pedidoAceptado: _pedidoAceptado);
@@ -65,6 +66,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
     super.dispose();
   }
 
+  // diseño basico con sus funcionalidades
   @override
   Widget build(BuildContext context) {
 
@@ -266,53 +268,3 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
   }
 
 }
-
-// class Linea extends StatefulWidget {
-
-//   final int tiempo;
-
-//   const Linea({
-//     Key? key,
-//     required this.tiempo
-//   }) : super(key: key);
-
-
-//   @override
-//   State<Linea> createState() => _LineaState();
-// }
-
-// class _LineaState extends State<Linea> with TickerProviderStateMixin{
-
-//   late AnimationController _controller;
-
-//   @override
-//   void initState() {
-//     // TODO: implement initState
-//     super.initState();
-
-//     _controller = AnimationController(
-//     /// [AnimationController]s can be created with `vsync: this` because of
-//     /// [TickerProviderStateMixin].
-//     vsync: this,
-//       duration: Duration(seconds: widget.tiempo),
-//     )..addListener(() {
-//         setState(() {});
-//     });
-//     _controller.reverse(from: 1.0);
-//   }
-
-//   @override
-//   void dispose() {
-//     _controller.dispose();
-//     super.dispose();
-//   }
-
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return LinearProgressIndicator(
-//       minHeight: 20,
-//       value: _controller.value
-//     );
-//   }
-// }

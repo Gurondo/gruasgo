@@ -14,7 +14,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
-
+  // libera de la memoria esos listener.
   @override
   void dispose() {
     
@@ -27,6 +27,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
     super.dispose();
   }
 
+  // Se pone en alerta para detectar cualquier solicitud del conductor, si este a aceptado el pedido o no, para poder visualizar en la ventana
   @override
   void initState() {
     // TODO: implement initState

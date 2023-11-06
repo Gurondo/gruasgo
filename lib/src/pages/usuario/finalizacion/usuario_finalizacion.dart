@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 
+  // diseño basico que se muestra cuando finaliza un pedido en el lado del cliente, puede valorar al conductor y escribir una nota
 class UsuarioFinalizacion extends StatelessWidget {
   const UsuarioFinalizacion({ Key? key }) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
@@ -94,10 +96,10 @@ class UsuarioFinalizacion extends StatelessWidget {
                 ),
               ),
               // Expanded(child: Container()),
-              Align(
+              const Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                   child: ButtonApp(
                     text: 'Enviar',
                     color: Colors.amber,
