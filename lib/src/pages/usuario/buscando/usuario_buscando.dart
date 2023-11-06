@@ -43,66 +43,69 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
   
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
-          children: [
-            SizedBox(
-              height: 180,
-              width: double.infinity,
-              child: ClipPath(
-                clipper: MyClipper(),
-                child: Container(
-                  color: Colors.black,
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(150),
-                          color: Colors.white
+    return WillPopScope(
+      onWillPop: () => Future(() => false),
+      child: SafeArea(
+        child: Scaffold(
+          body: Column(
+            children: [
+              SizedBox(
+                height: 180,
+                width: double.infinity,
+                child: ClipPath(
+                  clipper: MyClipper(),
+                  child: Container(
+                    color: Colors.black,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(150),
+                            color: Colors.white
+                          ),
                         ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Text('Tu conductor', style: TextStyle(color: Colors.white),),
-                      ),
-                    ],
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text('Tu conductor', style: TextStyle(color: Colors.white),),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Imagen'),
-                  const SizedBox(height: 40,),
-                  const Text('Buscando conductor'),
-                  const SizedBox(height: 40),
-                  BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
-                    builder: (context, state) {
-                      return Text(state.contador.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),);
-                    },
-                  )
-                ],
-              )
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-              child: ButtonApp(
-                color: Colors.amber,
-                text: 'Cancelar viaje',
-                icons: Icons.cancel_outlined,
-                onPressed: (){
-                  Navigator.pop(context);
-                },
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Imagen'),
+                    const SizedBox(height: 40,),
+                    const Text('Buscando conductor'),
+                    const SizedBox(height: 40),
+                    BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
+                      builder: (context, state) {
+                        return Text(state.contador.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),);
+                      },
+                    )
+                  ],
+                )
               ),
-            )
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                child: ButtonApp(
+                  color: Colors.amber,
+                  text: 'Cancelar viaje',
+                  icons: Icons.cancel_outlined,
+                  onPressed: (){
+                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false);
+                  },
+                ),
+              )
+            ],
+          )
         )
-      )
+      ),
     );
   }
 }
