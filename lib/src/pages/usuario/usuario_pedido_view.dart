@@ -398,6 +398,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               fontWeight: FontWeight.bold, // Opcional: Puedes agregar negrita u otras propiedades de fuente
             ),
           ),
+          (porHora) ?
           Container(
             margin: const EdgeInsets.only(top: 10),
             decoration: const BoxDecoration(
@@ -410,7 +411,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                 Text('POR HORA', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),),
               ],
             )
-          )
+          ) : Container()
         ],
       ),
       actions: <Widget>[
