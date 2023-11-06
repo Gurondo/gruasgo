@@ -254,30 +254,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
-  // Future<void> getDirecion({
-  //   required LatLng origen,
-  //   required LatLng destino,
-  // }) async{
-    
-  //   const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
-  //   var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
-  //   final resp = await http.get(urlParce);
-    
-  //   if (resp.statusCode == 200){
-  //     googleMapDirection = googleMapDirectionFromJson(resp.body);
-
-  //     print('-----------------------');
-  //     print(googleMapDirection!.routes[0].bounds.toJson());
-  //     print(googleMapDirection!.routes[0].legs[0].distance.text);
-  //     print(googleMapDirection!.routes[0].legs[0].duration.text);
-  //     polylines = PolylinePoints().decodePolyline(googleMapDirection!.routes[0].overviewPolyline.points);
-  //     // print(googleMapDirection!.routes[0].overviewPolyline.points);
-  //     // print(polylines!.map((e) => LatLng(e.latitude, e.longitude)).toList());
-
-  //   }
-
-  // }
-
   bool guardarPedido({
     required idUsuario,
     required String ubiInicial,
@@ -329,13 +305,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       
 
       final idResponse = await ClienteService.getId();
-      print('-----------GET ID-----------------------------');
-      print(idResponse.body);
       dynamic jsonDataId = json.decode(idResponse.body);
-      print(jsonDataId);
       final id = jsonDataId[0]['genId'];
-      print(id);
-      print('----------------------------------------');
 
 
 
@@ -356,7 +327,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         ubiFinLog: destino.position.longitude
       );
 
-      print('Respuesta despues de registrar el pedido ${response.body}');
       if (response.statusCode != 200) return false;
       
       dynamic jsonData = json.decode(response.body);
@@ -444,8 +414,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         )
       ));
       navigator.pop();
-      print(data['id']);
-      
     });
   }
 
@@ -467,7 +435,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   void listenPedidoProcesoCancelado(){
     SocketService.on('pedido en proceso cancelado', (data){
-      print('Pedido cancelado por el conductor');
       add(OnSetIdConductor(''));
       add(OnDeleteMarkerById(MarkerIdEnum.conductor));
     });

@@ -102,8 +102,6 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     try {
       
       Response resp = await ConductorService().eliminarEstado(idConductor: userBloc.user!.idUsuario);
-      print('eliminar estado');
-      print(resp.body);
       if (resp.statusCode != 200) return false;
       
       dynamic jsonData = json.decode(resp.body);
@@ -121,8 +119,6 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     try {
       
       final Response resp = await ConductorService().obtenerEstado(idConductor: userBloc.user!.idUsuario);
-      print('buscar estado');
-      print(resp.body);
       if (resp.statusCode != 200) return false;
       
       final responseEstado = responseEstadoFromJson(resp.body);
@@ -150,8 +146,6 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         lat: position.latitude, 
         lng: position.longitude
       );
-      print('crear estado');
-      print(resp.body);
       if (resp.statusCode != 200) {
         return false;
       }
@@ -169,10 +163,6 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     required LatLng destino,
   }) async{
     
-    // const key = 'AIzaSyAM_GlhLkiLrtgBL5G_Pteq1o1I-6C9ljA';
-    // var urlParce = Uri.parse('https://maps.googleapis.com/maps/api/directions/json?destination=${origen.latitude},${origen.longitude}&origin=${destino.latitude},${destino.longitude}&key=$key');
-    // final resp = await http.get(urlParce);
-
     final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
     
     if (resp.statusCode == 200){
@@ -244,30 +234,11 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
-  // void aceptarPedido({required String socketClientId, required String clientId}){
-
-  //   SocketService.emit('aceptar pedido', {
-  //     'socket_client_id': socketClientId,
-  //     'client_id': clientId
-  //   });
-
-  // }
 
   void respuestaSolicitudConductor({required NavigatorState navigator}){
 
     SocketService.on('solicitud pedido conductor', (data){
-      
-      //     origen: [-17.8370698, -63.23666479999999], 
-      //     destino: [-17.83886896671317, -63.23904678225518], 
-      //     servicio: gruas, 
-      //     cliente: Jose Ferdando, 
-      //     cliente_id: 5, 
-      //     nombre_origen: Doble vía la guardias, 
-      //     nombre_destino: Distrito 10 Santa Cruz de la Sierra Andrés Ibáñez Province Santa Cruz Department Bolivia, 
-      //     descarga: fdsfdsfdsfds, 
-      //     referencia: 32165498, 
-      //     monto: 50, 
-      //     socketClientId: gSb207yjYJ__v9lbAAAD
+    
       
       final payload = data['payload'];
 
