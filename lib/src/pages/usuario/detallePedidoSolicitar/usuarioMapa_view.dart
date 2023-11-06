@@ -60,141 +60,145 @@ class _UsuarioMapState extends State<UsuarioMap> {
 
   @override
   Widget build(BuildContext context) {
-    final _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
-    final _userBloc = BlocProvider.of<UserBloc>(context);
+    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    final userBloc = BlocProvider.of<UserBloc>(context);
 
 
     // LatLng origen = _usuarioPedidoBloc.pedidoModel!.origen;
 
-    return Scaffold(
-      key: _con.key,
-      drawer: _drawer(),
-      body: BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
-        builder: (context, state) {
-          return Stack(
-            children: [
-
-              GoogleMapWidget(
-                initPosition: getMarkerHelper(markers: _usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)!.position,
-                googleMapController: googleMapController,
-                markers: state.markers,
-                polylines: state.polylines,
-              ),
-              
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.topRight,
+    return WillPopScope(
+      onWillPop: () => Future(() => false),
+      child: Scaffold(
+        key: _con.key,
+        drawer: _drawer(),
+        body: BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
+          builder: (context, state) {
+            return Stack(
+              children: [
+    
+                GoogleMapWidget(
+                  initPosition: getMarkerHelper(markers: usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)!.position,
+                  googleMapController: googleMapController,
+                  markers: state.markers,
+                  polylines: state.polylines,
+                ),
+                
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 20),
+                      child: Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.yellow,
+                            ),
+                            child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 15, vertical: 5),
+                                child: Text(state.distancia),
+                          )),
+                          Container(
+                            margin: const EdgeInsets.only(top: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.yellow,
+                            ),
+                            child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 15, vertical: 5),
+                                child: Text(state.duracion)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+    
+                (state.idConductor == '') ? 
+    
+                Align(
+                  alignment: Alignment.bottomCenter,
                   child: Container(
-                    margin: const EdgeInsets.only(right: 20),
+                    padding: const EdgeInsets.only(top: 8),
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(25),
+                          topRight: Radius.circular(25)),
+                      color: Colors.white,
+                    ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        const SizedBox(height: 12,),
+                        InformacionWidget(
+                          icons: Icons.add_location,
+                          titulo: 'Desde',
+                          descripcion: usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
+                        ),
+                        const SizedBox(height: 12,),
+                        InformacionWidget(
+                          icons: Icons.my_location,
+                          titulo: 'Hasta',
+                          descripcion: usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
+                        ),
+                        const SizedBox(height: 12,),
+                        InformacionWidget(
+                          icons: Icons.attach_money,
+                          titulo: 'Precio',
+                          descripcion: '${usuarioPedidoBloc.pedidoModel!.bmonto} Bs.',
+                        ),
+                        const SizedBox(height: 12,),
                         Container(
-                          margin: const EdgeInsets.only(top: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.yellow,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(child: _buttonRequest(
+                                usuarioPedidoBloc: usuarioPedidoBloc,
+                                userBloc: userBloc
+                              )),
+                              const SizedBox(width: 12,),
+                              Expanded(child: _buttonCancel(usuarioPedidoBloc))
+                            ],
                           ),
-                          child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 15, vertical: 5),
-                              child: Text(state.distancia),
-                        )),
-                        Container(
-                          margin: const EdgeInsets.only(top: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.yellow,
-                          ),
-                          child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 15, vertical: 5),
-                              child: Text(state.duracion)),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
-
-              (state.idConductor == '') ? 
-
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  padding: const EdgeInsets.only(top: 18),
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25)),
-                    color: Colors.white,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.add_location),
-                        title: const Text('Desde'),
-                        subtitle: Text(
-                            _usuarioPedidoBloc.pedidoModel?.bubinicial ?? ''),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.my_location),
-                        title: const Text('Hasta'),
-                        subtitle: Text(
-                            _usuarioPedidoBloc.pedidoModel?.bubfinal ?? ''),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.attach_money),
-                        title: const Text('Precio'),
-                        subtitle: Text(
-                            '${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.'),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(child: _buttonRequest(
-                              usuarioPedidoBloc: _usuarioPedidoBloc,
-                              userBloc: _userBloc
-                            )),
-                            const SizedBox(width: 12,),
-                            Expanded(child: _buttonCancel(_usuarioPedidoBloc))
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ) : Container(),
-
-              // Column(
-              //   mainAxisSize: MainAxisSize.min,
-              //   children: [
-              //     // const Row(
-              //     //   children: [
-              //     //     Text('Distancia: '),
-              //     //     Text(': 123 Km'),
-              //     //   ],
-              //     // ),
-              //     // const Row(
-              //     //   children: [
-              //     //     Text('Tiempo: '),
-              //     //     Text(': 123 mins'),
-              //     //   ],
-              //     // ),
-
-              //     _buttonDrawer(),
-              //     // _buttonCenterPosition(),
-              //     Expanded(child: Container()),
-              //     //_cardGooglePlaces(),
-              //     _buttonRequest(),
-              //   ],
-              // ),
-            ],
-          );
-        },
+                ) : Container(),
+    
+                // Column(
+                //   mainAxisSize: MainAxisSize.min,
+                //   children: [
+                //     // const Row(
+                //     //   children: [
+                //     //     Text('Distancia: '),
+                //     //     Text(': 123 Km'),
+                //     //   ],
+                //     // ),
+                //     // const Row(
+                //     //   children: [
+                //     //     Text('Tiempo: '),
+                //     //     Text(': 123 mins'),
+                //     //   ],
+                //     // ),
+    
+                //     _buttonDrawer(),
+                //     // _buttonCenterPosition(),
+                //     Expanded(child: Container()),
+                //     //_cardGooglePlaces(),
+                //     _buttonRequest(),
+                //   ],
+                // ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -455,6 +459,45 @@ class _UsuarioMapState extends State<UsuarioMap> {
           ],
         );
       },
+    );
+  }
+}
+
+class InformacionWidget extends StatelessWidget {
+  
+  final IconData icons;
+  final String titulo;
+  final String descripcion;
+
+  const InformacionWidget({
+    super.key,
+    required this.icons,
+    required this.titulo,
+    required this.descripcion
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+          child: Icon(icons, color: Colors.black87,),
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(titulo, style: const TextStyle(fontSize: 16),)),
+              const SizedBox(height: 3,),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(descripcion, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: Colors.black54),),)
+            ],
+          )
+        )
+      ],
     );
   }
 }

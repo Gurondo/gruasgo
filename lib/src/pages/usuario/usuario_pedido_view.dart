@@ -29,6 +29,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
   final _formKey = GlobalKey<FormState>();
 
   static List<String> listDropdownMenu = <String>['RIPIO', 'ARENILLA', 'ARENA FINA', 'RELLENO'];
+  static List<String> listaPorHora = <String>['Grua Pluma', 'Grua Crane 30 Ton', 'Grua Crane 50 Ton', 'Monta Carga 1 Tonelada', 'Monta Carga 2 Tonelada', 'Monta Carga 5 Tonelada',];
 
   TextEditingController tecOrigen = TextEditingController();
   TextEditingController tecDestino = TextEditingController();
@@ -65,12 +66,6 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
 
     final List<String> listaRecibida = ModalRoute.of(context)!.settings.arguments as  List<String>;
 
-    print('------------------------');
-    print(listaRecibida[1]);
-    listaRecibida.forEach((element) {
-      print(element);
-    });
-
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
 
@@ -86,230 +81,258 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
           ),
         ),
         backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    _textDetallePedido(),
-
-                    Column(
-                      children: [
-
-                        BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
-                          builder: (context, state) {
-
-                            return Column(
-                              children: [
-
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
-                                    height: 70, 
-                                    child: TextFormField(
-                                      readOnly: true,
-                                      initialValue: listaRecibida[1],
-                                      style: const TextStyle(fontSize: 17),
-                                        decoration: InputDecoration(
-                                          labelText: 'Detalle del servicio',
-                                          filled: true, // Habilita el llenado de color de fondo
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                        ) ,
+        
+        body: WillPopScope(
+          onWillPop: () => Future(() => false),
+          child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      _textDetallePedido(),
+        
+                      Column(
+                        children: [
+        
+                          BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
+                            builder: (context, state) {
+        
+                              return Column(
+                                children: [
+        
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
+                                      height: 70, 
+                                      child: TextFormField(
+                                        readOnly: true,
+                                        initialValue: listaRecibida[1],
+                                        style: const TextStyle(fontSize: 17),
+                                          decoration: InputDecoration(
+                                            labelText: 'Detalle del servicio',
+                                            filled: true, // Habilita el llenado de color de fondo
+                                            fillColor: Colors.white,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                          ) ,
+                                      ),
                                     ),
-                                  ),
-
-                                TextFormFieldMapWidget(
-                                  suffixIcon: IconButton(
-                                    onPressed: (){
-                                      tecOrigen.text = '';
-                                      _usuarioPedidoBloc.add(OnDeleteMarkerById(MarkerIdEnum.origen));
+        
+                                  TextFormFieldMapWidget(
+                                    suffixIcon: IconButton(
+                                      onPressed: (){
+                                        tecOrigen.text = '';
+                                        _usuarioPedidoBloc.add(OnDeleteMarkerById(MarkerIdEnum.origen));
+                                      }, 
+                                      icon: const Icon(Icons.cancel_outlined)
+                                    ),
+                                    textEditingController: tecOrigen,
+                                    usuarioPedidoBloc: _usuarioPedidoBloc,
+                                    labelText: 'Lugar de origen',
+                                    // initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
+                                    suggestionsCallback: (String pattern) { 
+                                      return _usuarioPedidoBloc.searchPlace(place: pattern);
                                     }, 
-                                    icon: const Icon(Icons.cancel_outlined)
-                                  ),
-                                  textEditingController: tecOrigen,
-                                  usuarioPedidoBloc: _usuarioPedidoBloc,
-                                  labelText: 'Lugar de origen',
-                                  // initPosition: _usuarioPedidoBloc.state.origen ?? const LatLng(-17.7875271, -63.1782533),
-                                  suggestionsCallback: (String pattern) { 
-                                    return _usuarioPedidoBloc.searchPlace(place: pattern);
-                                  }, 
-                                  
-                                  onSuggestionSelected: (suggestion) {
-                                    tecOrigen.text = suggestion.toString();
-                                    // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
-
-                                    PositionModel? position;
-                                    for (var element in _usuarioPedidoBloc.placeModel) {
-                                      if (element.name == suggestion.toString()){
-                                        if (element.position != null){
-                                          position = element.position!;
+                                    
+                                    onSuggestionSelected: (suggestion) {
+                                      tecOrigen.text = suggestion.toString();
+                                      // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
+        
+                                      PositionModel? position;
+                                      for (var element in _usuarioPedidoBloc.placeModel) {
+                                        if (element.name == suggestion.toString()){
+                                          if (element.position != null){
+                                            position = element.position!;
+                                          }
                                         }
                                       }
-                                    }
-                                    
-                                    if (position != null){
-                                      _usuarioPedidoBloc.add(OnSetAddNewMarkets(
-                                        Marker(
-                                          markerId: MarkerId(MarkerIdEnum.origen.toString()),
-                                          position: LatLng(position.lat, position.lng)
-                                        )
-                                      ));
-                                    }
-
-
-                                  }, 
-                                  onChanged: (p0) {
-                                    _usuarioPedidoBloc.searchPlace(place: p0);
-                                  },
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty){
-                                      return 'Este campo es obligatorio';
-                                    }
-                                    return null;
-                                  },
-
-                                  onPressIcon: () async {
-                                    
-                                    Marker? marker;
-                                    userBloc.add(OnSetIsClicPin(false));
-                                    for (var elementMarker in state.markers) {
-                                      if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-                                        marker = elementMarker;
-                                        userBloc.add(OnSetIsClicPin(true));
-                                        break;
-                                      }
-                                    }
-
-                                    if (marker == null){
-                                      Position position = await getPositionHelpers();
-                                      marker = Marker(
-                                        markerId: MarkerId(MarkerIdEnum.origen.toString()),
-                                          position: LatLng(
-                                            position.latitude, 
-                                            position.longitude
+                                      
+                                      if (position != null){
+                                        _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                                          Marker(
+                                            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                            position: LatLng(position.lat, position.lng)
                                           )
-                                        );
-                                    }
-                                    
-                                    userBloc.add(OnSetMarker(marker));
-                                    if (!context.mounted) return;
-                                    Navigator.pushNamed(context, 'SelectMapUser', arguments: tecOrigen);
-                                    // if (!context.mounted) return;
-                                    // _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
-
-                                  },
-                                ),
-
-                                TextFormFieldMapWidget(
-                                  suffixIcon: IconButton(
-                                    onPressed: (){
-                                      tecDestino.text = '';
-                                      _usuarioPedidoBloc.add(OnDeleteMarkerById(MarkerIdEnum.destino));
+                                        ));
+                                      }
+        
+        
                                     }, 
-                                    icon: const Icon(Icons.cancel_outlined)
+                                    onChanged: (p0) {
+                                      _usuarioPedidoBloc.searchPlace(place: p0);
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty){
+                                        return 'Este campo es obligatorio';
+                                      }
+                                      return null;
+                                    },
+        
+                                    onPressIcon: () async {
+                                      
+                                      Marker? marker;
+                                      userBloc.add(OnSetIsClicPin(false));
+                                      for (var elementMarker in state.markers) {
+                                        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+                                          marker = elementMarker;
+                                          userBloc.add(OnSetIsClicPin(true));
+                                          break;
+                                        }
+                                      }
+        
+                                      if (marker == null){
+                                        Position position = await getPositionHelpers();
+                                        marker = Marker(
+                                          markerId: MarkerId(MarkerIdEnum.origen.toString()),
+                                            position: LatLng(
+                                              position.latitude, 
+                                              position.longitude
+                                            )
+                                          );
+                                      }
+                                      
+                                      userBloc.add(OnSetMarker(marker));
+                                      if (!context.mounted) return;
+                                      Navigator.pushNamed(context, 'SelectMapUser', arguments: tecOrigen);
+                                      // if (!context.mounted) return;
+                                      // _showModal(context, marker, mapController, idMarker, isClickPin, tecOrigen);
+        
+                                    },
                                   ),
-                                  onSuggestionSelected: (suggestion) {
-                                    tecDestino.text = suggestion.toString();
-                                    // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
-
-                                    PositionModel? position;
-                                    for (var element in _usuarioPedidoBloc.placeModel) {
-                                      if (element.name == suggestion.toString()){
-                                        if (element.position != null){
-                                          position = element.position!;
+        
+                                  TextFormFieldMapWidget(
+                                    suffixIcon: IconButton(
+                                      onPressed: (){
+                                        tecDestino.text = '';
+                                        _usuarioPedidoBloc.add(OnDeleteMarkerById(MarkerIdEnum.destino));
+                                      }, 
+                                      icon: const Icon(Icons.cancel_outlined)
+                                    ),
+                                    onSuggestionSelected: (suggestion) {
+                                      tecDestino.text = suggestion.toString();
+                                      // _usuarioPedidoBloc.add(OnSelected(suggestion.toString(), type));
+        
+                                      PositionModel? position;
+                                      for (var element in _usuarioPedidoBloc.placeModel) {
+                                        if (element.name == suggestion.toString()){
+                                          if (element.position != null){
+                                            position = element.position!;
+                                          }
                                         }
                                       }
-                                    }
-                                    
-                                    if (position != null){
-                                      _usuarioPedidoBloc.add(OnSetAddNewMarkets(
-                                        Marker(
-                                          markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                                          position: LatLng(position.lat, position.lng)
-                                        )
-                                      ));
-                                    }
-
-
-                                  }, 
-                                  textEditingController: tecDestino,
-                                  usuarioPedidoBloc: _usuarioPedidoBloc,
-                                  labelText: 'Lugar de destino',
-                                  suggestionsCallback: (String pattern) { 
-                                    return _usuarioPedidoBloc.searchPlace(place: pattern);
-                                  }, 
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty){
-                                      return 'Este campo es obligatorio';
-                                    }
-                                    return null;
-                                  },
-
-                                  onPressIcon: () async {
-
-                                    Marker? marker;
-                                    Marker? origen;
-                                    userBloc.add(OnSetIsClicPin(false));
-                                    for (var elementMarker in state.markers) {
-                                      if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
-                                        marker = elementMarker;
-                                        userBloc.add(OnSetIsClicPin(true));
-                                      }
-                                      if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
-                                        origen = Marker(
-                                          markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                                          position: elementMarker.position
-                                        );
-                                      }
-                                    }
-                                                                        
-                                    if (marker == null) {
-                                      if (origen != null){
-                                        marker = origen;
-                                      }else{
-
-                                        if (marker == null){
-                                          Position position = await getPositionHelpers();
-                                          marker = Marker(
+                                      
+                                      if (position != null){
+                                        _usuarioPedidoBloc.add(OnSetAddNewMarkets(
+                                          Marker(
                                             markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                                              position: LatLng(
-                                                position.latitude, 
-                                                position.longitude
-                                              )
-                                            );
+                                            position: LatLng(position.lat, position.lng)
+                                          )
+                                        ));
+                                      }
+        
+        
+                                    }, 
+                                    textEditingController: tecDestino,
+                                    usuarioPedidoBloc: _usuarioPedidoBloc,
+                                    labelText: 'Lugar de destino',
+                                    suggestionsCallback: (String pattern) { 
+                                      return _usuarioPedidoBloc.searchPlace(place: pattern);
+                                    }, 
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty){
+                                        return 'Este campo es obligatorio';
+                                      }
+                                      return null;
+                                    },
+        
+                                    onPressIcon: () async {
+        
+                                      Marker? marker;
+                                      Marker? origen;
+                                      userBloc.add(OnSetIsClicPin(false));
+                                      for (var elementMarker in state.markers) {
+                                        if (elementMarker.markerId.value == MarkerIdEnum.destino.toString()){
+                                          marker = elementMarker;
+                                          userBloc.add(OnSetIsClicPin(true));
+                                        }
+                                        if (elementMarker.markerId.value == MarkerIdEnum.origen.toString()){
+                                          origen = Marker(
+                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                            position: elementMarker.position
+                                          );
                                         }
                                       }
-                                    }
-
-                                    userBloc.add(OnSetMarker(marker));
-                                    if (!context.mounted) return;
-                                    Navigator.pushNamed(context, 'SelectMapUser', arguments: tecDestino);
-                                    // _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
-
-                                    // Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
-                                  },
-                                ),
-                              ],
-                            );
+                                                                          
+                                      if (marker == null) {
+                                        if (origen != null){
+                                          marker = origen;
+                                        }else{
+        
+                                          if (marker == null){
+                                            Position position = await getPositionHelpers();
+                                            marker = Marker(
+                                              markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                                position: LatLng(
+                                                  position.latitude, 
+                                                  position.longitude
+                                                )
+                                              );
+                                          }
+                                        }
+                                      }
+        
+                                      userBloc.add(OnSetMarker(marker));
+                                      if (!context.mounted) return;
+                                      Navigator.pushNamed(context, 'SelectMapUser', arguments: tecDestino);
+                                      // _showModal(context, marker, mapController, idMarker, isClickPin, tecDestino);
+        
+                                      // Navigator.pushNamed(context, 'VistaMapaUsuarioPedido', arguments: {'type': 'destino', 'controller': tecDestino});
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                  
+                        ],
+                      ),
+                      // Lugar de recogida
+         
+                  
+                      //   const SizedBox(height: 15),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: TextFormFieldWidget(
+                          tecNroContrato: tecNroContrato,
+                          label: 'Numero de contacto para entrega',
+                          textInputType: TextInputType.number,
+                          maxLength: 8,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty){
+                              return 'Este campo es obligatorio';
+                            }
+                            return null;
                           },
-                        )
-                
-                      ],
-                    ),
-                    // Lugar de recogida
- 
-                
-                    //   const SizedBox(height: 15),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: TextFormFieldWidget(
-                        tecNroContrato: tecNroContrato,
-                        label: 'Numero de contacto para entrega',
-                        textInputType: TextInputType.number,
-                        maxLength: 8,
+                        ),
+                      ),
+                      
+        
+                      (listaRecibida[0] == 'VOLQUETAS') ? 
+                        DropButtonWidget(
+                          label: 'Seleccione el tipo de carga',
+                          detalleServicio: detalleServicio, 
+                          listDropdownMenu: listDropdownMenu,
+                          onChanged: (String? value){
+                            if (value != null){
+                              detalleServicio = value;
+                              setState(() {
+                              });
+                            }
+                          },
+                        ) : TextFormFieldWidget(
+                        label: 'Descripcion de la carga',
+                        tecNroContrato: tecDescripcion,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty){
                             return 'Este campo es obligatorio';
@@ -317,44 +340,20 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                           return null;
                         },
                       ),
-                    ),
-                    
-
-                    (listaRecibida[0] == 'VOLQUETAS') ? 
-                      DropButtonWidget(
-                        label: 'Seleccione el tipo de carga',
-                        detalleServicio: detalleServicio, 
-                        listDropdownMenu: listDropdownMenu,
-                        onChanged: (String? value){
-                          if (value != null){
-                            detalleServicio = value;
-                            setState(() {
-                            });
-                          }
-                        },
-                      ) : TextFormFieldWidget(
-                      label: 'Descripcion de la carga',
-                      tecNroContrato: tecDescripcion,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty){
-                          return 'Este campo es obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-
-
-                    // DropdownMenu<String>(
-                      
-                    //   width: double.infinity,
-                    //   dropdownMenuEntries: listDropdownMenu.map<DropdownMenuEntry<String>>((String value) => DropdownMenuEntry(value: value, label: value)).toList()
-                    // ),
-
-                    _btnCalcularPedido(context, _usuarioPedidoBloc, userBloc, listaRecibida),
-                  ],
+        
+        
+                      // DropdownMenu<String>(
+                        
+                      //   width: double.infinity,
+                      //   dropdownMenuEntries: listDropdownMenu.map<DropdownMenuEntry<String>>((String value) => DropdownMenuEntry(value: value, label: value)).toList()
+                      // ),
+        
+                      _btnCalcularPedido(context, _usuarioPedidoBloc, userBloc, listaRecibida),
+                    ],
+                  ),
                 ),
               ),
-            )
+        )
     );
   }
 
@@ -420,6 +419,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             // Acción para "Aceptar"
 
             final navigator = Navigator.of(context);
+            // TODO: Aqui
 
             final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
 
@@ -432,7 +432,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
                 ubiInicial: tecOrigen.text.trim(),  
                 ubiFinal: tecDestino.text.trim(),  
                 metodoPago: 'QR',  
-                monto: precio, 
+                monto: (listaPorHora.contains(listaRecibida[1])) ? '0' : precio, 
                 servicio: servicio, 
                 descripcionDescarga: tecDescripcion.text.trim(), 
                 celentrega: int.parse(tecNroContrato.text.trim()),
@@ -558,15 +558,9 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             String title = '';
             bool porHora = false;
 
+            // TODO: Aqui x 2
             // Aqui es donde se decide a donde cunsultar, para calcular el precio por minuto o por kilometros
-            if ([
-              'Grua Pluma', 
-              'Grua Crane 30 Ton', 
-              'Grua Crane 50 Ton', 
-              'Monta Carga 1 Tonelada', 
-              'Monta Carga 2 Tonelada', 
-              'Monta Carga 5 Tonelada',
-            ].contains(listaRecibida[1])){
+            if (listaPorHora.contains(listaRecibida[1])){
               precio = await usuarioPedidoBloc.calcularPrecioPorHora(servicio: listaRecibida[1]);
               title = 'el costo del servicio sera: ';
               porHora = true;
@@ -614,6 +608,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
       ),
     );
   }
+
 }
 
 class TextFormFieldWidget extends StatelessWidget {
