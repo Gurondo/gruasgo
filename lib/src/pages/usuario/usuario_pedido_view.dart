@@ -379,7 +379,8 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
     required UsuarioPedidoBloc usuarioPedidoBloc, 
     required UserBloc userBloc, 
     required List<String> listaRecibida,
-    required String title
+    required String title,
+    required bool porHora
   }) {
     return AlertDialog(
       title: Text(title.toUpperCase()),
@@ -387,8 +388,8 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Image.asset('assets/img/money.jpg',
-            width: 70,
-            height: 70,),
+            width: 60,
+            height: 60,),
           Text(
             'Bs ${precio.toString()}',
             style: const TextStyle(
@@ -396,6 +397,19 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               color: Colors.red, // Color del texto, puedes cambiarlo a otro color
               fontWeight: FontWeight.bold, // Opcional: Puedes agregar negrita u otras propiedades de fuente
             ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            decoration: const BoxDecoration(
+              color: Colors.red,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('POR HORA', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),),
+              ],
+            )
           )
         ],
       ),
@@ -541,6 +555,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
             
             String? precio;
             String title = '';
+            bool porHora = false;
 
             // Aqui es donde se decide a donde cunsultar, para calcular el precio por minuto o por kilometros
             if ([
@@ -552,7 +567,8 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               'Monta Carga 5 Tonelada',
             ].contains(listaRecibida[1])){
               precio = await usuarioPedidoBloc.calcularPrecioPorHora(servicio: listaRecibida[1]);
-              title = 'el costo del servicio por hora sera: ';
+              title = 'el costo del servicio sera: ';
+              porHora = true;
             }else{
               final servicio = (listaRecibida[0] == 'VOLQUETAS') ? '${listaRecibida[1]} $detalleServicio' : listaRecibida[1];
               precio = await usuarioPedidoBloc.calcularPrecioDistancia(servicio: servicio);
@@ -565,6 +581,7 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
               showDialog(
                 context: context,
                 builder: (context) => _alertDialogCosto(
+                  porHora: porHora,
                   usuarioPedidoBloc: usuarioPedidoBloc,
                   title: title,
                   listaRecibida: listaRecibida,
