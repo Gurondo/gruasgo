@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -13,7 +12,6 @@ import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as data;
-import 'package:gruasgo/src/models/response/place_description.dart';
 import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
