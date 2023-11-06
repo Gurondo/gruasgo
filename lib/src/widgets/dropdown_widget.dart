@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class DropButtonWidget extends StatelessWidget {
   const DropButtonWidget({
     super.key,
-    required this.detalleServicio,
+    required this.value,
     required this.listDropdownMenu,
     required this.label,
     required this.onChanged
   });
 
-  final String detalleServicio;
+  final String value;
   final String label;
   final List<String> listDropdownMenu;
   final Function(String?)? onChanged;
@@ -30,7 +30,7 @@ class DropButtonWidget extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             child: DropdownButton(
               underline: const SizedBox(),
-              value: detalleServicio,
+              value: value,
               isExpanded: true,
               items: listDropdownMenu.map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(

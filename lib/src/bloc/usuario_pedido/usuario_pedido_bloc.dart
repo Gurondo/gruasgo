@@ -197,9 +197,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
       Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
 
-      print(origen);
-      print(destino);
-
       if (origen == null || destino == null){
         return null;
       }
@@ -207,22 +204,15 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       // Hacer consulta para obtener la distancia entre dos puntos
       final responseDistancia = await GoogleMapServices.getDistancia(origen: origen.position, destino: destino.position, servicio: servicio);
 
-      print(responseDistancia.body);
       Map<String, dynamic> jsonData = json.decode(responseDistancia.body);
       String distanciaValue = jsonData['distancia'];
 
       // Consultar para obtener el costo
       final responsePrecio = await ClienteService.getPrecioKilometro(distancia: distanciaValue.toString(), servicio: servicio);
       
-      print('--------RESPUESTA DESPUES DE LA CONSULTA PARA OBTENER EL PRECIO EN JSON--------');
-      print(responsePrecio.body);
-      print('----------------');
       var jsonData1 = json.decode(responsePrecio.body);
       
-
-      print('--------RESPUESTA DEL RESULTADO--------');
-      print(jsonData1);
-      print('----------------');
+      if (jsonData1["costo"] == null) return null;
 
       return jsonData1["costo"].toString();
     } catch (e) {
