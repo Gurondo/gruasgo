@@ -30,3 +30,8 @@ class OnSetClearPolylines extends ConductorEvent{
 class OnSetLimpiarPedidos extends ConductorEvent{
   OnSetLimpiarPedidos();
 }
+
+class OnSetAddMarker extends ConductorEvent{
+  final Marker marker;
+  OnSetAddMarker(this.marker);
+}

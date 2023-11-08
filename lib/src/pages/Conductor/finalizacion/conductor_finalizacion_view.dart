@@ -83,10 +83,10 @@ class ConductorFinalizacion extends StatelessWidget {
             ),
 
             Expanded(child: Container()),
-            Align(
+            const Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                 child: ButtonApp(
                   text: 'Enviar',
                   color: Colors.amber,

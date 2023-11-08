@@ -31,7 +31,6 @@ class loginController{
       "busuario": emailController.text,
       "bpassword": passwordController.text,
     });
-
     if (response.statusCode == 200) {
       var datauser = json.decode(response.body);
       if (datauser.length == 0) {

@@ -19,6 +19,7 @@ class GoogleMapWidget extends StatelessWidget {
   final double zoom;
   final Function()? onCameraMoveStarted;
   final bool ajustarZoomOrigenDestino;
+  final bool myLocationEnabled;
 
 
   const GoogleMapWidget({
@@ -29,6 +30,7 @@ class GoogleMapWidget extends StatelessWidget {
     this.zoom = 18.151926040649414,
     this.onCameraMoveStarted,
     this.ajustarZoomOrigenDestino = false,
+    this.myLocationEnabled = true,
     required this.initPosition,
     required this.googleMapController,
   });
@@ -38,7 +40,7 @@ class GoogleMapWidget extends StatelessWidget {
     
 
     return GoogleMap(
-      myLocationEnabled: true,
+      myLocationEnabled: myLocationEnabled,
       zoomControlsEnabled: false,
       buildingsEnabled: false,
       polylines: polylines,
@@ -63,8 +65,14 @@ class GoogleMapWidget extends StatelessWidget {
                 Marker? destino = getMarkerHelper(markers: markers, id: MarkerIdEnum.destino);
                 if (origen != null && destino != null){
                   LatLngBounds bounds = LatLngBounds(
-                    southwest: LatLng(origen.position.latitude, origen.position.longitude),
-                    northeast: LatLng(destino.position.latitude, destino.position.longitude),
+                    southwest: LatLng(
+                      origen.position.latitude < destino.position.latitude ? origen.position.latitude : destino.position.latitude,
+                      origen.position.longitude < destino.position.longitude ? origen.position.longitude : destino.position.longitude,
+                    ),
+                    northeast: LatLng(
+                      origen.position.latitude > destino.position.latitude ? origen.position.latitude : destino.position.latitude,
+                      origen.position.longitude > destino.position.longitude ? origen.position.longitude : destino.position.longitude,
+                    ),
                   );
                   controller.animateCamera(
                     CameraUpdate.newLatLngBounds(

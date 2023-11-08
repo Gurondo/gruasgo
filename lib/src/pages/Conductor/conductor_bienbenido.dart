@@ -1,85 +1,131 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gruasgo/src/bloc/conductor/conductor_bloc.dart';
+import 'package:gruasgo/src/helpers/helpers.dart';
+
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
 
 class ConductorBienbenido extends StatefulWidget {
-  const ConductorBienbenido({super.key});
+  const ConductorBienbenido({ Key? key }) : super(key: key);
 
   @override
-  State<ConductorBienbenido> createState() => _ConductorBienbenidoState();
+  State<ConductorBienbenido> createState() => _ConductorBienvenidaState();
 }
 
-class _ConductorBienbenidoState extends State<ConductorBienbenido> {
+class _ConductorBienvenidaState extends State<ConductorBienbenido> {
+
+
+  // Bandera para controlar el estado de esta app, si esta cargando, el boton se bloquea mostrando un mensaje de cargando,, para evitar que el conductor 
+  // haga muchas veces click al boton realizando muchas peticiones al servidor
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
-    // print('METODO BUILD');
 
-    return Scaffold(
-      drawer: _drawer(),
-      appBar: AppBar(
+    final conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
-        backgroundColor: utils.Colors.logoColor,
-
-        title: Container(
-          alignment: Alignment.center,
-/*          child: Text('ADMINISTRACION',
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),),*/
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: utils.Colors.logoColor,
+          //title: Text('Mi Aplicación'),
+          actions: [
+            //leading:
+            IconButton(
+              icon: const Icon(Icons.exit_to_app_sharp), // Icono cerrar sesion
+              onPressed: () {
+                SystemNavigator.pop();
+              },
+            ),
+          ],
         ),
-        actions: [
-          //leading:
+        body: Center(
+          child: FutureBuilder<bool>(
+            future: conductorBloc.buscarEstado(),
+            builder: (context, snapshot) {
+              
+              if (!snapshot.hasData) return const Text('Cargando');
+              if (!snapshot.data!) return const Text('Error');
 
-          IconButton(
-            icon: const Icon(Icons.exit_to_app_sharp), // Icono cerrar sesion
-            onPressed: () {
-              //Navigator.pop(context);
-              SystemNavigator.pop();
-              // Aquí puedes manejar la acción de abrir el menú o el cajón de navegación
+              return Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 40),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Bienvenido Conductor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                    ),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: _imagen(),
+
+                    )
+                  ),
+                  (!_isLoading) ? Container(
+                    height: 50,
+                    alignment: Alignment.bottomCenter,
+                    margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+                    child: ButtonApp(
+                      text: 'Conectarse'.toUpperCase(),
+                      color: Colors.amber,
+                      textColor: Colors.black,
+                      onPressed: () async {
+                          
+                          setState(() {   
+                            _isLoading = true;
+                          });
+                          final navigator = Navigator.of(context);
+                          final position = await getPositionHelpers();
+                          
+                          final status = await conductorBloc.crearEstado();
+
+                          // enviar la lat y lng del conductor que esta ahora mismo
+                          if (status){
+                            conductorBloc.openSocket(
+                              lat: position.latitude, 
+                              lng: position.longitude
+                            );
+
+                            await navigator.pushNamed('MapaConductor');
+
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }else{
+                            setState(() {
+                              _isLoading = false;
+                            });
+                            // TODO: Mensaje de error
+                          }
+                       
+                        },
+                    ),
+                  ) : Container(
+                    height: 50,
+                    alignment: Alignment.bottomCenter,
+                    margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+                    child: ButtonApp(
+                      text: 'Conectandose...'.toUpperCase(),
+                      color: Colors.amber[200],
+                      textColor: Colors.black,
+                      onPressed: (){
+
+                      },
+                    ),
+                  )
+                ],
+              );
+
             },
           ),
-        ],
-      ),
-
-      backgroundColor: Colors.white,
-
-      body:
-      WillPopScope(
-        onWillPop: (){
-          return Future(() => false); //Descativar el boton volver atraz
-        },
-
-        child:  SingleChildScrollView(
-          child: Column(
-            children: [
-              _textBienbenido(),
-              const SizedBox(height: 100),
-              //_textTitulo(),
-              _imagen(),
-              const SizedBox(height: 5),
-              _btnConectarse(),
-            ],
-          ),
         ),
-      ),
-    );
-  }
-
-  Widget _textBienbenido(){
-    return Container(
-      alignment: Alignment.centerLeft,
-      margin: const EdgeInsets.symmetric(horizontal: 30,vertical: 10), // MARGENES DEL TEXTO LOGIN
-      child: const Text(
-        'Bienbenido Conductor',
-        style: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 23,
-        ),
-      ),
+      )
     );
   }
 
@@ -100,70 +146,6 @@ class _ConductorBienbenidoState extends State<ConductorBienbenido> {
       /*CircleAvatar(
         backgroundImage: AssetImage('assets/img/my_location.png'),
       ),*/
-    );
-  }
-
-  Widget _drawer() {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const SizedBox(
-            height: 120,
-            child: DrawerHeader(
-              decoration: BoxDecoration(
-                  color: Colors.amber
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'MENU CONDUCTOR',
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold
-                    ),
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          ListTile(
-            title: const Text('Historial de carreras'),
-            trailing: const Icon(Icons.list),
-            // leading: Icon(Icons.cancel),
-            onTap: () {
-             // Navigator.pushNamedAndRemoveUntil(context, 'RegistroConductor', (route) => true);
-            },
-          ),
-          ListTile(
-            title: const Text('Saldo Cuenta'),
-            trailing: const Icon(Icons.attach_money),
-            // leading: Icon(Icons.cancel),
-            onTap: () {
-              // Navigator.pushNamedAndRemoveUntil(context, 'RegistroConductor', (route) => true);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _btnConectarse(){
-    return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
-
-        child: ButtonApp(
-          text: 'CONECTARSE',
-          color: Colors.amber,
-          textColor: Colors.black,
-          onPressed: (){
-            Navigator.pushNamedAndRemoveUntil(context, 'MapaConductor', (route) => false);
-          },
-        )
     );
   }
 }

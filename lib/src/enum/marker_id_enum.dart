@@ -1,5 +1,6 @@
 enum MarkerIdEnum{
   conductor,
   origen,
-  destino
+  destino,
+  user
 }

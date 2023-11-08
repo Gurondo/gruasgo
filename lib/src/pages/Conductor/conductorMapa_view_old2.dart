@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
@@ -23,8 +24,7 @@ class ConductorMap extends StatefulWidget {
 class _ConductorMapState extends State<ConductorMap> {
   final DriverMapController _con = DriverMapController();
 
-  Completer<GoogleMapController> googleMapController =
-      Completer<GoogleMapController>();
+  Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
 
 
   Timer? _timer;
@@ -47,10 +47,10 @@ class _ConductorMapState extends State<ConductorMap> {
 
     final navigator = Navigator.of(context);
     _conductorBloc.respuestaSolicitudConductor(navigator: navigator);
+
   }
 
-  // limpiar en la memoria estos eventos, ya que son listener, estara guardado en memoria, cuando esta ventana de destruye, ya no es necesario escuchar ya que
-  // el conductor se ha desconectado, por eso, ya no necesita estar escuchando cualquier evento de un nuevo pedido
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -59,6 +59,23 @@ class _ConductorMapState extends State<ConductorMap> {
 
     // TODO: implement dispose
     super.dispose();
+  }
+
+  Future<Position> getPositionAsset() async {
+    Position position = await getPositionHelpers();
+
+    ImageConfiguration configuration = const ImageConfiguration();
+     final markerDriver = await BitmapDescriptor.fromAssetImage(configuration, 'assets/img/icono_grua.png');  ////ULILIZADO EN M3
+
+    _conductorBloc.add(OnSetAddMarker(
+      Marker(
+        markerId: MarkerId(MarkerIdEnum.user.toString()),
+        position: LatLng(position.latitude, position.longitude),
+        icon: markerDriver
+      )
+    ));
+
+    return position;
   }
 
   @override
@@ -71,7 +88,7 @@ class _ConductorMapState extends State<ConductorMap> {
       key: _con.key,
       drawer: _drawer(),
       body: FutureBuilder<Position>(
-          future: getPositionHelpers(),
+          future: getPositionAsset(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               return BlocBuilder<ConductorBloc, ConductorState>(
@@ -79,18 +96,19 @@ class _ConductorMapState extends State<ConductorMap> {
                   return Stack(
                     children: [
                       GoogleMapWidget(
+                        myLocationEnabled: false,
                         initPosition: LatLng(
                             snapshot.data!.latitude, snapshot.data!.longitude),
                         googleMapController: googleMapController,
                         markers: state.markers,
                         polylines: state.polylines,
                       ),
-                      // _googleMapsWidget(),
                       SafeArea(
 
                         child: WidgetDetailMap(
                           builder: (){
-                            if (state.markers.isEmpty) {
+                            // TODO: Aqui cambiar la validacion
+                            if (!hayPedido(state)) {
                               return Column(
                                 children: [
                                   Row(
@@ -98,6 +116,10 @@ class _ConductorMapState extends State<ConductorMap> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       _buttonDrawer(),
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 5),
+                                        child: Text('Esperando solicitud', style: TextStyle(fontSize: 16),)
+                                      ),
                                       _buttonCenterPosition()
                                     ],
                                   ),
@@ -201,7 +223,14 @@ class _ConductorMapState extends State<ConductorMap> {
     );
   }
 
-  // para obtener las rutas de dos puntos, y poder dibujarlo en el mapa, para que el conductor vea las rutas
+  bool hayPedido(ConductorState state){
+
+    Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
+    Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
+
+    return (origen != null && destino != null);
+  }
+
   Future _getPolylines(ConductorState state) async {
 
 
@@ -281,7 +310,20 @@ class _ConductorMapState extends State<ConductorMap> {
 
   Widget _buttonCenterPosition() {
     return GestureDetector(
-      onTap: _con.centerPosition,
+      // onTap: _con.centerPosition,
+      onTap: () async {
+        Position userLocation = await getPositionHelpers();
+
+        final controller = await googleMapController.future;
+
+        controller.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(userLocation.latitude, userLocation.longitude),
+            zoom: 18.151926040649414
+          )
+        ));
+
+      },
       child: Container(
         alignment: Alignment.centerLeft,
         margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -321,7 +363,7 @@ class _ConductorMapState extends State<ConductorMap> {
       alignment: Alignment.bottomCenter,
       margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 30),
       child: ButtonApp(
-        text: 'Desconectarse'.toUpperCase(),
+        text: 'DESCONECTARSE',
         color: Colors.amber,
         onPressed: () {
           conductorBloc.closeSocket();

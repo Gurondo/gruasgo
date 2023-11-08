@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:lottie/lottie.dart';
+import 'package:timer_count_down/timer_count_down.dart';
 
 class UsuarioBuscando extends StatefulWidget {
   const UsuarioBuscando({ Key? key }) : super(key: key);
@@ -66,13 +68,52 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
 
                     const SizedBox(height: 20,),
                     const Text('BUSCANDO CONDUCTOR',
-                      style: TextStyle(
-                      color: Colors.black, // Cambia el color del texto
-                      fontSize: 25, fontWeight: FontWeight.bold,
+                        style: TextStyle(
+                        color: Colors.black, // Cambia el color del texto
+                        fontSize: 25, fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 20),
+
+                    Countdown(
+                      seconds: 30,
+                      build: (BuildContext context, double time) {
+                        return Text(
+                          time.toStringAsFixed(time.truncateToDouble() == time ? 0 : 1),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                        );
+                      },
+                      onFinished: (){
+
+                        Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: _userBloc.user!.nombreusuario);
+
+                        showDialog(
+                          context: context, 
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Atencion'),
+                              content: const Text('EN ESTE MOMENTO NO SE TIENEN CONDUCTORES DIPONIBLES, INTENTELO MAS TARDE'),
+                              actions: [
+                                TextButton(
+                                  child: const Text('Aceptar'),
+                                  onPressed: () => Navigator.pop(context),
+                                ), 
+                              ],
+                            );
+                          },
+                        );
+
+                      },
                     ),
-                    const SizedBox(height: 40),
+
+                    const SizedBox(height: 5),
                     _lottieAni(),
+
+                    const SizedBox(height: 5),
+
+                    const Text('Espere por favor', style: TextStyle(color: Colors.red, fontSize: 20),),
+                    
+                    const SizedBox(height: 10),
 
                     BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
                       builder: (context, state) {

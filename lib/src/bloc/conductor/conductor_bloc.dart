@@ -45,6 +45,25 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       emit(state.copyWitch(markers: markers));
     });
 
+
+    on<OnSetAddMarker>((event, emit) {
+
+      Set<Marker> markers = Set.from(state.markers);
+      Marker? marker;
+  
+      for (var elementMarkers in markers) {
+        if (elementMarkers.markerId.value == event.marker.markerId.value){
+          marker = elementMarkers;
+        }
+      }
+
+      if (marker != null) markers.remove(marker);
+
+      markers.add(event.marker);
+
+      emit(state.copyWitch(markers: markers));
+    });
+
     on<OnSetAddPolyline>((event, emit) {
 
       Set<Polyline> polylines = Set.from(state.polylines);
@@ -103,11 +122,11 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       
       Response resp = await ConductorService().eliminarEstado(idConductor: userBloc.user!.idUsuario);
       if (resp.statusCode != 200) return false;
-      
+      print('Actualizando para elimianr este estado');
+      print(resp.body);
       dynamic jsonData = json.decode(resp.body);
-      if (jsonData['success'] != 'si') return false;
+      return jsonData['success'] == 'si';
       
-      return true;
     } catch (e) {
       print(e);
       return false;
