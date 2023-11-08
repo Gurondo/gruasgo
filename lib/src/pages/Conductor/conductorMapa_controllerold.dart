@@ -9,7 +9,7 @@ import 'package:gruasgo/src/utils/snackbar.dart' as utils;
 class DriverMapController{
   BuildContext? context;
   Function? refresh;
-  GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
+  GlobalKey<ScaffoldState> key = new GlobalKey<ScaffoldState>();
   Completer <GoogleMapController> _mapController = Completer();
 
   CameraPosition initialPosition = CameraPosition(

@@ -26,7 +26,6 @@ class ConductorNotificacion extends StatefulWidget {
 }
 
 class _ConductorNotificacionState extends State<ConductorNotificacion> {
-
   final Completer <GoogleMapController> _mapController = Completer();
 
   late ConductorBloc _conductorBloc;

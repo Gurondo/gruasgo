@@ -149,13 +149,16 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       
       List<String> placesName = [];
 
-      final placesResponse = placesResponseFromJson(response.body);
-      placeModel = placesResponse.places;
-      for (var element in placesResponse.places) {
-        if (element.name != null){
-          placesName.add(element.name!);
+      if (place.isNotEmpty) {
+        final placesResponse = placesResponseFromJson(response.body);
+        placeModel = placesResponse.places;
+        for (var element in placesResponse.places) {
+          if (element.name != null){
+            placesName.add(element.name!);
+          }
         }
-      }
+      } 
+
       // return names;
       return placesName;
 
@@ -374,11 +377,23 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
-  void cancelarPedido(){
+  Future<bool> cancelarPedido() async {
 
-    SocketService.emit('cancelar pedido cliente', {
-      'cliente_id': userBloc.user!.idUsuario
-    });
+    try {
+        
+      final response = await ClienteService.actualizarEstadoPedido(uuidPedido: pedidoModel!.bidpedido);
+      print(response.body);
+
+      SocketService.emit('cancelar pedido cliente', {
+        'cliente_id': userBloc.user!.idUsuario
+      });
+
+      return response.statusCode == 200;
+
+    } catch (e) {
+      print(e);
+      return false;
+    }
 
   }
 

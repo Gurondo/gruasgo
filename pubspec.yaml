@@ -40,16 +40,16 @@ dependencies:
   flutter_typeahead: ^4.8.0
   geolocator: ^10.1.0
   google_maps_flutter: ^2.5.0
+  google_maps_flutter_android: ">=2.4.15"
   http: any
   image_picker: ^1.0.4
   location: ^5.0.3
+  lottie: ^2.7.0
   path_provider: ^2.1.1
   permission_handler: ^11.0.0
   progress_dialog_null_safe: ^1.0.7
   socket_io_client: ^2.0.3+1
   timer_count_down: ^2.2.2
-
-  google_maps_flutter_android: '>=2.4.15'
 
 dev_dependencies:
   flutter_lints: ^2.0.0
@@ -72,6 +72,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/img/
+    - assets/json/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
   # For details regarding adding assets from package dependencies, see

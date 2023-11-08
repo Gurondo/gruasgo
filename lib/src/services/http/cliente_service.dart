@@ -24,30 +24,6 @@ class ClienteService{
     final String url = "${Enviroment().baseUrl}/pedido.php";
     final Uri uri = Uri.parse(url);
 
-    // int timestampInMilliseconds = DateTime.now().millisecondsSinceEpoch;
-    // String idString = timestampInMilliseconds.toString();
-
-
-    // DateTime now = DateTime.now();
-    // int year = now.year % 100;
-    // int month = now.month;
-
-    // String codigo = '${year.toString()}${month.toString()}${idString.substring(idString.length - 4)}';
-
-    print('bidpedido: $uuidPedido');
-    print('bidusuario : $idUsuario');
-    print('bubinicial: $ubiInicial');
-    print('bubfinal: $ubiFinal');
-    print('metodoPago: $metodoPago');
-    print('bmonto: $monto');
-    print('bservicio: $servicio');
-    print('bdescarga: $descripcionDescarga');
-    print('bcelentrega: $celentrega');
-    print('bubinilat: $ubiInitLat');
-    print('bubinilog: $ubiInitLog');
-    print('bubfinlat: $ubiFinLat');
-    print('bubfinlog: $ubiFinLog');
-
     final response = await http.post(uri, body: {
       'btip': 'addPedido',
       'bidpedido': uuidPedido,
@@ -70,6 +46,21 @@ class ClienteService{
 
     return response;
 
+  }
+
+  static Future<http.Response> actualizarEstadoPedido({
+    required String  uuidPedido
+  }) async {
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+
+    final response = await http.post(uri, body: {
+      'btip': 'updEstado',
+      'bidpedido': uuidPedido,
+      'bestado': "CACL",
+    });
+
+    return response;
   }
 
   static Future<http.Response> getPrecioHoras({

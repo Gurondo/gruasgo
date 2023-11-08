@@ -19,17 +19,17 @@ class UsuarioMap extends StatefulWidget {
   State<UsuarioMap> createState() => _UsuarioMapState();
 }
 
-class _UsuarioMapState extends State<UsuarioMap> {
+class _UsuarioMapState extends State<UsuarioMap>{
   final UsuarioMapController _con = UsuarioMapController();
+
   late UsuarioPedidoBloc _usuarioPedidoBloc;
+
+  Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    
-
 
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     _usuarioPedidoBloc.listenPedidoProcesoCancelado();
@@ -53,14 +53,8 @@ class _UsuarioMapState extends State<UsuarioMap> {
     super.dispose();
   }
 
-  final LatLng origen = const LatLng(-17.7995132, -63.1924906);
-  final LatLng destino = const LatLng(-17.8005504, -63.1786198);
-  Completer<GoogleMapController> googleMapController =
-      Completer<GoogleMapController>();
-
   @override
   Widget build(BuildContext context) {
-    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
 
 
@@ -71,50 +65,57 @@ class _UsuarioMapState extends State<UsuarioMap> {
         drawer: _drawer(),
         body: BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
           builder: (context, state) {
-            return Stack(
+            return Column(
               children: [
     
-                GoogleMapWidget(
-                  initPosition: getMarkerHelper(markers: usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)!.position,
-                  googleMapController: googleMapController,
-                  markers: state.markers,
-                  polylines: state.polylines,
-                ),
-                
-                SafeArea(
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 20),
-                      child: Column(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 12),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.yellow,
-                            ),
-                            child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 15, vertical: 5),
-                                child: Text(state.distancia),
-                          )),
-                          Container(
-                            margin: const EdgeInsets.only(top: 12),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.yellow,
-                            ),
-                            child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 15, vertical: 5),
-                                child: Text(state.duracion)),
-                          ),
-                        ],
+                Expanded(
+                  child: Stack(
+                    children: [
+                      GoogleMapWidget(
+                        initPosition: getMarkerHelper(markers: _usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)!.position,
+                        googleMapController: googleMapController,
+                        markers: state.markers,
+                        polylines: state.polylines,
+                        ajustarZoomOrigenDestino: true,
                       ),
-                    ),
+                      SafeArea(
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 20),
+                            child: Column(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(top: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.yellow,
+                                  ),
+                                  child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 5),
+                                      child: Text(state.distancia),
+                                )),
+                                Container(
+                                  margin: const EdgeInsets.only(top: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.yellow,
+                                  ),
+                                  child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 5),
+                                      child: Text(state.duracion)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              
     
                 (state.idConductor == '') ? 
     
@@ -136,20 +137,23 @@ class _UsuarioMapState extends State<UsuarioMap> {
                         InformacionWidget(
                           icons: Icons.add_location,
                           titulo: 'Desde',
-                          descripcion: usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
+                          descripcion: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
                         ),
                         const SizedBox(height: 12,),
                         InformacionWidget(
                           icons: Icons.my_location,
                           titulo: 'Hasta',
-                          descripcion: usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
+                          descripcion: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
                         ),
-                        const SizedBox(height: 12,),
-                        InformacionWidget(
+                        
+                        (_usuarioPedidoBloc.pedidoModel!.bmonto != '0') ? const SizedBox(height: 12,) : Container(),
+                        
+                        (_usuarioPedidoBloc.pedidoModel!.bmonto != '0') ? InformacionWidget(
                           icons: Icons.attach_money,
                           titulo: 'Precio',
-                          descripcion: '${usuarioPedidoBloc.pedidoModel!.bmonto} Bs.',
-                        ),
+                          descripcion: '${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.',
+                        ) : Container(),
+                        
                         const SizedBox(height: 12,),
                         Container(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -157,11 +161,11 @@ class _UsuarioMapState extends State<UsuarioMap> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Expanded(child: _buttonRequest(
-                                usuarioPedidoBloc: usuarioPedidoBloc,
+                                usuarioPedidoBloc: _usuarioPedidoBloc,
                                 userBloc: userBloc
                               )),
                               const SizedBox(width: 12,),
-                              Expanded(child: _buttonCancel(usuarioPedidoBloc))
+                              Expanded(child: _buttonCancel(_usuarioPedidoBloc))
                             ],
                           ),
                         ),
@@ -311,6 +315,8 @@ class _UsuarioMapState extends State<UsuarioMap> {
       },
     );
   }
+  
+
 }
 
 class InformacionWidget extends StatelessWidget {

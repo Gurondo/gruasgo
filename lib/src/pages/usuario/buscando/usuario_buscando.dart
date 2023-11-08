@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
+import 'package:lottie/lottie.dart';
 
 class UsuarioBuscando extends StatefulWidget {
   const UsuarioBuscando({ Key? key }) : super(key: key);
@@ -16,7 +18,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
 
   // libera de la memoria esos listener.
   @override
-  void dispose() {
+  void dispose(){
     
     if (_usuarioPedidoBloc.state.idConductor == ''){
       _usuarioPedidoBloc.cancelarPedido();
@@ -41,8 +43,10 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
 
   @override
   Widget build(BuildContext context) {
-  
+    
+    
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    final _userBloc = BlocProvider.of<UserBloc>(context);
     
     return WillPopScope(
       onWillPop: () => Future(() => false),
@@ -50,40 +54,26 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
         child: Scaffold(
           body: Column(
             children: [
-              SizedBox(
-                height: 180,
-                width: double.infinity,
-                child: ClipPath(
-                  clipper: MyClipper(),
-                  child: Container(
-                    color: Colors.black,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(150),
-                            color: Colors.white
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text('Tu conductor', style: TextStyle(color: Colors.white),),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Imagen'),
-                    const SizedBox(height: 40,),
-                    const Text('Buscando conductor'),
+                    Image.asset(
+                      'assets/img/logo_gruas.png', // Ruta a la imagen en el directorio assets
+                      width: 140,  // Ancho de la imagen
+                      height: 140, // Alto de la imagen
+                    ),
+
+                    const SizedBox(height: 20,),
+                    const Text('BUSCANDO CONDUCTOR',
+                      style: TextStyle(
+                      color: Colors.black, // Cambia el color del texto
+                      fontSize: 25, fontWeight: FontWeight.bold,
+                    ),
+                    ),
                     const SizedBox(height: 40),
+                    _lottieAni(),
+
                     BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
                       builder: (context, state) {
                         return Text(state.contador.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),);
@@ -97,9 +87,9 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
                 child: ButtonApp(
                   color: Colors.amber,
                   text: 'Cancelar viaje',
-                  icons: Icons.cancel_outlined,
+                 // icons: Icons.cancel_outlined,
                   onPressed: (){
-                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false);
+                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: _userBloc.user!.nombreusuario);
                   },
                 ),
               )
@@ -109,24 +99,13 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
       ),
     );
   }
-}
 
-class MyClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(0,0);
-    path.lineTo(0, size.height);
-    path.quadraticBezierTo((size.width/4), size.height-40, size.width/2, size.height-40);
-    path.quadraticBezierTo(size.width-(size.width/4), size.height-40, size.width, size.height-80);
-    path.lineTo(size.width, 0.0);
-    path.close();
-    return path;
+  Widget _lottieAni(){
+    return Lottie.asset(
+      'assets/json/ani2.json',
+      width: MediaQuery.of(context).size.width * 0.60,
+      height: MediaQuery.of(context).size.width * 0.60,
+      fit: BoxFit.fill
+    );
   }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
-    return false;
-  }
-  
 }

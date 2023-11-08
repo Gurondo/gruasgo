@@ -14,6 +14,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
   final void Function(String) onSuggestionSelected;
   final Widget? suffixIcon;
 
+
   const TextFormFieldMapWidget({
     super.key,
     required this.labelText,
@@ -36,12 +37,13 @@ class TextFormFieldMapWidget extends StatelessWidget {
         children: [
           Expanded(
             child: TypeAheadFormField(
-              
-              
+              minCharsForSuggestions: 1,
               validator: validator,
               textFieldConfiguration: TextFieldConfiguration(
+
+                
                 controller: textEditingController,
-                autofocus: true,
+                autofocus: false,
                 style: DefaultTextStyle.of(context).style.copyWith(
                   fontStyle: FontStyle.italic
                 ),
