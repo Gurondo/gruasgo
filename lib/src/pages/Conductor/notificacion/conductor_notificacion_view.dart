@@ -5,9 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
-import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
@@ -29,7 +28,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
   final Completer <GoogleMapController> _mapController = Completer();
 
   late ConductorBloc _conductorBloc;
-  late DetalleNotificacionConductor args;
+  late UserBloc _userBloc;
 
   final int _tiempo = Enviroment().tiempoEspera;
 
@@ -42,20 +41,26 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
     super.initState();
 
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
+    _userBloc = BlocProvider.of(context);
 
     _conductorBloc.solicitudYaTomada();
 
     final navigator = Navigator.of(context);
     _conductorBloc.solicitudCancelada(navigator: navigator);
 
+
   }
    // Para limpiar de la memoria
   @override
   void dispose() async {
-    _conductorBloc.respuestaPedido(detalleNotificacionConductor: args, pedidoAceptado: _pedidoAceptado);
+    _conductorBloc.respuestaPedido(detalleNotificacionConductor: _conductorBloc.detallePedido!, pedidoAceptado: _pedidoAceptado);
     if (!_pedidoAceptado){
       _conductorBloc.add(OnSetDetallePedido(null));
+      _conductorBloc.eliminarCrearEstado();
       _conductorBloc.add(OnSetNewMarkets({}));
+      _conductorBloc.pedidoNoAceptado(idConductor: _userBloc.user!.idUsuario, idPedido: _conductorBloc.detallePedido!.pedidoId);
+    }else{
+      _conductorBloc.pedidoAceptado(idConductor: _userBloc.user!.idUsuario, idPedido: _conductorBloc.detallePedido!.pedidoId);
     }
 
     // Limpiar de memoria
@@ -69,12 +74,11 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
   @override
   Widget build(BuildContext context) {
 
-    args = ModalRoute.of(context)!.settings.arguments as DetalleNotificacionConductor;
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
 
-    LatLng origen = args.origen;
-    LatLng destino = args.destino;
+    LatLng origen = _conductorBloc.detallePedido!.origen;
+    LatLng destino = _conductorBloc.detallePedido!.destino;
     
     return SafeArea(
       child: Scaffold(
@@ -94,20 +98,9 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                       }
                       return GoogleMapWidget(
                         initPosition: origen, 
+                        ajustarZoomOrigenDestino: true,
                         googleMapController: _mapController,
-                        markers: {
-                          Marker(
-                            markerId: const MarkerId('origen'),
-                            position: origen
-                          ),
-                          Marker(
-                            markerId: const MarkerId('destino'),
-                            position: destino,
-                            infoWindow: const InfoWindow(
-                              title: 'Destino',
-                            )
-                          ),
-                        },
+                        markers: _conductorBloc.state.markers,
                         polylines: {
                           Polyline(
                             polylineId: const PolylineId('ruta'),
@@ -131,7 +124,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                     child: Align(
                       alignment: Alignment.topCenter,
                       heightFactor: 1,
-                      child: Text('Cliente: ${args.cliente}')),
+                      child: Text('Cliente: ${_conductorBloc.detallePedido!.cliente}')),
                   )
                 ],
               ),
@@ -141,7 +134,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               child: Column(
                 children: [
                   const Text('Recoger en', style: TextStyle(fontWeight: FontWeight.bold),),
-                  Text(args.nombreOrigen),
+                  Text(_conductorBloc.detallePedido!.nombreOrigen),
                 ],
               ),
             ),
@@ -150,7 +143,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               child: Column(
                 children: [
                   const Text('Llegar a', style: TextStyle(fontWeight: FontWeight.bold),),
-                  Text(args.nombreDestino),
+                  Text(_conductorBloc.detallePedido!.nombreDestino),
                 ],
               ),
             ),
@@ -159,7 +152,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               child: Column(
                 children: [
                   const Text('Carga a recoger', style: TextStyle(fontWeight: FontWeight.bold),),
-                  Text(args.descripcionDescarga),
+                  Text(_conductorBloc.detallePedido!.descripcionDescarga),
                 ],
               ),
             ),
@@ -168,7 +161,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
               child: Column(
                 children: [
                   const Text('Referencia', style: TextStyle(fontWeight: FontWeight.bold),),
-                  Text('Llamar al numero: ${args.referencia.toString()}'),
+                  Text('Llamar al numero: ${_conductorBloc.detallePedido!.referencia.toString()}'),
                 ],
               ),
             ),
@@ -212,22 +205,17 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         icons: Icons.check,
                         onPressed: () async {
                           // _conductorBloc.aceptarPedido(socketClientId: args.socketClientId, clientId: args.clienteId);
-                          _conductorBloc.add(OnSetNewMarkets({
-                            Marker(
-                              markerId: MarkerId(MarkerIdEnum.origen.toString()),
-                              position: args.origen
-                            ),
-                            Marker(
-                              markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                              position: args.destino
-                            ),
-                          }));
+
                           
                           _getPolylines();
 
+                          // TODO: Aqui se actualiza el pedido
+
                           _pedidoAceptado = true;
+                          print('Detalle Pedido');
+                          print(_conductorBloc.detallePedido);
+                          _conductorBloc.add(OnSetDetallePedido(_conductorBloc.detallePedido!));
                           Navigator.pop(context);
-                          _conductorBloc.add(OnSetDetallePedido(args));
                         },
                       ),
                     ],
@@ -251,7 +239,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
       
       List<PointLatLng>? polyline = await _conductorBloc.getPolylines(
         origen: LatLng(position.latitude, position.longitude), 
-        destino: args.origen
+        destino: _conductorBloc.detallePedido!.origen
       );
 
       if (polyline != null){

@@ -115,11 +115,6 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
                     
                     const SizedBox(height: 10),
 
-                    BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
-                      builder: (context, state) {
-                        return Text(state.contador.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),);
-                      },
-                    )
                   ],
                 )
               ),

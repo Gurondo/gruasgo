@@ -8,7 +8,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
+import 'package:gruasgo/src/models/response/estado_pedido_response.dart';
 import 'package:gruasgo/src/models/response/estado_response.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as polyline;
 import 'package:gruasgo/src/services/http/conductor_service.dart';
@@ -24,6 +27,9 @@ part 'conductor_state.dart';
 class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   UserBloc userBloc;
+  DetalleNotificacionConductor? detallePedido;
+
+  bool yaHayPedido = false;
 
   ConductorBloc({
     required this.userBloc
@@ -92,12 +98,26 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     });
   }
 
+  Future<bool> eliminarCrearEstado() async {
+    try {
+      
+      await ConductorService.eliminarEstado(idConductor: userBloc.user!.idUsuario);
+      Position position = await getPositionHelpers();
+      await ConductorService.crearEstado(idConductor: userBloc.user!.idUsuario, lat: position.latitude, lng: position.longitude);
+      
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
   Future<bool> actualizarCoorEstado() async {
     try {
       
       final Position position = await getPositionHelpers();
 
-      Response resp = await ConductorService().actualizarUbicacionEstado(
+      Response resp = await ConductorService.actualizarUbicacionEstado(
         idConductor: userBloc.user!.idUsuario, 
         ubiLatitud: position.latitude, 
         ubiLongitud: position.longitude
@@ -120,7 +140,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
     try {
       
-      Response resp = await ConductorService().eliminarEstado(idConductor: userBloc.user!.idUsuario);
+      Response resp = await ConductorService.eliminarEstado(idConductor: userBloc.user!.idUsuario);
       if (resp.statusCode != 200) return false;
       print('Actualizando para elimianr este estado');
       print(resp.body);
@@ -137,16 +157,86 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
     try {
       
-      final Response resp = await ConductorService().obtenerEstado(idConductor: userBloc.user!.idUsuario);
-      if (resp.statusCode != 200) return false;
+      final Response respEstado = await ConductorService.obtenerEstado(
+        idConductor: userBloc.user!.idUsuario
+      );
+      print('Obtener Estado');
+      print(respEstado.body);
+      if (respEstado.statusCode != 200) return false;
       
-      final responseEstado = responseEstadoFromJson(resp.body);
-
-      
+      final responseEstado = responseEstadoFromJson(respEstado.body);
       if (responseEstado.isEmpty) return true;
-      
-      final status = await eliminarEstado();
-      return status;
+
+      if (responseEstado[0].estado == 'PE'){
+        
+        final Response resp = await ConductorService.obtenerEstadoConPedido(idConductor: userBloc.user!.idUsuario);
+        if (resp.statusCode != 200) return false;
+
+        print('Obtener Estado Pedido');
+        print(resp.body);
+        final responseEstadoPedido = responseEstadoPedidoFromJson(resp.body);
+        
+        if (responseEstadoPedido.isEmpty) return true;
+
+        final data = responseEstadoPedido[0];
+        add(OnSetDetallePedido(DetalleNotificacionConductor(
+          origen: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+          destino: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+          servicio: data.servicio,
+          cliente: "nombre del usuario",
+          clienteId: data.idUsuario,
+          nombreOrigen: data.ubiInicial,
+          nombreDestino: data.ubiFinal,
+          descripcionDescarga: data.descripCarga,
+          referencia: int.parse(data.celularEntrega),
+          monto: double.parse(data.monto),
+          socketClientId: 'socket_id',
+          pedidoId: data.idPedido
+        )));
+
+        add(OnSetNewMarkets({
+          Marker(
+            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+            position: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+          ),
+          Marker(
+            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+            position: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+          ),
+        }));
+
+        print(state.detallePedido);
+
+        final position = await getPositionHelpers();
+        openSocket(
+          lat: position.latitude, 
+          lng: position.longitude
+        );
+        
+        List<PointLatLng>? polyline = await getPolylines(
+          origen: LatLng(position.latitude, position.longitude), 
+          destino: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+        );
+
+        if (polyline != null){
+
+          add(OnSetAddPolyline(
+            Polyline(
+              polylineId: PolylineId(PolylineIdEnum.posicionToOrigen.toString()),
+              color: Colors.black,
+              width: 4,
+              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+            )
+          ));
+        }
+
+        yaHayPedido = true;
+
+      }else{
+        await eliminarEstado();
+      }
+
+      return true;
 
     } catch (e) {
       print(e);
@@ -160,11 +250,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       
       Position position = await getPositionHelpers();
 
-      final Response resp = await ConductorService().agregarEstado(
+      final Response resp = await ConductorService.crearEstado(
         idConductor: userBloc.user!.idUsuario, 
         lat: position.latitude, 
         lng: position.longitude
       );
+
+      print('Crear estado');
+      print(resp.body);
       if (resp.statusCode != 200) {
         return false;
       }
@@ -189,6 +282,67 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       return PolylinePoints().decodePolyline(googleMapDirection.routes[0].overviewPolyline.points);
     }
     return null;
+
+  }
+
+  Future<bool> pedidoNoAceptado({
+    required String idConductor,
+    required String idPedido
+  }) async {
+
+    try {
+
+      final responsePedido = await ConductorService.actualizarEstadoEnPedido(
+        idPedido: idPedido, 
+        idVehiculo: '-', 
+        idConductor: idConductor, 
+        estado: 'RECO'
+      );
+      print('Cambiando el estado que rechazo el pedido');
+      print(responsePedido.body);
+      if (responsePedido.statusCode != 200) return false;
+      dynamic jsonDataPedido = json.decode(responsePedido.body);
+      return (jsonDataPedido['success'] == 'si');
+
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool> pedidoAceptado({
+    required String idConductor,
+    required String idPedido
+  }) async {
+    try {
+      
+      final responseStatus = await ConductorService.actualizarEstadoAceptado(
+        idConductor: idConductor, 
+        idPedido: idPedido
+      );
+
+      print('Cambiando el estado que acepto');
+      print(responseStatus.body);
+      if (responseStatus.statusCode != 200) return false;
+      dynamic jsonData = json.decode(responseStatus.body);
+      if (jsonData['success'] != 'si') return false;
+
+      final responsePedido = await ConductorService.actualizarEstadoEnPedido(
+        idPedido: idPedido, 
+        idVehiculo: '-', 
+        idConductor: idConductor, 
+        estado: 'APCO'
+      );
+      print('Cambiando el estado que acepto el pedido');
+      print(responsePedido.body);
+      if (responsePedido.statusCode != 200) return false;
+      dynamic jsonDataPedido = json.decode(responsePedido.body);
+      return (jsonDataPedido['success'] == 'si');
+
+    } catch (e) {
+      print(e);
+      return false;
+    }
 
   }
 
@@ -254,14 +408,13 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
 
-  void respuestaSolicitudConductor({required NavigatorState navigator}){
+  void notificacionNuevaSolicitudConductor({required NavigatorState navigator}){
 
-    SocketService.on('solicitud pedido conductor', (data){
+    SocketService.on('notificacion pedido conductor', (data){
     
-      
       final payload = data['payload'];
 
-      final arguments = DetalleNotificacionConductor(
+      detallePedido = DetalleNotificacionConductor(
         origen: LatLng(payload['origen'][0], payload['origen'][1]),
         destino: LatLng(payload['destino'][0], payload['destino'][1]),
         servicio: payload['servicio'],
@@ -273,9 +426,21 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         referencia: payload['referencia'],
         monto: double.parse(payload['monto'].toString()),
         socketClientId: payload['socket_client_id'],
-      );
+        pedidoId: payload['pedido_id'],
+      );;
 
-      navigator.pushNamed('ConductorNotificacion', arguments: arguments);
+      add(OnSetNewMarkets({
+        Marker(
+          markerId: MarkerId(MarkerIdEnum.origen.toString()),
+          position: detallePedido!.origen
+        ),
+        Marker(
+          markerId: MarkerId(MarkerIdEnum.destino.toString()),
+          position: detallePedido!.destino
+        ),
+      }));
+
+      navigator.pushNamed('ConductorNotificacion');
 
     });
 
@@ -305,8 +470,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     SocketService.off('solicitud cancelada');
   }
 
-  void clearSocketSolicitudConductor(){
-    SocketService.off('solicitud pedido conductor');
+  void clearSocketNotificacionNuevaSolicitudConductor(){
+    SocketService.off('notificacion pedido conductor');
   }
   
 }

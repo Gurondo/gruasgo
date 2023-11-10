@@ -146,7 +146,7 @@ class _FormWidgetState extends State<FormWidget> {
   TextEditingController tecNroContrato = TextEditingController();
   TextEditingController tecDescripcion = TextEditingController();
   bool isLoading = false;
-
+  
   @override
   Widget build(BuildContext context) {
 
@@ -460,7 +460,7 @@ class _FormWidgetState extends State<FormWidget> {
         ],
       ),
     );
-}
+  }
 
   Future<dynamic> showDialogPrecio(BuildContext context, bool porHora, String? precio, List<String> listaRecibida, UserBloc userBloc) {
     return showDialog(

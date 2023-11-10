@@ -48,7 +48,7 @@ class ClienteService{
 
   }
 
-  static Future<http.Response> actualizarEstadoPedido({
+  static Future<http.Response> cancelarEstadoPedido({
     required String  uuidPedido
   }) async {
     final String url = "${Enviroment().baseUrl}/pedido.php";

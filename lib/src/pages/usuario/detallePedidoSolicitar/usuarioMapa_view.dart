@@ -20,7 +20,11 @@ class UsuarioMap extends StatefulWidget {
 }
 
 class _UsuarioMapState extends State<UsuarioMap>{
+
+
+
   final UsuarioMapController _con = UsuarioMapController();
+  
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
 
@@ -172,7 +176,13 @@ class _UsuarioMapState extends State<UsuarioMap>{
                       ],
                     ),
                   ),
-                ) : Container(),
+                ) : Container(
+                  child: TextButton(
+                    onPressed: (){
+                      _usuarioPedidoBloc.add(OnSetIdConductor(''));
+                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: userBloc.user!.nombreusuario);
+                  }, child: Text('data')),
+                ),
     
               ],
             );
@@ -246,11 +256,11 @@ class _UsuarioMapState extends State<UsuarioMap>{
         text: 'SOLICITAR',
         color: Colors.amber,
         textColor: Colors.black,
-        onPressed: () {
+        onPressed: () async {
           
+          final navigator = Navigator.of(context);
 
-
-          usuarioPedidoBloc.registrarPedido(
+          final status = await usuarioPedidoBloc.registrarPedido(
             idUsuario: userBloc.user!.idUsuario, 
             ubiInicial: usuarioPedidoBloc.pedidoModel!.bubinicial, 
             ubiFinal: usuarioPedidoBloc.pedidoModel!.bubfinal, 
@@ -261,7 +271,8 @@ class _UsuarioMapState extends State<UsuarioMap>{
             celentrega: usuarioPedidoBloc.pedidoModel!.bcelentrega
           );
 
-          usuarioPedidoBloc.solicitar(
+          if (status){
+            usuarioPedidoBloc.solicitar(
               origen: usuarioPedidoBloc.pedidoModel!.origen,
               destino: usuarioPedidoBloc.pedidoModel!.destino,
               // origen: usuarioPedidoBloc.state.origen!,
@@ -273,8 +284,14 @@ class _UsuarioMapState extends State<UsuarioMap>{
                   _usuarioPedidoBloc.pedidoModel?.bdescarga ?? '',
               monto: double.parse(
                   (_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
-              referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega);
-          Navigator.pushNamed(context, 'UsuarioBuscando');
+              referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega,
+              pedidoId: usuarioPedidoBloc.pedidoModel!.bidpedido
+            );
+
+            navigator.pushNamed('UsuarioBuscando');
+          }else{
+            print('Error a la hora de crear el pedido, por eso no se notificara a los conductores');
+          }
         },
       ),
     );

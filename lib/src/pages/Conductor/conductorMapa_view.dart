@@ -46,14 +46,20 @@ class _ConductorMapState extends State<ConductorMap> {
     });
 
     final navigator = Navigator.of(context);
-    _conductorBloc.respuestaSolicitudConductor(navigator: navigator);
+    _conductorBloc.notificacionNuevaSolicitudConductor(navigator: navigator);
+
+    print(_conductorBloc.detallePedido);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _conductorBloc.clearSocketSolicitudConductor();
-    _conductorBloc.eliminarEstado();
+    _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
+    if (_conductorBloc.state.detallePedido == null){
+      _conductorBloc.eliminarEstado();
+    }
+    print(_conductorBloc.detallePedido);
+
     // TODO: implement dispose
     super.dispose();
   }
@@ -80,9 +86,16 @@ class _ConductorMapState extends State<ConductorMap> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               _buttonDrawer(), 
-                              const Padding(
-                                padding: EdgeInsets.only(top: 5),
-                                child: Text('Esperando solicitud', style: TextStyle(fontSize: 16),)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 5),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(7)
+                                  ),
+                                  child: const Text('Esperando solicitud', style: TextStyle(fontSize: 19,color: Colors.red),)
+                                )
                               ),
                               _buttonCenterPosition()
                               ],
@@ -108,11 +121,15 @@ class _ConductorMapState extends State<ConductorMap> {
                                     text: 'Cancelar',
                                     color: Colors.amber,
                                     textColor: Colors.black,
-                                    onPressed: (){
+                                    onPressed: ()async{
                                       
                                       // TODO: Cancelar Pedido
-                                      _conductorBloc.respuestaPedidoProcesoCancelado();
-                                      _conductorBloc.add(OnSetLimpiarPedidos());
+                                      final status = await _conductorBloc.eliminarCrearEstado();
+                                      if (status){
+                                        _conductorBloc.respuestaPedidoProcesoCancelado();
+                                        _conductorBloc.add(OnSetLimpiarPedidos());
+                                      }
+                                  
 
                                     },
                                   ),
@@ -292,7 +309,11 @@ class _ConductorMapState extends State<ConductorMap> {
       myLocationEnabled: false,
       myLocationButtonEnabled:
           false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
-      markers: Set<Marker>.of(_con.markers.values),
+      markers: Set<Marker>.of({
+        ..._con.markers.values,
+        ..._conductorBloc.state.markers
+      }),
+      polylines: _conductorBloc.state.polylines,
     );
   }
 
@@ -309,8 +330,7 @@ class _ConductorMapState extends State<ConductorMap> {
     return (origen != null && destino != null);
   }
 
-    Future _getPolylines(ConductorState state) async {
-
+  Future _getPolylines(ConductorState state) async {
 
     Position position = await getPositionHelpers();
     Marker? marker = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);

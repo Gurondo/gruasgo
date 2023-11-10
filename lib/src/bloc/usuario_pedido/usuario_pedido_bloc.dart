@@ -358,7 +358,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String nombreDestino,
     required String descripcionDescarga,
     required int referencia,
-    required double monto
+    required double monto,
+    required String pedidoId,
   }){
 
     SocketService.open();
@@ -372,7 +373,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       'nombre_destino': nombreDestino,
       'descripcion_descarga': descripcionDescarga,
       'referencia': referencia,
-      'monto': monto
+      'monto': monto,
+      'pedido_id': pedidoId,
     });
 
   }
@@ -381,7 +383,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
     try {
         
-      final response = await ClienteService.actualizarEstadoPedido(uuidPedido: pedidoModel!.bidpedido);
+      final response = await ClienteService.cancelarEstadoPedido(uuidPedido: pedidoModel!.bidpedido);
       print(response.body);
 
       SocketService.emit('cancelar pedido cliente', {

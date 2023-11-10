@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 
 class ConductorService{
 
-  Future agregarEstado({
+  ConductorService._();
+
+  static Future<http.Response> crearEstado({
     required String idConductor,
     required double lat,
     required double lng,
@@ -14,13 +16,13 @@ class ConductorService{
       'bidconductor': idConductor,
       'bublatitud': lat.toString(),
       'bublongitud': lng.toString(),
-      'bestado': ''
+      'bestado': 'ES'
     });
 
     return resp;
   }
 
-  Future obtenerEstado({required String idConductor}) async{
+  static Future obtenerEstadoConPedido({required String idConductor}) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
     final resp = await http.post(urlParce, body: {
       'btip': 'BUCON',
@@ -30,23 +32,54 @@ class ConductorService{
     return resp;
   }
 
-  Future actualizarEstado({
-    required String idConductor,
-    required String idPedido,
-    required String estado
-  }) async{
+  static Future obtenerEstado({required String idConductor}) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
     final resp = await http.post(urlParce, body: {
-      'btip': 'UPESPE',
-      'bidconductor': idConductor,
-      'bidpedido': idPedido,
-      'idPedido': estado
+      'btip': 'BUSEST',
+      'bidconductor': idConductor
     });
 
     return resp;
   }
 
-  Future actualizarUbicacionEstado({
+  static Future<http.Response> actualizarEstadoAceptado({
+    required String idConductor,
+    required String idPedido,
+  }) async{
+    var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
+    print(idConductor);
+    print(idPedido);
+    final resp = await http.post(urlParce, body: {
+      'btip': 'UPESPE',
+      'bidconductor': idConductor,
+      'bidpedido': idPedido,
+      'bestado': 'PE'
+    });
+
+    return resp;
+  }
+
+  static Future<http.Response> actualizarEstadoEnPedido({
+    required String idPedido,
+    required String idVehiculo,
+    required String idConductor,
+    required String estado
+  }) async {
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+
+    final response = await http.post(uri, body: {
+      'btip': 'AcpCanConductor',
+      'bidpedido': idPedido,
+      'bidvehiculo': idVehiculo,
+      'bidconductor': idConductor,
+      'bestado': estado
+    });
+
+    return response;
+  }
+
+  static Future actualizarUbicacionEstado({
     required String idConductor,
     required double ubiLatitud,
     required double ubiLongitud
@@ -61,7 +94,7 @@ class ConductorService{
     return resp;
   }
 
-  Future eliminarEstado({
+  static Future eliminarEstado({
     required String idConductor
   }) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');

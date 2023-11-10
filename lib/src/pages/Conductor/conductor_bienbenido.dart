@@ -18,13 +18,10 @@ class ConductorBienbenido extends StatefulWidget {
 
 class _ConductorBienvenidaState extends State<ConductorBienbenido> {
 
-
-  // Bandera para controlar el estado de esta app, si esta cargando, el boton se bloquea mostrando un mensaje de cargando,, para evitar que el conductor 
-  // haga muchas veces click al boton realizando muchas peticiones al servidor
-  bool _isLoading = false;
-
   @override
   Widget build(BuildContext context) {
+
+    final navigator = Navigator.of(context);
 
     final conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
@@ -51,81 +48,117 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
               if (!snapshot.hasData) return const Text('Cargando');
               if (!snapshot.data!) return const Text('Error');
 
-              return Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 40),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Bienvenido Conductor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
-                    ),
-                  ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: _imagen(),
+                if (conductorBloc.yaHayPedido) {
+                  Future.delayed(Duration.zero, (){
+                    navigator.pushNamed('MapaConductor');                  
+                  });
+                  return const Text('Redireccionando');
+                }
 
-                    )
-                  ),
-                  (!_isLoading) ? Container(
-                    height: 50,
-                    alignment: Alignment.bottomCenter,
-                    margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
-                    child: ButtonApp(
-                      text: 'Conectarse'.toUpperCase(),
-                      color: Colors.amber,
-                      textColor: Colors.black,
-                      onPressed: () async {
-                          
-                          setState(() {   
-                            _isLoading = true;
-                          });
-                          final navigator = Navigator.of(context);
-                          final position = await getPositionHelpers();
-                          
-                          final status = await conductorBloc.crearEstado();
+                // TODO: Para evitar que el usuario pueda ver esto, tengo que separarlo en un nuevo widget
+                return const ComponentWidget();
+              }
 
-                          // enviar la lat y lng del conductor que esta ahora mismo
-                          if (status){
-                            conductorBloc.openSocket(
-                              lat: position.latitude, 
-                              lng: position.longitude
-                            );
-
-                            await navigator.pushNamed('MapaConductor');
-
-                            setState(() {
-                              _isLoading = false;
-                            });
-                          }else{
-                            setState(() {
-                              _isLoading = false;
-                            });
-                            // TODO: Mensaje de error
-                          }
-                       
-                        },
-                    ),
-                  ) : Container(
-                    height: 50,
-                    alignment: Alignment.bottomCenter,
-                    margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
-                    child: ButtonApp(
-                      text: 'Conectandose...'.toUpperCase(),
-                      color: Colors.amber[200],
-                      textColor: Colors.black,
-                      onPressed: (){
-
-                      },
-                    ),
-                  )
-                ],
-              );
-
-            },
           ),
         ),
       )
+    );
+
+  
+  }
+
+
+
+}
+
+
+// Para que el setState no trabaje con toda la ventana, solo trabaje con lo que realmente se necesita 
+// para evitar dobles consultas
+class ComponentWidget extends StatefulWidget {
+  const ComponentWidget({ Key? key }) : super(key: key);
+
+  @override
+  State<ComponentWidget> createState() => _ComponentWidgetState();
+}
+
+class _ComponentWidgetState extends State<ComponentWidget> {
+
+  bool _isLoading = false;
+
+
+  @override
+  Widget build(BuildContext context) {
+  final conductorBloc = BlocProvider.of<ConductorBloc>(context);
+  final navigator = Navigator.of(context);
+
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 40),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Bienvenido Conductor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+          ),
+        ),
+        Expanded(
+          child: Align(
+            alignment: Alignment.center,
+            child: _imagen(),
+
+          )
+        ),
+        (!_isLoading) ? Container(
+          height: 50,
+          alignment: Alignment.bottomCenter,
+          margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+          child: ButtonApp(
+            text: 'Conectarse'.toUpperCase(),
+            color: Colors.amber,
+            textColor: Colors.black,
+            onPressed: () async {
+                
+                setState(() {   
+                  _isLoading = true;
+                });
+                final position = await getPositionHelpers();
+                
+                final status = await conductorBloc.crearEstado();
+
+                // enviar la lat y lng del conductor que esta ahora mismo
+                if (status){
+                  conductorBloc.openSocket(
+                    lat: position.latitude, 
+                    lng: position.longitude
+                  );
+
+                  await navigator.pushNamed('MapaConductor');
+
+                  setState(() {
+                    _isLoading = false;
+                  });
+                }else{
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  // TODO: Mensaje de error
+                }
+            
+              },
+          ),
+        ) : Container(
+          height: 50,
+          alignment: Alignment.bottomCenter,
+          margin: const EdgeInsets.only(right: 60, left: 60, bottom: 20),
+          child: ButtonApp(
+            text: 'Conectandose...'.toUpperCase(),
+            color: Colors.amber[200],
+            textColor: Colors.black,
+            onPressed: (){
+
+            },
+          ),
+        )
+      ],
     );
   }
 
