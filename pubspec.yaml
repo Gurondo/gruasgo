@@ -49,6 +49,7 @@ dependencies:
   permission_handler: ^11.0.0
   progress_dialog_null_safe: ^1.0.7
   socket_io_client: ^2.0.3+1
+  stop_watch_timer: ^3.0.2
   timer_count_down: ^2.2.2
 
 dev_dependencies:

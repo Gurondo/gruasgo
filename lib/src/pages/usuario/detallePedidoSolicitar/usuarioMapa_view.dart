@@ -35,12 +35,14 @@ class _UsuarioMapState extends State<UsuarioMap>{
     // TODO: implement initState
     super.initState();
 
+    final navigator = Navigator.of(context);
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     _usuarioPedidoBloc.listenPedidoProcesoCancelado();
     _usuarioPedidoBloc.respuesta(showAlert: showAlert);
     _usuarioPedidoBloc.actualizarContador();
     _usuarioPedidoBloc.listenPosicionConductor();
-
+    _usuarioPedidoBloc.listenConductorEstaAqui();
+    _usuarioPedidoBloc.listenPedidoFinalizado(navigator: navigator);
     // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
     //   _con.init(context, refresh);  //// REFRESH  PARA M3
     // });
@@ -48,6 +50,8 @@ class _UsuarioMapState extends State<UsuarioMap>{
 
   @override
   void dispose() {
+    _usuarioPedidoBloc.clearSocketPedidoFinalizado();
+    _usuarioPedidoBloc.clearSocketConductorEstaAqui();
     _usuarioPedidoBloc.clearSocketRespuestaUsuario();
     _usuarioPedidoBloc.clearSocketPedidoProcesadoCancelado();
     _usuarioPedidoBloc.clearSocketActualizarContador();
@@ -116,6 +120,31 @@ class _UsuarioMapState extends State<UsuarioMap>{
                           ),
                         ),
                       ),
+                      (state.conductorEstaAqui) ? Align(
+                        alignment: Alignment.topCenter,
+                        child: Container(
+                          padding: const EdgeInsets.only(top: 50, bottom: 15),
+                          height: 160,
+                          color: Colors.white,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('El conductor ya esta en el lugar', style: TextStyle(fontSize: 15),),
+                              const SizedBox(height: 12,),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: ButtonApp(
+                                  text: 'Aceptar',
+                                  color: Colors.amber,
+                                  onPressed: (){
+                                    _usuarioPedidoBloc.add(OnConductorEstaAqui(false));
+                                  },
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ) : Container()
                     ],
                   ),
                 ),
@@ -285,7 +314,9 @@ class _UsuarioMapState extends State<UsuarioMap>{
               monto: double.parse(
                   (_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
               referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega,
-              pedidoId: usuarioPedidoBloc.pedidoModel!.bidpedido
+              pedidoId: usuarioPedidoBloc.pedidoModel!.bidpedido,
+              nombreUsuario: userBloc.user!.nombreusuario,
+              clienteid: userBloc.user!.idUsuario,
             );
 
             navigator.pushNamed('UsuarioBuscando');

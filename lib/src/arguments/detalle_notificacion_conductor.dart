@@ -26,6 +26,7 @@ class DetalleNotificacionConductor {
   final double monto;
   final String socketClientId;
   final String pedidoId;
+  final String estado;
 
   DetalleNotificacionConductor({
     required this.origen,
@@ -39,6 +40,7 @@ class DetalleNotificacionConductor {
     required this.referencia,
     required this.monto,
     required this.socketClientId,
-    required this.pedidoId
+    required this.pedidoId,
+    required this.estado
   });
 }

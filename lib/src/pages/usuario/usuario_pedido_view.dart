@@ -526,7 +526,7 @@ class _FormWidgetState extends State<FormWidget> {
                   descripcionDescarga: tecDescripcion.text.trim(), 
                   celentrega: int.parse(tecNroContrato.text.trim()),
                   origen: origen,
-                  destino: destino
+                  destino: destino,
                 );
 
                 widget.usuarioPedidoBloc.sendEventDistanciaDuracion(origen: origen.position, destino: destino.position);

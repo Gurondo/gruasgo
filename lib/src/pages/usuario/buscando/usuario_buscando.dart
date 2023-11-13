@@ -48,7 +48,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
     
     
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
-    final _userBloc = BlocProvider.of<UserBloc>(context);
+    final userBloc = BlocProvider.of<UserBloc>(context);
     
     return WillPopScope(
       onWillPop: () => Future(() => false),
@@ -85,7 +85,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
                       },
                       onFinished: (){
 
-                        Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: _userBloc.user!.nombreusuario);
+                        Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: userBloc.user!.nombreusuario);
 
                         showDialog(
                           context: context, 
@@ -125,7 +125,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
                   text: 'Cancelar viaje',
                  // icons: Icons.cancel_outlined,
                   onPressed: (){
-                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: _userBloc.user!.nombreusuario);
+                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: userBloc.user!.nombreusuario);
                   },
                 ),
               )

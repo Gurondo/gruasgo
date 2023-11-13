@@ -15,13 +15,17 @@ class UsuarioPedidoState extends Equatable{
   // Cuando el pedido es aceptado
   final String idConductor;
 
+
+  // Notificacion del conductor
+  final bool conductorEstaAqui;
   const UsuarioPedidoState({
     this.markers = const {},
     this.polylines = const {},
     this.contador = 0,
     this.idConductor = '',
     this.distancia = '',
-    this.duracion = ''
+    this.duracion = '',
+    this.conductorEstaAqui = false
   });
 
   UsuarioPedidoState copyWitch({
@@ -30,16 +34,18 @@ class UsuarioPedidoState extends Equatable{
     Set<Polyline>? polylines,
     String? idConductor,
     String? distancia,
-    String? duracion
+    String? duracion,
+    bool? conductorEstaAqui
   }) => UsuarioPedidoState(
     contador: contador ?? this.contador,
     markers: markers ?? this.markers,
     idConductor: idConductor ?? this.idConductor,
     distancia: distancia ?? this.distancia,
     duracion: duracion ?? this.duracion,
-    polylines: polylines ?? this.polylines
+    polylines: polylines ?? this.polylines,
+    conductorEstaAqui: conductorEstaAqui ?? this.conductorEstaAqui
   );
 
   @override
-  List<Object?> get props => [contador, markers, idConductor, distancia, duracion, polylines];
+  List<Object?> get props => [contador, markers, idConductor, distancia, duracion, polylines, conductorEstaAqui];
 }

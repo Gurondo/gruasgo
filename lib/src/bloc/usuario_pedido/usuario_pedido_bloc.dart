@@ -99,14 +99,11 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       emit(state.copyWitch(polylines: polylines));
     });
 
-    on<OnSetIdConductor>((event, emit){
-      emit(state.copyWitch(idConductor: event.idConductor));
-    });
+    on<OnSetIdConductor>((event, emit) => emit(state.copyWitch(idConductor: event.idConductor)));
 
-    on<OnUpdateDistanciaDuracion>((event, emit){
-      emit(state.copyWitch(distancia: event.distancia, duracion: event.duracion));
-    });
+    on<OnUpdateDistanciaDuracion>((event, emit) => emit(state.copyWitch(distancia: event.distancia, duracion: event.duracion)));
 
+    on<OnConductorEstaAqui>((event, emit) => emit(state.copyWitch(conductorEstaAqui: event.conductorEstaAqui)) );
 
   }
 
@@ -267,7 +264,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String descripcionDescarga,
     required int celentrega,
     required Marker origen,
-    required Marker destino
+    required Marker destino,
   }){
     pedidoModel = PedidoModel(
       btip: 'addPedido', 
@@ -329,7 +326,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         ubiFinLat: destino.position.latitude,
         ubiFinLog: destino.position.longitude
       );
-
+      print('creando un nuevo pedido');
+      print(response.body);
       if (response.statusCode != 200) return false;
       
       dynamic jsonData = json.decode(response.body);
@@ -360,15 +358,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required int referencia,
     required double monto,
     required String pedidoId,
+    required String nombreUsuario,
+    required String clienteid
   }){
-
+    
+    print('===================================');
+    print(pedidoId);
     SocketService.open();
     SocketService.emit('solicitar', {
       'origen': origen, 
       'destino': destino,
       'servicio': servicio,
-      'cliente': userBloc.user!.nombreusuario,
-      'cliente_id': userBloc.user!.idUsuario,
+      'cliente': nombreUsuario,
+      'cliente_id': clienteid,
       'nombre_origen': nombreOrigen,
       'nombre_destino': nombreDestino,
       'descripcion_descarga': descripcionDescarga,
@@ -450,11 +452,31 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     });
   }
 
+  void listenConductorEstaAqui(){
+    SocketService.on('El conductor ya esta aqui', (data) {
+      add(OnConductorEstaAqui(true));
+    });
+  }
+
   void listenPedidoProcesoCancelado(){
     SocketService.on('pedido en proceso cancelado', (data){
       add(OnSetIdConductor(''));
       add(OnDeleteMarkerById(MarkerIdEnum.conductor));
     });
+  }
+
+  void listenPedidoFinalizado({required NavigatorState navigator}){
+    SocketService.on('pedido finalizado', (data){
+      navigator.pushNamedAndRemoveUntil('UsuarioFinalizacion', (route) => false);
+    });
+  }
+
+  void clearSocketPedidoFinalizado(){
+    SocketService.off('pedido finalizado');
+  }
+
+  void clearSocketConductorEstaAqui(){
+    SocketService.off('El conductor ya esta aqui');
   }
 
   void clearSocketPedidoProcesadoCancelado(){

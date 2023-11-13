@@ -38,3 +38,8 @@ class OnDeleteMarkerById extends UsuarioPedidoEvent{
   final MarkerIdEnum markerIdEnum;
   OnDeleteMarkerById(this.markerIdEnum);
 }
+
+class OnConductorEstaAqui extends UsuarioPedidoEvent{
+  final bool conductorEstaAqui;
+  OnConductorEstaAqui(this.conductorEstaAqui);
+}

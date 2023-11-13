@@ -16,7 +16,15 @@ class ConductorBienbenido extends StatefulWidget {
   State<ConductorBienbenido> createState() => _ConductorBienvenidaState();
 }
 
+
+
 class _ConductorBienvenidaState extends State<ConductorBienbenido> {
+
+  Future<bool> recuperarDato({required ConductorBloc conductorBloc}) async {
+    await conductorBloc.buscarEstado();
+
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +50,7 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
         ),
         body: Center(
           child: FutureBuilder<bool>(
-            future: conductorBloc.buscarEstado(),
+            future: recuperarDato(conductorBloc: conductorBloc),
             builder: (context, snapshot) {
               
               if (!snapshot.hasData) return const Text('Cargando');
@@ -50,7 +58,7 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
 
                 if (conductorBloc.yaHayPedido) {
                   Future.delayed(Duration.zero, (){
-                    navigator.pushNamed('MapaConductor');                  
+                    navigator.pushNamedAndRemoveUntil('MapaConductor', (route) => false);
                   });
                   return const Text('Redireccionando');
                 }
@@ -131,7 +139,7 @@ class _ComponentWidgetState extends State<ComponentWidget> {
                     lng: position.longitude
                   );
 
-                  await navigator.pushNamed('MapaConductor');
+                  await navigator.pushNamedAndRemoveUntil('MapaConductor', (route) => false);
 
                   setState(() {
                     _isLoading = false;

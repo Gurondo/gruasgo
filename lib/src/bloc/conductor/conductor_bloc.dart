@@ -8,12 +8,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/models/response/estado_pedido_response.dart';
 import 'package:gruasgo/src/models/response/estado_response.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as polyline;
+import 'package:gruasgo/src/models/response/pedido_response.dart';
 import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
@@ -96,6 +98,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     on<OnSetClearPolylines>((event, emit){
       emit(state.copyWitch(polylines: {}));
     });
+
+    on<OnSetEstadoPedidoAceptado>((event, emit){
+      emit(state.copyWitch(estadoPedidoAceptado: event.estadoPedidoAceptado));
+    });
   }
 
   Future<bool> eliminarCrearEstado() async {
@@ -110,6 +116,17 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       print(e);
       return false;
     }
+  }
+
+  Future<bool> adiccionarHora({
+    required String idPedido
+  }) async {
+
+    final Response resp = await ConductorService.adicionarHora(idPedido: idPedido);
+
+    print('Adiccionar hora');
+    print(resp.body);
+    return resp.statusCode == 200;
   }
 
   Future<bool> actualizarCoorEstado() async {
@@ -134,6 +151,17 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       print(e);
       return false;
     }
+  }
+
+  Future<String?> getMinutosConsumidos({
+    required String idPedido
+  }) async {
+    Response resp = await ConductorService.getMinutosConsumidos(idPedido: idPedido);
+
+    print(resp.body);
+    if (resp.statusCode != 200) return null;
+    dynamic jsonData = json.decode(resp.body);
+    return jsonData[0]['minutos'];
   }
 
   Future<bool> eliminarEstado() async {
@@ -191,9 +219,12 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           referencia: int.parse(data.celularEntrega),
           monto: double.parse(data.monto),
           socketClientId: 'socket_id',
-          pedidoId: data.idPedido
+          pedidoId: data.idPedido,
+          estado: data.estado
         )));
 
+
+        // add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum));
         add(OnSetNewMarkets({
           Marker(
             markerId: MarkerId(MarkerIdEnum.origen.toString()),
@@ -213,10 +244,21 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           lng: position.longitude
         );
         
-        List<PointLatLng>? polyline = await getPolylines(
-          origen: LatLng(position.latitude, position.longitude), 
-          destino: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
-        );
+        List<PointLatLng>? polyline;
+        if (data.estado == 'VICO'){
+          polyline = await getPolylines(
+            origen: LatLng(position.latitude, position.longitude), 
+            destino: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+          );
+          add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
+        }else{
+          polyline = await getPolylines(
+            origen: LatLng(position.latitude, position.longitude), 
+            destino: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+          );
+          add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+        }
+
 
         if (polyline != null){
 
@@ -285,16 +327,35 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
+  Future<bool> actualizarPedido({
+    required String idConductor,
+    required String idPedido,
+    required String idVehiculo,
+    required String estado
+  })async{
+    final responsePedido = await ConductorService.actualizarEstadoEnPedido(
+      idPedido: idPedido, 
+      idVehiculo: idVehiculo,
+      idConductor: idConductor, 
+      estado: estado
+    );
+
+    print('Actualizando estado del pedido en $estado');
+    print(responsePedido.body);
+    return responsePedido.statusCode == 200;
+  }
+
   Future<bool> pedidoNoAceptado({
     required String idConductor,
-    required String idPedido
+    required String idPedido,
+    required String idVehiculo
   }) async {
 
     try {
 
       final responsePedido = await ConductorService.actualizarEstadoEnPedido(
         idPedido: idPedido, 
-        idVehiculo: '-', 
+        idVehiculo: idVehiculo,
         idConductor: idConductor, 
         estado: 'RECO'
       );
@@ -371,6 +432,38 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
+  void emitFinalizarPedido(){
+    SocketService.emit('finalizar pedido', {
+      'origen': state.detallePedido!.origen, 
+      'destino': state.detallePedido!.destino, 
+      'servicio': state.detallePedido!.servicio,
+      'cliente': state.detallePedido!.cliente,
+      'cliente_id': state.detallePedido!.clienteId,
+      'nombre_origen': state.detallePedido!.nombreOrigen,
+      'nombre_destino': state.detallePedido!.nombreDestino,
+      'descripcion_descarga': state.detallePedido!.descripcionDescarga,
+      'referencia': state.detallePedido!.referencia,
+      'monto': state.detallePedido!.monto,
+      'socket_client_id': state.detallePedido!.socketClientId,
+    });
+  }
+  
+  void emitYaEstoyAqui(){
+    SocketService.emit('ya estoy aqui', {
+      'origen': state.detallePedido!.origen, 
+      'destino': state.detallePedido!.destino, 
+      'servicio': state.detallePedido!.servicio,
+      'cliente': state.detallePedido!.cliente,
+      'cliente_id': state.detallePedido!.clienteId,
+      'nombre_origen': state.detallePedido!.nombreOrigen,
+      'nombre_destino': state.detallePedido!.nombreDestino,
+      'descripcion_descarga': state.detallePedido!.descripcionDescarga,
+      'referencia': state.detallePedido!.referencia,
+      'monto': state.detallePedido!.monto,
+      'socket_client_id': state.detallePedido!.socketClientId,
+    });
+  }
+
   void respuestaPedidoProcesoCancelado(){
     SocketService.emit('pedido proceso cancelado conductor', {
       'origen': state.detallePedido!.origen, 
@@ -389,6 +482,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   void respuestaPedido({required DetalleNotificacionConductor detalleNotificacionConductor, required bool pedidoAceptado}){
 
+    print(detalleNotificacionConductor.pedidoId);
     // SocketService.emit('cancelar pedido', detalleNotificacionConductor);
     SocketService.emit('respuesta del conductor', {
       'pedido_aceptado': pedidoAceptado,
@@ -402,45 +496,64 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       'descripcion_descarga': detalleNotificacionConductor.descripcionDescarga,
       'referencia': detalleNotificacionConductor.referencia,
       'monto': detalleNotificacionConductor.monto,
-      'socket_client_id': detalleNotificacionConductor.socketClientId
+      'socket_client_id': detalleNotificacionConductor.socketClientId,
+      'pedido_id': detalleNotificacionConductor.pedidoId
     });
 
   }
 
+  void notificacionNuevaSolicitudConductor({
+    required NavigatorState navigator,
+    required String idConductor
+  }){
 
-  void notificacionNuevaSolicitudConductor({required NavigatorState navigator}){
-
-    SocketService.on('notificacion pedido conductor', (data){
-    
+    SocketService.on('notificacion pedido conductor', (data) async {
+      
       final payload = data['payload'];
+      print(data);
+      final response = await ConductorService.getPedido(idPedido: payload['pedido_id']);
 
-      detallePedido = DetalleNotificacionConductor(
-        origen: LatLng(payload['origen'][0], payload['origen'][1]),
-        destino: LatLng(payload['destino'][0], payload['destino'][1]),
-        servicio: payload['servicio'],
-        cliente: payload['cliente'],
-        clienteId: payload['cliente_id'],
-        nombreOrigen: payload['nombre_origen'],
-        nombreDestino: payload['nombre_destino'],
-        descripcionDescarga: payload['descripcion_descarga'],
-        referencia: payload['referencia'],
-        monto: double.parse(payload['monto'].toString()),
-        socketClientId: payload['socket_client_id'],
-        pedidoId: payload['pedido_id'],
-      );;
+      print(response.body);
 
-      add(OnSetNewMarkets({
-        Marker(
-          markerId: MarkerId(MarkerIdEnum.origen.toString()),
-          position: detallePedido!.origen
-        ),
-        Marker(
-          markerId: MarkerId(MarkerIdEnum.destino.toString()),
-          position: detallePedido!.destino
-        ),
-      }));
+      if (response.statusCode != 200){
+        print('No se pudo obtener el pedido');
+      } else{
+        final responsePedido = responsePedidoFromJson(response.body)[0];
 
-      navigator.pushNamed('ConductorNotificacion');
+        // TODO: Falta enviar el nombre del usuario
+        detallePedido = DetalleNotificacionConductor(
+          origen: LatLng(double.parse(responsePedido.iniLat), double.parse(responsePedido.iniLog)),
+          destino: LatLng(double.parse(responsePedido.finalLat), double.parse(responsePedido.finalLog)),
+          servicio: responsePedido.servicio,
+          cliente: payload['cliente'],
+          clienteId: responsePedido.idUsuario,
+          nombreOrigen: responsePedido.ubiInicial,
+          nombreDestino: responsePedido.ubiFinal,
+          descripcionDescarga: responsePedido.descripCarga,
+          referencia: int.parse(responsePedido.celularEntrega),
+          monto: double.parse(responsePedido.monto),
+          socketClientId: payload['socket_client_id'],
+          pedidoId: responsePedido.idPedido,
+          estado: responsePedido.estado
+        );
+
+        add(OnSetNewMarkets({
+          Marker(
+            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+            position: detallePedido!.origen
+          ),
+          Marker(
+            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+            position: detallePedido!.destino
+          ),
+        }));
+
+        navigator.pushNamed('ConductorNotificacion');
+      }
+      // TODO: Aqui quiero obtener el pedido mandando el id del pedido
+      
+
+
 
     });
 

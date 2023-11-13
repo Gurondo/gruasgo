@@ -35,3 +35,8 @@ class OnSetAddMarker extends ConductorEvent{
   final Marker marker;
   OnSetAddMarker(this.marker);
 }
+
+class OnSetEstadoPedidoAceptado extends ConductorEvent{
+  final EstadoPedidoAceptadoEnum estadoPedidoAceptado;
+  OnSetEstadoPedidoAceptado(this.estadoPedidoAceptado);
+}

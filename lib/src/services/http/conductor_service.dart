@@ -22,7 +22,7 @@ class ConductorService{
     return resp;
   }
 
-  static Future obtenerEstadoConPedido({required String idConductor}) async{
+  static Future<http.Response> obtenerEstadoConPedido({required String idConductor}) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
     final resp = await http.post(urlParce, body: {
       'btip': 'BUCON',
@@ -39,6 +39,12 @@ class ConductorService{
       'bidconductor': idConductor
     });
 
+    var urlParce1 = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
+    final resp1 = await http.post(urlParce, body: {
+      'btip': 'BUES',
+    });
+    print('----------------aqui esta todo-----------------------');
+    print(resp1.body);
     return resp;
   }
 
@@ -47,8 +53,7 @@ class ConductorService{
     required String idPedido,
   }) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
-    print(idConductor);
-    print(idPedido);
+    
     final resp = await http.post(urlParce, body: {
       'btip': 'UPESPE',
       'bidconductor': idConductor,
@@ -59,6 +64,21 @@ class ConductorService{
     return resp;
   }
 
+  static Future<http.Response> adicionarHora({
+    required String idPedido
+  }) async {
+    
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+
+    final response = await http.post(uri, body: {
+      'btip': 'addHoraini',
+      'bidpedido': idPedido,
+    });
+
+    return response;
+  }
+    
   static Future<http.Response> actualizarEstadoEnPedido({
     required String idPedido,
     required String idVehiculo,
@@ -101,6 +121,28 @@ class ConductorService{
     final resp = await http.post(urlParce, body: {
       'btip': 'DEL',
       'bidconductor': idConductor,
+    });
+    return resp;
+  }
+
+  static Future<http.Response> getPedido({
+    required String idPedido
+  }) async {
+    var urlParce = Uri.parse('${Enviroment().baseUrl}/pedido.php');
+    final resp = await http.post(urlParce, body: {
+      'btip': 'devPedido',
+      'bidpedido': idPedido,
+    });
+    return resp;
+  }
+
+  static Future<http.Response> getMinutosConsumidos({
+    required String idPedido
+  }) async {
+    var urlParce = Uri.parse('${Enviroment().baseUrl}/pedido.php');
+    final resp = await http.post(urlParce, body: {
+      'btip': 'devuelveMinutos',
+      'bidpedido': idPedido,
     });
     return resp;
   }

@@ -34,6 +34,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
 
   var _pedidoAceptado = false;
 
+
   // Para estar escuchando eventos, si el cliente cancela el pedido o ya a sido aceptado por un conductor, este conductor puede ver el mensaje.
   @override
   void initState() {
@@ -58,9 +59,11 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
       _conductorBloc.add(OnSetDetallePedido(null));
       _conductorBloc.eliminarCrearEstado();
       _conductorBloc.add(OnSetNewMarkets({}));
-      _conductorBloc.pedidoNoAceptado(idConductor: _userBloc.user!.idUsuario, idPedido: _conductorBloc.detallePedido!.pedidoId);
-    }else{
-      _conductorBloc.pedidoAceptado(idConductor: _userBloc.user!.idUsuario, idPedido: _conductorBloc.detallePedido!.pedidoId);
+      _conductorBloc.pedidoNoAceptado(
+        idConductor: _userBloc.user!.idUsuario, 
+        idPedido: _conductorBloc.detallePedido!.pedidoId,
+        idVehiculo: '-'
+      );
     }
 
     // Limpiar de memoria
@@ -205,17 +208,29 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         icons: Icons.check,
                         onPressed: () async {
                           // _conductorBloc.aceptarPedido(socketClientId: args.socketClientId, clientId: args.clienteId);
-
+                          final navigator = Navigator.of(context);
                           
-                          _getPolylines();
+                          final statusPedido = await _conductorBloc.pedidoAceptado(idConductor: _userBloc.user!.idUsuario, idPedido: _conductorBloc.detallePedido!.pedidoId);
+                          
+                          if (statusPedido){
+                            bool statusHora = true;
+                            if (Enviroment().listaServicioHoraAvanzada.contains(_conductorBloc.detallePedido!.servicio)){
+                              statusHora = await _conductorBloc.adiccionarHora(idPedido: _conductorBloc.detallePedido!.pedidoId);
+                            }
+                            _getPolylines();
 
-                          // TODO: Aqui se actualiza el pedido
+                            if (statusHora){
+                              _pedidoAceptado = true;
+                              _conductorBloc.add(OnSetDetallePedido(_conductorBloc.detallePedido!));
+                              navigator.pop();
 
-                          _pedidoAceptado = true;
-                          print('Detalle Pedido');
-                          print(_conductorBloc.detallePedido);
-                          _conductorBloc.add(OnSetDetallePedido(_conductorBloc.detallePedido!));
-                          Navigator.pop(context);
+                            }else{
+                              print('Error a la hora de iniciar la hora');
+                            }
+                          }else{
+                            print('Error a la hora de aceptar un pedido');
+                          }
+
                         },
                       ),
                     ],
