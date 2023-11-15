@@ -10,6 +10,7 @@ class ConductorState extends Equatable {
   final EstadoPedidoAceptadoEnum estadoPedidoAceptado;
 
 
+
   const ConductorState({
     this.tiempo = 0,
     this.detallePedido,

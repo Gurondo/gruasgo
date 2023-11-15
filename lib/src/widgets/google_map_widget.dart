@@ -20,6 +20,7 @@ class GoogleMapWidget extends StatelessWidget {
   final Function()? onCameraMoveStarted;
   final bool ajustarZoomOrigenDestino;
   final bool myLocationEnabled;
+  final Function(CameraPosition)? onCameraMove;
 
 
   const GoogleMapWidget({
@@ -27,6 +28,7 @@ class GoogleMapWidget extends StatelessWidget {
     this.onTap,
     this.polylines = const {},
     this.markers = const {},
+    this.onCameraMove,
     this.zoom = 18.151926040649414,
     this.onCameraMoveStarted,
     this.ajustarZoomOrigenDestino = false,
@@ -40,6 +42,7 @@ class GoogleMapWidget extends StatelessWidget {
     
 
     return GoogleMap(
+      myLocationButtonEnabled: false,
       myLocationEnabled: myLocationEnabled,
       zoomControlsEnabled: false,
       buildingsEnabled: false,
@@ -91,9 +94,7 @@ class GoogleMapWidget extends StatelessWidget {
       },
 
 
-      onCameraMove: (position) {
-        
-      },
+      onCameraMove: onCameraMove,
 
       onCameraMoveStarted: onCameraMoveStarted,
       

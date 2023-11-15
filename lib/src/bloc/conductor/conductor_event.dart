@@ -40,3 +40,8 @@ class OnSetEstadoPedidoAceptado extends ConductorEvent{
   final EstadoPedidoAceptadoEnum estadoPedidoAceptado;
   OnSetEstadoPedidoAceptado(this.estadoPedidoAceptado);
 }
+
+class OnSetTiempoTranscurrido extends ConductorEvent{
+  final String tiempoTranscurrido;
+  OnSetTiempoTranscurrido(this.tiempoTranscurrido);
+}

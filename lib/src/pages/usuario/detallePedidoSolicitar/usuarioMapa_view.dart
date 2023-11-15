@@ -27,6 +27,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
   
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
+  late UserBloc _userBloc;
 
   Completer<GoogleMapController> googleMapController = Completer<GoogleMapController>();
 
@@ -35,8 +36,13 @@ class _UsuarioMapState extends State<UsuarioMap>{
     // TODO: implement initState
     super.initState();
 
+
     final navigator = Navigator.of(context);
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    _userBloc = BlocProvider.of<UserBloc>(context);
+
+    _usuarioPedidoBloc.conectarseSocket(idUsuario: _userBloc.user!.idUsuario);
+
     _usuarioPedidoBloc.listenPedidoProcesoCancelado();
     _usuarioPedidoBloc.respuesta(showAlert: showAlert);
     _usuarioPedidoBloc.actualizarContador();
@@ -50,6 +56,9 @@ class _UsuarioMapState extends State<UsuarioMap>{
 
   @override
   void dispose() {
+
+    _usuarioPedidoBloc.desconectarseSocket();
+
     _usuarioPedidoBloc.clearSocketPedidoFinalizado();
     _usuarioPedidoBloc.clearSocketConductorEstaAqui();
     _usuarioPedidoBloc.clearSocketRespuestaUsuario();
@@ -304,16 +313,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
             usuarioPedidoBloc.solicitar(
               origen: usuarioPedidoBloc.pedidoModel!.origen,
               destino: usuarioPedidoBloc.pedidoModel!.destino,
-              // origen: usuarioPedidoBloc.state.origen!,
-              // destino: usuarioPedidoBloc.state.destino!,
               servicio: usuarioPedidoBloc.pedidoModel!.bservicio,
-              nombreOrigen: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
-              nombreDestino: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
-              descripcionDescarga:
-                  _usuarioPedidoBloc.pedidoModel?.bdescarga ?? '',
-              monto: double.parse(
-                  (_usuarioPedidoBloc.pedidoModel?.bmonto ?? 0).toString()),
-              referencia: _usuarioPedidoBloc.pedidoModel!.bcelentrega,
               pedidoId: usuarioPedidoBloc.pedidoModel!.bidpedido,
               nombreUsuario: userBloc.user!.nombreusuario,
               clienteid: userBloc.user!.idUsuario,

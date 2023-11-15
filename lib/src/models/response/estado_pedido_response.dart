@@ -51,6 +51,8 @@ class ResponseEstadoPedido {
     String servicio;
     String descripCarga;
     String celularEntrega;
+    String? horaIni;
+    String? horaFin;
 
     ResponseEstadoPedido({
         required this.the0,
@@ -95,6 +97,8 @@ class ResponseEstadoPedido {
         required this.servicio,
         required this.descripCarga,
         required this.celularEntrega,
+        required this.horaIni,
+        required this.horaFin,
     });
 
     factory ResponseEstadoPedido.fromJson(Map<String, dynamic> json) => ResponseEstadoPedido(
@@ -140,6 +144,8 @@ class ResponseEstadoPedido {
         servicio: json["Servicio"],
         descripCarga: json["DescripCarga"],
         celularEntrega: json["CelularEntrega"],
+        horaIni: json["HoraIni"],
+        horaFin: json["HoraFin"],
     );
 
     Map<String, dynamic> toJson() => {
@@ -185,5 +191,7 @@ class ResponseEstadoPedido {
         "Servicio": servicio,
         "DescripCarga": descripCarga,
         "CelularEntrega": celularEntrega,
+        "HoraIni": horaIni,
+        "HoraFin": horaFin,
     };
 }

@@ -17,6 +17,7 @@ import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:audioplayers/audioplayers.dart';
 
 
 import 'package:gruasgo/src/models/response/place_response.dart';
@@ -32,6 +33,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   PedidoModel? pedidoModel;
   // List<PointLatLng>? polylines;
   UserBloc userBloc;
+
+  static AudioPlayer player = AudioPlayer();
+  
 
   List<PlaceModel> placeModel = [];
 
@@ -105,7 +109,25 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
     on<OnConductorEstaAqui>((event, emit) => emit(state.copyWitch(conductorEstaAqui: event.conductorEstaAqui)) );
 
+    audio();
+    
   }
+
+  Future audio() async {
+      await player.setSource(AssetSource('sonido/sonido.mp3'));
+  }
+  
+  void conectarseSocket({required String idUsuario}){
+    SocketService.open();
+    SocketService.emit('usuario online', {
+      'id': idUsuario,
+    });
+  }
+
+    void desconectarseSocket(){
+    SocketService.close();
+  }
+
 
   Future<String?> searchPlaceByCoors({required LatLng coors}) async {
 
@@ -163,6 +185,13 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       print(e);
       return [];  
     }
+
+  }
+
+  Future getPedido({required String idPedido}) async {
+
+    final response = await ClienteService.getPedido(idPedido: idPedido);
+    print(response.body);
 
   }
 
@@ -349,34 +378,23 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   // Socket
   void solicitar({
-    required LatLng origen, 
-    required LatLng destino, 
     required String servicio,
-    required String nombreOrigen,
-    required String nombreDestino,
-    required String descripcionDescarga,
-    required int referencia,
-    required double monto,
     required String pedidoId,
     required String nombreUsuario,
-    required String clienteid
+    required String clienteid,
+    required LatLng origen,
+    required LatLng destino,
   }){
     
     print('===================================');
     print(pedidoId);
-    SocketService.open();
     SocketService.emit('solicitar', {
-      'origen': origen, 
-      'destino': destino,
       'servicio': servicio,
       'cliente': nombreUsuario,
-      'cliente_id': clienteid,
-      'nombre_origen': nombreOrigen,
-      'nombre_destino': nombreDestino,
-      'descripcion_descarga': descripcionDescarga,
-      'referencia': referencia,
-      'monto': monto,
-      'pedido_id': pedidoId,
+      'idCliente': clienteid,
+      'idPedido': pedidoId,
+      'origen': origen,
+      'destino': destino
     });
 
   }
@@ -384,13 +402,12 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   Future<bool> cancelarPedido() async {
 
     try {
-        
+      SocketService.emit('cancelar pedido cliente', {
+        'idPedido': pedidoModel!.bidpedido
+      });
+
       final response = await ClienteService.cancelarEstadoPedido(uuidPedido: pedidoModel!.bidpedido);
       print(response.body);
-
-      SocketService.emit('cancelar pedido cliente', {
-        'cliente_id': userBloc.user!.idUsuario
-      });
 
       return response.statusCode == 200;
 
@@ -412,6 +429,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
+  // TODO: Borrar
   void actualizarContador(){
     SocketService.on('actualizar contador', (data){
       if (data['isReset']){
@@ -439,7 +457,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   void listenPosicionConductor(){
     SocketService.on('actualizar posicion conductor', (data){
       // TODO: Aqui actualizar la posicion del conductor
-
+      
+      print('La nueva posicion es');
+      print('${data['lat']}, ${data['lng']}');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
@@ -453,12 +473,15 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }
 
   void listenConductorEstaAqui(){
-    SocketService.on('El conductor ya esta aqui', (data) {
+    SocketService.on('El conductor ya esta aqui', (data) async {
       add(OnConductorEstaAqui(true));
+
+      // Reproducir el sonido
+      await player.resume();
     });
   }
 
-  void listenPedidoProcesoCancelado(){
+  void listenPedidoProcesoCancelado(){    
     SocketService.on('pedido en proceso cancelado', (data){
       add(OnSetIdConductor(''));
       add(OnDeleteMarkerById(MarkerIdEnum.conductor));

@@ -9,6 +9,7 @@ class ConductorService{
     required String idConductor,
     required double lat,
     required double lng,
+    required String servicio
   }) async {
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
     final resp = await http.post(urlParce, body: {
@@ -16,17 +17,36 @@ class ConductorService{
       'bidconductor': idConductor,
       'bublatitud': lat.toString(),
       'bublongitud': lng.toString(),
-      'bestado': 'ES'
+      'bestado': 'ES',
+      'bsubservicio': servicio
     });
 
     return resp;
   }
 
-  static Future<http.Response> obtenerEstadoConPedido({required String idConductor}) async{
+  static Future<http.Response> getPrecioHoras({
+    required String servicio,
+    String minutos = '60'
+  }) async{
+    final String url = "${Enviroment().baseUrl}/pedido.php";
+    final Uri uri = Uri.parse(url);
+
+    final response = await http.post(uri, body: {
+      "btip": 'costo',
+      "bminutos": minutos,
+      "bserv": servicio
+    });
+    
+    print(response.body);
+    return response;
+  }
+
+  static Future<http.Response> obtenerEstadoConPedido({required String idConductor, required String subServicio}) async{
     var urlParce = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
     final resp = await http.post(urlParce, body: {
       'btip': 'BUCON',
-      'bidconductor': idConductor
+      'bidconductor': idConductor,
+      'bsubservicio': subServicio
     });
 
     return resp;

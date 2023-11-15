@@ -5,10 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
+import 'package:gruasgo/src/helpers/get_hora.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
@@ -41,33 +43,45 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
     // TODO: implement initState
     super.initState();
 
+    final navigator = Navigator.of(context);
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
     _userBloc = BlocProvider.of(context);
 
     _conductorBloc.solicitudYaTomada();
 
-    final navigator = Navigator.of(context);
-    _conductorBloc.solicitudCancelada(navigator: navigator);
+    _conductorBloc.listenPedidoCanceladoCliente(navigator: navigator);
 
 
   }
    // Para limpiar de la memoria
   @override
   void dispose() async {
-    _conductorBloc.respuestaPedido(detalleNotificacionConductor: _conductorBloc.detallePedido!, pedidoAceptado: _pedidoAceptado);
+    _conductorBloc.respuestaPedido(
+      pedidoAceptado: _pedidoAceptado,
+      origen: _conductorBloc.detallePedido!.origen,
+      destino: _conductorBloc.detallePedido!.destino,
+      servicio: _conductorBloc.detallePedido!.servicio,
+      cliente: _conductorBloc.detallePedido!.cliente,
+      clienteId: _conductorBloc.detallePedido!.clienteId,
+      pedidoId: _conductorBloc.detallePedido!.pedidoId,
+    );
     if (!_pedidoAceptado){
-      _conductorBloc.add(OnSetDetallePedido(null));
-      _conductorBloc.eliminarCrearEstado();
+      _conductorBloc.eliminarCrearEstado(
+        idUsuario: _userBloc.user!.idUsuario,
+        servicio: _userBloc.user!.subCategoria
+      );
       _conductorBloc.add(OnSetNewMarkets({}));
       _conductorBloc.pedidoNoAceptado(
         idConductor: _userBloc.user!.idUsuario, 
         idPedido: _conductorBloc.detallePedido!.pedidoId,
-        idVehiculo: '-'
+        idVehiculo: _userBloc.user!.place
       );
+      _conductorBloc.add(OnSetDetallePedido(null));
+      _conductorBloc.detallePedido = null;
     }
 
     // Limpiar de memoria
-    _conductorBloc.clearSolicitudCanceladaSocket();
+    _conductorBloc.clearPedidoCanceladoClienteSocket();
     _conductorBloc.clearSolicitudYaTomadaSocket();
     // TODO: implement dispose
     super.dispose();
@@ -216,6 +230,24 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                             bool statusHora = true;
                             if (Enviroment().listaServicioHoraAvanzada.contains(_conductorBloc.detallePedido!.servicio)){
                               statusHora = await _conductorBloc.adiccionarHora(idPedido: _conductorBloc.detallePedido!.pedidoId);
+                              _conductorBloc.add(OnSetDetallePedido(
+                                  DetalleNotificacionConductor(
+                                    origen: _conductorBloc.state.detallePedido!.origen, 
+                                    destino: _conductorBloc.state.detallePedido!.destino, 
+                                    servicio: _conductorBloc.state.detallePedido!.servicio, 
+                                    cliente: _conductorBloc.state.detallePedido!.cliente, 
+                                    clienteId: _conductorBloc.state.detallePedido!.clienteId, 
+                                    nombreOrigen: _conductorBloc.state.detallePedido!.nombreOrigen, 
+                                    nombreDestino: _conductorBloc.state.detallePedido!.nombreDestino, 
+                                    descripcionDescarga: _conductorBloc.state.detallePedido!.descripcionDescarga, 
+                                    referencia: _conductorBloc.state.detallePedido!.referencia, 
+                                    monto: _conductorBloc.state.detallePedido!.monto, 
+                                    socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
+                                    pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
+                                    estado: _conductorBloc.state.detallePedido!.estado,
+                                    horaInicio: getHoraHelpers()
+                                  )
+                                ));
                             }
                             _getPolylines();
 

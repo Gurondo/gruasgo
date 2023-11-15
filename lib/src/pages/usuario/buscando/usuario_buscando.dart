@@ -17,11 +17,12 @@ class UsuarioBuscando extends StatefulWidget {
 class _UsuarioBuscandoState extends State<UsuarioBuscando> {
 
   late UsuarioPedidoBloc _usuarioPedidoBloc;
+  late UserBloc _userBloc;
 
   // libera de la memoria esos listener.
   @override
   void dispose(){
-    
+    print(_usuarioPedidoBloc.state.idConductor);
     if (_usuarioPedidoBloc.state.idConductor == ''){
       _usuarioPedidoBloc.cancelarPedido();
     }
@@ -36,6 +37,8 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    
+    _userBloc = BlocProvider.of<UserBloc>(context);
 
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final navigator = Navigator.of(context);
@@ -48,7 +51,6 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
     
     
     _usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
-    final userBloc = BlocProvider.of<UserBloc>(context);
     
     return WillPopScope(
       onWillPop: () => Future(() => false),
@@ -85,7 +87,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
                       },
                       onFinished: (){
 
-                        Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: userBloc.user!.nombreusuario);
+                        Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: _userBloc.user!.nombreusuario);
 
                         showDialog(
                           context: context, 
@@ -125,7 +127,7 @@ class _UsuarioBuscandoState extends State<UsuarioBuscando> {
                   text: 'Cancelar viaje',
                  // icons: Icons.cancel_outlined,
                   onPressed: (){
-                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: userBloc.user!.nombreusuario);
+                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: _userBloc.user!.nombreusuario);
                   },
                 ),
               )

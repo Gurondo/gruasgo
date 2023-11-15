@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gruasgo/src/bloc/conductor/conductor_bloc.dart';
+import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 
 import 'package:gruasgo/src/utils/colors.dart' as utils;
@@ -20,8 +21,15 @@ class ConductorBienbenido extends StatefulWidget {
 
 class _ConductorBienvenidaState extends State<ConductorBienbenido> {
 
-  Future<bool> recuperarDato({required ConductorBloc conductorBloc}) async {
-    await conductorBloc.buscarEstado();
+  Future<bool> recuperarDato({
+    required ConductorBloc conductorBloc, 
+    required String idUsuario, 
+    required String subServicio
+  }) async {
+    await conductorBloc.buscarEstado(
+      idUsuario: idUsuario,
+      subServicio: subServicio
+    );
 
     return true;
   }
@@ -32,6 +40,7 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
     final navigator = Navigator.of(context);
 
     final conductorBloc = BlocProvider.of<ConductorBloc>(context);
+    final userBloc = BlocProvider.of<UserBloc>(context);
 
     return SafeArea(
       child: Scaffold(
@@ -50,7 +59,11 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
         ),
         body: Center(
           child: FutureBuilder<bool>(
-            future: recuperarDato(conductorBloc: conductorBloc),
+            future: recuperarDato(
+              conductorBloc: conductorBloc,
+              idUsuario: userBloc.user!.idUsuario,
+              subServicio: userBloc.user!.subCategoria
+            ),
             builder: (context, snapshot) {
               
               if (!snapshot.hasData) return const Text('Cargando');
@@ -97,6 +110,8 @@ class _ComponentWidgetState extends State<ComponentWidget> {
   @override
   Widget build(BuildContext context) {
   final conductorBloc = BlocProvider.of<ConductorBloc>(context);
+  final userBloc = BlocProvider.of<UserBloc>(context);
+
   final navigator = Navigator.of(context);
 
     return Column(
@@ -128,15 +143,17 @@ class _ComponentWidgetState extends State<ComponentWidget> {
                 setState(() {   
                   _isLoading = true;
                 });
-                final position = await getPositionHelpers();
                 
-                final status = await conductorBloc.crearEstado();
+                final status = await conductorBloc.crearEstado(
+                  idUsuario: userBloc.user!.idUsuario,
+                  servicio: userBloc.user!.subCategoria
+                );
 
                 // enviar la lat y lng del conductor que esta ahora mismo
                 if (status){
                   conductorBloc.openSocket(
-                    lat: position.latitude, 
-                    lng: position.longitude
+                    idUsuario: userBloc.user!.idUsuario,
+                    servicio: userBloc.user!.subCategoria,
                   );
 
                   await navigator.pushNamedAndRemoveUntil('MapaConductor', (route) => false);

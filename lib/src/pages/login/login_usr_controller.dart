@@ -37,12 +37,20 @@ class loginController{
         utils.Snackbar.showSnackbar(context!, key, 'Usuario o contraseña incorrectos.');
         return null;
       } else {
+        print('aqui esta el uusario logueadccco');
+        print(datauser);
+        if (datauser['TipoUsuario'] == null) {
+          print('Erropr por el login');
+          return null;
+        };
         String tipusuario = datauser['TipoUsuario'];
         String nombreusuario = datauser['NombreApe'];
         String licencia = datauser['CI'];
         String estado = datauser['Estado'];
-
-        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: licencia);
+        String subCategoria = datauser['subCategoria'] ?? '';
+        String placa = datauser['placa'] ?? '';
+      
+        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: licencia, place: placa, subCategoria: subCategoria);
 
         saveTypeUsuario('typeUser',user.TipoUsuario);
         saveTypeUsuario('sPe_NombreApe',user.nombreusuario);

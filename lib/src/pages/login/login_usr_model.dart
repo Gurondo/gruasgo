@@ -5,6 +5,8 @@ class UserModel {
   String email;
   String nombreusuario;
   String TipoUsuario;
+  String subCategoria;
+  String place;
 
-  UserModel({required this.email, required this.nombreusuario, required this.TipoUsuario, required this.idUsuario});
+  UserModel({required this.email, required this.nombreusuario, required this.TipoUsuario, required this.idUsuario, required this.subCategoria, required this.place});
 }

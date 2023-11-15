@@ -116,5 +116,14 @@ class ClienteService{
     
   }
   
-
+  static Future<http.Response> getPedido({
+    required String idPedido
+  }) async {
+    var urlParce = Uri.parse('${Enviroment().baseUrl}/pedido.php');
+    final resp = await http.post(urlParce, body: {
+      'btip': 'devPedido',
+      'bidpedido': idPedido,
+    });
+    return resp;
+  }
 }
