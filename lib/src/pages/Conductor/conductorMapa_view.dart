@@ -69,9 +69,13 @@ class _ConductorMapState extends State<ConductorMap> {
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
     _userBloc = BlocProvider.of<UserBloc>(context);
     _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
+
+
       final position = await getPositionHelpers();
+
       _conductorBloc.updatePosition(
-          lat: position.latitude, lng: position.longitude);
+        lat: position.latitude, lng: position.longitude, rotation: position.heading
+      );
 
       _conductorBloc.actualizarCoorEstado(
         idUsuario: _userBloc.user!.idUsuario
@@ -90,10 +94,17 @@ class _ConductorMapState extends State<ConductorMap> {
   void dispose() {
     _timer?.cancel();
     _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
+    _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+    _conductorBloc.add(OnSetClearPolylines());
+    _conductorBloc.add(OnSetLimpiarPedidos());
+    _conductorBloc.add(OnSetNewMarkets({}));
+    _conductorBloc.yaHayPedido = false;
     // if (_conductorBloc.state.detallePedido == null){
     //   _conductorBloc.eliminarEstado();
     // }
-    _stopWatchTimer.dispose();
+    if (!_stopWatchTimer.isRunning){
+      _stopWatchTimer.dispose();
+    }
 
     locationSubscription.cancel();
     // TODO: implement dispose
@@ -110,7 +121,7 @@ class _ConductorMapState extends State<ConductorMap> {
   Future getPosition({required ConductorBloc conductorBloc}) async {
     _position = await getPositionHelpers();
     
-    markerDriver = await createMarkerImageFromAsset('assets/img/icono_grua.png');  ////ULILIZADO EN M3
+    markerDriver = await createMarkerImageFromAsset('assets/img/icono_grua.png');
 
     conductorBloc.add(OnSetAddMarker(
       Marker(
@@ -125,6 +136,32 @@ class _ConductorMapState extends State<ConductorMap> {
       if (cLoc.latitude != null && cLoc.longitude != null){
 
         // Aqui es el evento cuando se mueve el usuario
+
+        if (hayPedido(_conductorBloc.state)){
+
+          Marker? marker = (_conductorBloc.state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.finalizarCarrera) ?
+            getMarkerHelper(markers: _conductorBloc.state.markers, id: MarkerIdEnum.destino) :
+            getMarkerHelper(markers: _conductorBloc.state.markers, id: MarkerIdEnum.origen);
+
+          if (marker != null){
+            List<PointLatLng>? polyline = await _conductorBloc.getPolylines(
+              origen: LatLng(cLoc.latitude!, cLoc.longitude!), 
+              destino: marker.position
+            );
+
+            if (polyline != null){
+              _conductorBloc.add(OnSetAddPolyline(
+                Polyline(
+                  polylineId: PolylineId(PolylineIdEnum.posicionToOrigen.toString()),
+                  color: Colors.black,
+                  width: 4,
+                  points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+                )
+              ));
+            }
+          }
+          
+        }
         
         conductorBloc.add(OnSetAddMarker(
           Marker(
@@ -136,8 +173,8 @@ class _ConductorMapState extends State<ConductorMap> {
           
         ));
 
-        final GoogleMapController controller = await googleMapController.future;
         if (camaraEnfocada){
+          final GoogleMapController controller = await googleMapController.future;
           controller.animateCamera(
             CameraUpdate.newLatLng(LatLng(cLoc.latitude!, cLoc.longitude!))
           );
@@ -175,6 +212,7 @@ class _ConductorMapState extends State<ConductorMap> {
                       googleMapController: googleMapController,
                       markers: state.markers,
                       myLocationEnabled: false,
+                      polylines: state.polylines,
                     ),
                   ),
                   // _googleMapsWidget(),
@@ -243,12 +281,11 @@ class _ConductorMapState extends State<ConductorMap> {
                                                     
                                                     final navigator = Navigator.of(context);
                                                     _conductorBloc.emitRespuestaPedidoProcesoCancelado();
-                                                    _conductorBloc.add(OnSetLimpiarPedidos());
                                                     final status = await _conductorBloc.actualizarPedido(
                                                       estado: 'CACO',
                                                       idConductor: _userBloc.user!.idUsuario,
                                                       idPedido: state.detallePedido!.pedidoId,
-                                                      idVehiculo: '='
+                                                      idVehiculo: _userBloc.user!.place
                                                     );
                                                     if (status){
                                                       final statusEstadoConductor = await _conductorBloc.eliminarEstado(
@@ -256,6 +293,21 @@ class _ConductorMapState extends State<ConductorMap> {
                                                       );
                                                 
                                                       if (statusEstadoConductor){
+                                                        _timer?.cancel();
+                                                        _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
+                                                        _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+                                                        _conductorBloc.add(OnSetClearPolylines());
+                                                        _conductorBloc.add(OnSetLimpiarPedidos());
+                                                        _conductorBloc.add(OnSetNewMarkets({}));
+                                                        _conductorBloc.yaHayPedido = false;
+
+
+                                                        // if (_conductorBloc.state.detallePedido == null){
+                                                        //   _conductorBloc.eliminarEstado();
+                                                        // }
+                                                        _stopWatchTimer.dispose();
+
+                                                        locationSubscription.cancel();
                                                         navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false, arguments: _userBloc.user!.nombreusuario);
                                                       }
                                                     }
@@ -294,49 +346,6 @@ class _ConductorMapState extends State<ConductorMap> {
                                   child: Text('Hora Inicio ${state.detallePedido?.horaInicio ?? getHoraHelpers()}'),
                                 ),
                               ) : Container(),
-                              // (
-                              //   Enviroment().listaServicioHoraAvanzada.contains(state.detallePedido?.servicio ?? '-') ||
-                              //   (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-') && state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.finalizarCarrera)
-                              // ) ?
-                              // FutureBuilder<String?>(
-                              //   future: _conductorBloc.getMinutosConsumidos(idPedido: state.detallePedido!.pedidoId),
-                              //   builder: (context, snapshot) {
-                              //     if (snapshot.connectionState == ConnectionState.waiting){
-                              //       return Container();
-                              //     }
-      
-                              //     if (!_stopWatchTimer.isRunning){
-                              //       _stopWatchTimer.setPresetMinuteTime(int.parse(snapshot.data ?? '0'));
-                              //       _stopWatchTimer.onStartTimer();
-                              //     }
-      
-      
-                              //     return StreamBuilder<int>(
-                              //       stream: _stopWatchTimer.rawTime,
-                              //       initialData: 0,
-                              //       builder: (context, snapshot) {
-                              //         final value = snapshot.data;
-                              //         final displayTime = StopWatchTimer.getDisplayTime(value!);
-                              //         // StopWatchTimer.getMilliSecFromHour
-                              //         return Padding(
-                              //           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                              //           child: Align(
-                              //             alignment: Alignment.centerLeft,
-                              //             child: Container(
-                              //               decoration: BoxDecoration(
-                              //                 color: Colors.white,
-                              //                 borderRadius: BorderRadius.circular(8)
-                              //               ),
-                              //               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              //               child: Text('Tiempo transcurrido: ${displayTime.substring(0, displayTime.length - 3)}', style: const TextStyle(fontSize: 16),)
-                              //             ),
-                              //           ),
-                              //         );
-                              //       },
-                              //     );
-      
-                              //   },
-                              // ) : Container(),
                               
                               Container(
                                 color: Colors.white,
@@ -359,14 +368,17 @@ class _ConductorMapState extends State<ConductorMap> {
                                           content: '¿Confirmar que llego al lugar de recogida?',
                                           onPressed: () async {
                                             
-                                            _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.comenzarCarrera));
-                                            _conductorBloc.emitYaEstoyAqui();
-                                            await _conductorBloc.actualizarPedido(
+
+                                            final status = await _conductorBloc.actualizarPedido(
                                               idConductor: _userBloc.user!.idUsuario, 
                                               idPedido: state.detallePedido!.pedidoId, 
                                               idVehiculo: '=', 
                                               estado: 'NOCL'
                                             );
+                                            if (status){
+                                              _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.comenzarCarrera));
+                                              _conductorBloc.emitYaEstoyAqui();
+                                            }
       
                                           }
                                         );
@@ -408,6 +420,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                             }
                                             _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
                                             _conductorBloc.add(OnSetClearPolylines());
+                                            _conductorBloc.add(OnSetRemoveMarker(MarkerIdEnum.origen));
                                             _getPolylines(state);
                                             final statusPedido = await _conductorBloc.actualizarPedido(
                                               estado: 'VICO',
@@ -423,6 +436,8 @@ class _ConductorMapState extends State<ConductorMap> {
                                                 );
       
                                               }
+
+                                              _conductorBloc.emitComenzarCarrera();
                                             }
                                     
                                           
@@ -482,7 +497,8 @@ class _ConductorMapState extends State<ConductorMap> {
                                                       monto: double.parse(precio.toString()), 
                                                       socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
                                                       pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
-                                                      estado: _conductorBloc.state.detallePedido!.estado
+                                                      estado: _conductorBloc.state.detallePedido!.estado,
+                                                      tiempoTranscurrido: minutos
                                                     )));
                                                   }
       
@@ -521,68 +537,6 @@ class _ConductorMapState extends State<ConductorMap> {
                                       },
                                     ),
                                   ) 
-                                // Row(
-                                //   mainAxisAlignment:
-                                //       MainAxisAlignment.spaceAround,
-                                //   children: [
-                                //     const SizedBox(
-                                //       width: 10,
-                                //     ),
-                                //     Expanded(
-                                //       child: ButtonApp(
-                                //         text: 'Estoy aqui',
-                                //         color: Colors.amber,
-                                //         textColor: Colors.black,
-                                //         onPressed: (){
-      
-                                //           // TODO: Comenzar Ruta
-                                //           showCustomDialog(
-                                //             context: context,
-                                //             title: 'Estas seguro??',
-                                //             content: '¿ Confirmar que llego al lugar de recogida?',
-                                //             onPressed: (){
-                                              
-                                //               _conductorBloc.add(OnSetClearPolylines());
-                                //               _getPolylines(state);
-                                            
-                                //             }
-                                //           );
-                                          
-      
-                                //         },
-                                //       ),
-                                //     ),
-                                //     const SizedBox(
-                                //       width: 10,
-                                //     ),
-                                //     Expanded(
-                                //       child: ButtonApp(
-                                //         text: 'Finalizar Viaje',
-                                //         color: Colors.amber,
-                                //         textColor: Colors.black,
-                                //         onPressed: (){
-                                //           // TODO: Finalizar viaje
-      
-                                //           showCustomDialog(
-                                //             context: context,
-                                //             title: 'Estas seguro??',
-                                //             content: '¿Estas seguro de finalizar el viaje?',
-                                //             onPressed: (){
-                                              
-                                //               // TODO: Aqui cuando finaliza el pedido
-                                //               _conductorBloc.add(OnSetClearPolylines());
-                                //               _getPolylines(state);
-                                            
-                                //             }
-                                //           );
-                                //         },
-                                //       ),
-                                //     ),
-                                //     const SizedBox(
-                                //       width: 10,
-                                //     ),
-                                //   ],
-                                // ),
                               )
                             ],
                           );
@@ -769,10 +723,9 @@ void showCustomDialog({
 
   bool hayPedido(ConductorState state){
 
-    Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
     Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
 
-    return (origen != null && destino != null);
+    return (destino != null);
   }
 
   Future _getPolylines(ConductorState state) async {

@@ -45,3 +45,8 @@ class OnSetTiempoTranscurrido extends ConductorEvent{
   final String tiempoTranscurrido;
   OnSetTiempoTranscurrido(this.tiempoTranscurrido);
 }
+
+class OnSetRemoveMarker extends ConductorEvent{
+  final MarkerIdEnum id;
+  OnSetRemoveMarker(this.id);
+}

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 
   // diseño basico que se muestra cuando finaliza un pedido en el lado del cliente, puede valorar al conductor y escribir una nota
@@ -18,11 +19,23 @@ class _UsuarioFinalizacionState extends State<UsuarioFinalizacion> {
   double calificacion = 3.0;
   final TextEditingController tecComentario = TextEditingController();
 
+  late UsuarioPedidoBloc usuarioBloc;
+
+  @override
+  void initState() {
+
+    usuarioBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+
+    usuarioBloc.add(OnSetIdConductor(''));
+    usuarioBloc.add(OnRemoveMarker(MarkerIdEnum.conductor));
+    // TODO: implement initState
+    super.initState();
+
+  }
 
   @override
   Widget build(BuildContext context) {
     final userBLoc = BlocProvider.of<UserBloc>(context);
-    final usuarioBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     return SafeArea(
       child: Scaffold(
         body: SingleChildScrollView(
@@ -53,9 +66,9 @@ class _UsuarioFinalizacionState extends State<UsuarioFinalizacion> {
                       padding: EdgeInsets.only(bottom: 3),
                       child: Text('Valor del viaje'),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 20),
-                      child: Text('5.0 Bs.', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w300),),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text('${usuarioBloc.pedidoModel?.bmonto} Bs.', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w300),),
                     ),
         
                   ],
@@ -120,7 +133,7 @@ class _UsuarioFinalizacionState extends State<UsuarioFinalizacion> {
                           tipoUsuario: 'usu'
                         );
                         if (status){
-                          navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false);
+                          navigator.pushNamedAndRemoveUntil('bienbendioUsuario', (route) => false);
                           // TODO: Aqui liumpiar todo
                         }else{
                           print('No se pudo enviar la calificacion');

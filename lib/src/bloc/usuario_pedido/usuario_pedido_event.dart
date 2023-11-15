@@ -43,3 +43,12 @@ class OnConductorEstaAqui extends UsuarioPedidoEvent{
   final bool conductorEstaAqui;
   OnConductorEstaAqui(this.conductorEstaAqui);
 }
+
+class OnRemoveMarker extends UsuarioPedidoEvent{
+  final MarkerIdEnum id;
+  OnRemoveMarker(this.id);
+}
+
+class OnClearPolylines extends UsuarioPedidoEvent{
+  OnClearPolylines();
+}

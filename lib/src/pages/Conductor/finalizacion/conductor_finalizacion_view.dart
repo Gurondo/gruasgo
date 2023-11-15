@@ -1,9 +1,10 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
+import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
@@ -23,10 +24,34 @@ class _ConductorFinalizacionState extends State<ConductorFinalizacion> {
 
   double calificacion = 3.0;
 
+  late ConductorBloc conductorBloc;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    conductorBloc = BlocProvider.of<ConductorBloc>(context);
+
+    conductorBloc.add(OnSetClearPolylines());
+  }
+
+  @override
+  void dispose() {
+
+    conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+    conductorBloc.add(OnSetClearPolylines());
+    conductorBloc.add(OnSetLimpiarPedidos());
+    conductorBloc.add(OnSetNewMarkets({}));
+    conductorBloc.yaHayPedido = false;
+
+    // TODO: implement dispose
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     
-    final conductorBloc = BlocProvider.of<ConductorBloc>(context);
     final userBLoc = BlocProvider.of<UserBloc>(context);
     
     return SafeArea(
@@ -77,6 +102,22 @@ class _ConductorFinalizacionState extends State<ConductorFinalizacion> {
                 title: const Text('Hasta', style: TextStyle(fontWeight: FontWeight.bold),),
                 subtitle: Text(conductorBloc.state.detallePedido?.nombreDestino ?? 'none'),
               ),
+              
+              (
+                Enviroment().listaServicioHoraAvanzada.contains(conductorBloc.state.detallePedido!.servicio) ||
+                Enviroment().listaServicioPorHoraBasico.contains(conductorBloc.state.detallePedido!.servicio)
+              ) ?
+              Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.date_range),
+                    title: const Text('Tiempo transcurrido', style: TextStyle(fontWeight: FontWeight.bold),),
+                    subtitle: Text('${conductorBloc.state.detallePedido?.tiempoTranscurrido} minutos'),
+                  ),
+                ],
+              ) : 
+              Container(),
+
               Text('Califica a tu cliente'.toUpperCase(), style: TextStyle(color: Colors.blue[600]),),
               RatingBar.builder(
                 initialRating: 3,

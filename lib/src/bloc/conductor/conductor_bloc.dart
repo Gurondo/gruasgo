@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -32,6 +33,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   DetalleNotificacionConductor? detallePedido;
 
   bool yaHayPedido = false;
+
+  static AudioPlayer player = AudioPlayer();
 
   ConductorBloc({
     required this.userBloc
@@ -122,12 +125,21 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           tiempoTranscurrido: event.tiempoTranscurrido
         );
 
-        state.copyWitch(detallePedido: detalle);
+        emit(state.copyWitch(detallePedido: detalle));
       }
 
 
     });
+
+    on<OnSetRemoveMarker>((event, emit){
+      Set<Marker> markers = Set.from(state.markers);
+      markers.removeWhere((marker) => marker.markerId.value == event.id.toString());
+      emit(state.copyWitch(markers: markers));
+    });
+    
   }
+
+
 
   Future<bool> eliminarCrearEstado({
     required String idUsuario,
@@ -293,15 +305,20 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
 
         // add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum));
+        Marker origen = (data.estado != 'VICO') ? Marker(
+          markerId: MarkerId(MarkerIdEnum.origen.toString()),
+          position: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+        ) : Marker(markerId: MarkerId(MarkerIdEnum.origen.toString()));
+        
+        Marker destino = Marker(
+          markerId: MarkerId(MarkerIdEnum.destino.toString()),
+          position: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+        );
+
+
         add(OnSetNewMarkets({
-          Marker(
-            markerId: MarkerId(MarkerIdEnum.origen.toString()),
-            position: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
-          ),
-          Marker(
-            markerId: MarkerId(MarkerIdEnum.destino.toString()),
-            position: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
-          ),
+          origen,
+          destino,
         }));
 
 
@@ -497,14 +514,21 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     SocketService.close();
   }
 
-  void updatePosition({required lat, required lng}){
+  void updatePosition({required lat, required lng, required rotation}){
 
     SocketService.emit('actualizar coordenadas conductor', {
       'lat': lat,
       'lng': lng,
+      'rotation': rotation,
       'idPedido': state.detallePedido?.pedidoId ?? '='
     });
 
+  }
+
+  void emitComenzarCarrera(){
+    SocketService.emit('comenzar carrera', {
+      'idCliente': state.detallePedido!.clienteId
+    });
   }
 
   void emitFinalizarPedido(){
@@ -600,6 +624,9 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           ),
         }));
 
+        audio();
+
+       
         navigator.pushNamed('ConductorNotificacion');
       }
       // TODO: Aqui quiero obtener el pedido mandando el id del pedido
@@ -609,6 +636,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
     });
 
+  }
+
+  Future audio() async {
+    await player.setSource(AssetSource('sonido/sonido.mp3'));
+    await player.resume();
+    Future.delayed(const Duration(seconds: 2), () {
+      player.stop();
+    });
   }
 
   void solicitudYaTomada(){

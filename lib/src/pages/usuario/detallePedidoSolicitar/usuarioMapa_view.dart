@@ -49,6 +49,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
     _usuarioPedidoBloc.listenPosicionConductor();
     _usuarioPedidoBloc.listenConductorEstaAqui();
     _usuarioPedidoBloc.listenPedidoFinalizado(navigator: navigator);
+    _usuarioPedidoBloc.listenComenzarCarrera();
     // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
     //   _con.init(context, refresh);  //// REFRESH  PARA M3
     // });
@@ -65,6 +66,9 @@ class _UsuarioMapState extends State<UsuarioMap>{
     _usuarioPedidoBloc.clearSocketPedidoProcesadoCancelado();
     _usuarioPedidoBloc.clearSocketActualizarContador();
     _usuarioPedidoBloc.clearSocketPosicionConductor();
+    _usuarioPedidoBloc.clearSocketComenzarCarrera();
+    _usuarioPedidoBloc.add(OnRemoveMarker(MarkerIdEnum.conductor));
+
     
     // TODO: implement dispose
     super.dispose();
@@ -73,6 +77,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
   @override
   Widget build(BuildContext context) {
     final userBloc = BlocProvider.of<UserBloc>(context);
+    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
 
 
     return WillPopScope(
@@ -89,7 +94,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
                   child: Stack(
                     children: [
                       GoogleMapWidget(
-                        initPosition: getMarkerHelper(markers: _usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)!.position,
+                        initPosition: getMarkerHelper(markers: _usuarioPedidoBloc.state.markers, id: MarkerIdEnum.origen)?.position ?? getMarkerHelper(markers: _usuarioPedidoBloc.state.markers, id: MarkerIdEnum.destino)!.position,
                         googleMapController: googleMapController,
                         markers: state.markers,
                         polylines: state.polylines,
@@ -214,13 +219,25 @@ class _UsuarioMapState extends State<UsuarioMap>{
                       ],
                     ),
                   ),
-                ) : Container(
-                  child: TextButton(
-                    onPressed: (){
-                      _usuarioPedidoBloc.add(OnSetIdConductor(''));
-                    Navigator.pushNamedAndRemoveUntil(context, 'bienbendioUsuario', (route) => false, arguments: userBloc.user!.nombreusuario);
-                  }, child: Text('data')),
-                ),
+                ) : Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.arrow_downward),
+                      title: const Text('Desde', style: TextStyle(fontWeight: FontWeight.bold),),
+                      subtitle: Text(usuarioPedidoBloc.pedidoModel!.bubinicial),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.arrow_upward),
+                      title: const Text('Hasta', style: TextStyle(fontWeight: FontWeight.bold),),
+                      subtitle: Text(usuarioPedidoBloc.pedidoModel!.bubfinal),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.dashboard_customize_sharp),
+                      title: const Text('Servicio', style: TextStyle(fontWeight: FontWeight.bold),),
+                      subtitle: Text(usuarioPedidoBloc.pedidoModel!.bservicio),
+                    ),
+                  ],
+                )
     
               ],
             );

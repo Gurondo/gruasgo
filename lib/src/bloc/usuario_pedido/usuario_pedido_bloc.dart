@@ -109,13 +109,20 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
     on<OnConductorEstaAqui>((event, emit) => emit(state.copyWitch(conductorEstaAqui: event.conductorEstaAqui)) );
 
-    audio();
+    on<OnRemoveMarker>((event, emit){
+      Set<Marker> markers = Set.from(state.markers);
+      markers.removeWhere((element) => element.markerId.value == event.id.toString());
+      emit(state.copyWitch(markers: markers));
+    });
+
+    on<OnClearPolylines>((event, emit){
+      emit(state.copyWitch(polylines: {}));
+    });
+
     
   }
 
-  Future audio() async {
-      await player.setSource(AssetSource('sonido/sonido.mp3'));
-  }
+
   
   void conectarseSocket({required String idUsuario}){
     SocketService.open();
@@ -246,6 +253,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       print(e);
       return null;
     }
+
+    
+    
 
   }
 
@@ -439,15 +449,23 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       }
     });
   }
+  
 
-  void listenPedidoAceptado({required NavigatorState navigator}){
-    SocketService.on('pedido aceptado por conductor', (data){
+  Future<BitmapDescriptor>? createMarkerImageFromAsset(String path) async{
+    ImageConfiguration configuration = const ImageConfiguration();
+    BitmapDescriptor bitmapDescriptor =
+    await BitmapDescriptor.fromAssetImage(configuration, path);
+    return bitmapDescriptor;
+  }
+  void listenPedidoAceptado({required NavigatorState navigator}) {
+    SocketService.on('pedido aceptado por conductor', (data) async {
       add(OnSetIdConductor(data['id']));
-
+      final markerDriver = await createMarkerImageFromAsset('assets/img/icono_grua.png');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
-          position: LatLng(data['lat'], data['lng'])
+          position: LatLng(data['lat'], data['lng']),
+          icon: markerDriver!,
         )
       ));
       navigator.pop();
@@ -458,12 +476,16 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     SocketService.on('actualizar posicion conductor', (data){
       // TODO: Aqui actualizar la posicion del conductor
       
+      Marker? marker = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.conductor);
+
       print('La nueva posicion es');
       print('${data['lat']}, ${data['lng']}');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
-          position: LatLng(data['lat'], data['lng'])
+          position: LatLng(data['lat'], data['lng']),
+          icon: marker?.icon ?? BitmapDescriptor.defaultMarker,
+          rotation: data['rotation'] ?? 0.0
         )
       ));
 
@@ -477,7 +499,15 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       add(OnConductorEstaAqui(true));
 
       // Reproducir el sonido
-      await player.resume();
+      audio();
+    });
+  }
+
+  Future audio() async {
+    await player.setSource(AssetSource('sonido/sonido.mp3'));
+    await player.resume();
+    Future.delayed(const Duration(seconds: 2), () {
+      player.stop();
     });
   }
 
@@ -492,6 +522,17 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     SocketService.on('pedido finalizado', (data){
       navigator.pushNamedAndRemoveUntil('UsuarioFinalizacion', (route) => false);
     });
+  }
+
+  void listenComenzarCarrera(){
+    SocketService.on('El conductor comenzo carrera', (data){
+      add(OnRemoveMarker(MarkerIdEnum.origen));
+      add(OnClearPolylines());
+    });
+  }
+
+  void clearSocketComenzarCarrera(){
+    SocketService.off('El conductor comenzo carrera');
   }
 
   void clearSocketPedidoFinalizado(){

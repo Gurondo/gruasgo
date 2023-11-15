@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_hora.dart';
@@ -70,7 +71,6 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
         idUsuario: _userBloc.user!.idUsuario,
         servicio: _userBloc.user!.subCategoria
       );
-      _conductorBloc.add(OnSetNewMarkets({}));
       _conductorBloc.pedidoNoAceptado(
         idConductor: _userBloc.user!.idUsuario, 
         idPedido: _conductorBloc.detallePedido!.pedidoId,
@@ -78,6 +78,10 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
       );
       _conductorBloc.add(OnSetDetallePedido(null));
       _conductorBloc.detallePedido = null;
+      _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+      _conductorBloc.add(OnSetClearPolylines());
+      _conductorBloc.add(OnSetLimpiarPedidos());
+      _conductorBloc.add(OnSetNewMarkets({}));
     }
 
     // Limpiar de memoria
@@ -118,6 +122,7 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                         ajustarZoomOrigenDestino: true,
                         googleMapController: _mapController,
                         markers: _conductorBloc.state.markers,
+                        myLocationEnabled: false,
                         polylines: {
                           Polyline(
                             polylineId: const PolylineId('ruta'),
