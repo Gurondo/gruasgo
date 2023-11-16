@@ -1,5 +1,7 @@
 enum PolylineIdEnum{
   origenToDestino,
   posicionToOrigen,
-  posicionToDestino
+  posicionToDestino,
+  conductorToOrigen,
+  conductorToDestino
 }

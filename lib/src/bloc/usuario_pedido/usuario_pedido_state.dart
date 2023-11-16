@@ -15,6 +15,8 @@ class UsuarioPedidoState extends Equatable{
   // Cuando el pedido es aceptado
   final String idConductor;
 
+  // Estado del pedido
+  
 
   // Notificacion del conductor
   final bool conductorEstaAqui;

@@ -463,7 +463,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   Future<bool> pedidoAceptado({
     required String idConductor,
-    required String idPedido
+    required String idPedido,
+    required String placa
   }) async {
     try {
       
@@ -480,7 +481,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
       final responsePedido = await ConductorService.actualizarEstadoEnPedido(
         idPedido: idPedido, 
-        idVehiculo: '-', 
+        idVehiculo: placa, 
         idConductor: idConductor, 
         estado: 'APCO'
       );

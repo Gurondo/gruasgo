@@ -10,6 +10,9 @@ class Enviroment {
   // final server = 'https://socketcarlosdev.fly.dev/api';
   // final serverSocket = 'https://socketcarlosdev.fly.dev';
 
+  // final server = 'https://socketcarlosdev.fly.dev/api';
+  // final serverSocket = 'https://socketcarlosdev.fly.dev';
+
   List<String> listaServicioHoraAvanzada = ['Grua Crane 30 Ton', 'Grua Crane 50 Ton'];
   List<String> listaServicioPorHoraBasico = ['Grua Pluma', 'Monta Carga 1 Tonelada', 'Monta Carga 2 Tonelada', 'Monta Carga 5 Tonelada'];
 

@@ -43,7 +43,10 @@ class _UsuarioMapState extends State<UsuarioMap>{
 
     _usuarioPedidoBloc.conectarseSocket(idUsuario: _userBloc.user!.idUsuario);
 
-    _usuarioPedidoBloc.listenPedidoProcesoCancelado();
+    _usuarioPedidoBloc.listenPedidoProcesoCancelado(
+      navigator: navigator,
+      nombreUsuario: _userBloc.user!.nombreusuario
+    );
     _usuarioPedidoBloc.respuesta(showAlert: showAlert);
     _usuarioPedidoBloc.actualizarContador();
     _usuarioPedidoBloc.listenPosicionConductor();

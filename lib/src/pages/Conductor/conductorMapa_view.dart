@@ -51,9 +51,6 @@ class _ConductorMapState extends State<ConductorMap> {
   BitmapDescriptor? markerDriver;
   late StreamSubscription<LocationData> locationSubscription;
 
-  final _stopWatchTimer = StopWatchTimer(
-    mode: StopWatchMode.countUp,
-  );
   @override 
   void initState() {
     // TODO: implement initState
@@ -102,9 +99,6 @@ class _ConductorMapState extends State<ConductorMap> {
     // if (_conductorBloc.state.detallePedido == null){
     //   _conductorBloc.eliminarEstado();
     // }
-    if (!_stopWatchTimer.isRunning){
-      _stopWatchTimer.dispose();
-    }
 
     locationSubscription.cancel();
     // TODO: implement dispose
@@ -305,7 +299,6 @@ class _ConductorMapState extends State<ConductorMap> {
                                                         // if (_conductorBloc.state.detallePedido == null){
                                                         //   _conductorBloc.eliminarEstado();
                                                         // }
-                                                        _stopWatchTimer.dispose();
 
                                                         locationSubscription.cancel();
                                                         navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false, arguments: _userBloc.user!.nombreusuario);
@@ -372,7 +365,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                             final status = await _conductorBloc.actualizarPedido(
                                               idConductor: _userBloc.user!.idUsuario, 
                                               idPedido: state.detallePedido!.pedidoId, 
-                                              idVehiculo: '=', 
+                                              idVehiculo: _userBloc.user!.place, 
                                               estado: 'NOCL'
                                             );
                                             if (status){
@@ -426,7 +419,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                               estado: 'VICO',
                                               idConductor: _userBloc.user!.idUsuario,
                                               idPedido: state.detallePedido!.pedidoId,
-                                              idVehiculo: '='
+                                              idVehiculo: _userBloc.user!.place
                                             );
       
                                             if (statusPedido){
@@ -463,7 +456,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                               estado: 'VITE',
                                               idConductor: _userBloc.user!.idUsuario,
                                               idPedido: state.detallePedido!.pedidoId,
-                                              idVehiculo: '='
+                                              idVehiculo: _userBloc.user!.place
                                             );
                                             if (status){
                                               if (

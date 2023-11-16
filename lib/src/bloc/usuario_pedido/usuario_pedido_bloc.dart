@@ -6,8 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
+import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/models/models.dart';
@@ -36,6 +38,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   static AudioPlayer player = AudioPlayer();
   
+  // Estado Pedido
+  var paraOrigen = false;
 
   List<PlaceModel> placeModel = [];
 
@@ -460,7 +464,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   void listenPedidoAceptado({required NavigatorState navigator}) {
     SocketService.on('pedido aceptado por conductor', (data) async {
       add(OnSetIdConductor(data['id']));
-      final markerDriver = await createMarkerImageFromAsset('assets/img/icono_grua.png');
+      final markerDriver = await createMarkerImageFromAsset('assets/img/icon_taxi.png');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
@@ -468,16 +472,41 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           icon: markerDriver!,
         )
       ));
+
+
+      // TODO: Aqui comenzar a dibujar
+      add(OnClearPolylines());
+      Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
+      paraOrigen = true;
+      if (origen != null){
+        final polyline = await getPolylines(origen: LatLng(data['lat'], data['lng']), destino: origen.position);
+        if (polyline != null){
+          add(OnSetAddNewPolylines(
+            Polyline(
+              polylineId: PolylineId(PolylineIdEnum.conductorToOrigen.toString()),
+              color: Colors.black,
+              width: 4,
+              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+            )
+          ));
+        }
+      }
+
       navigator.pop();
+      
+      
+      // final polylines = await getPolylines(origen: origen, destino: destino);
+
     });
   }
 
   void listenPosicionConductor(){
-    SocketService.on('actualizar posicion conductor', (data){
+    SocketService.on('actualizar posicion conductor', (data) async {
       // TODO: Aqui actualizar la posicion del conductor
       
       Marker? marker = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.conductor);
 
+      
       print('La nueva posicion es');
       print('${data['lat']}, ${data['lng']}');
       add(OnSetAddNewMarkets(
@@ -485,9 +514,42 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
           position: LatLng(data['lat'], data['lng']),
           icon: marker?.icon ?? BitmapDescriptor.defaultMarker,
-          rotation: data['rotation'] ?? 0.0
+          // rotation: data['rotation'] ?? 0.0
         )
       ));
+
+
+      if (paraOrigen){
+        Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
+        if (origen != null){
+          final polyline = await getPolylines(origen: LatLng(data['lat'], data['lng']), destino: origen.position);
+          if (polyline != null){
+            add(OnSetAddNewPolylines(
+              Polyline(
+                polylineId: PolylineId(PolylineIdEnum.conductorToOrigen.toString()),
+                color: Colors.black,
+                width: 4,
+                points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+              )
+            ));
+          }
+        }
+      }else{
+        Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
+        if (destino != null){
+          final polyline = await getPolylines(origen: LatLng(data['lat'], data['lng']), destino: destino.position);
+          if (polyline != null){
+            add(OnSetAddNewPolylines(
+              Polyline(
+                polylineId: PolylineId(PolylineIdEnum.conductorToDestino.toString()),
+                color: Colors.black,
+                width: 4,
+                points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+              )
+            ));
+          }
+        }
+      }
 
       // add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
       // print(data);
@@ -511,23 +573,48 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     });
   }
 
-  void listenPedidoProcesoCancelado(){    
+  void listenPedidoProcesoCancelado({
+    required NavigatorState navigator,
+    required String nombreUsuario
+  }){    
     SocketService.on('pedido en proceso cancelado', (data){
+      add(OnClearPolylines());
       add(OnSetIdConductor(''));
       add(OnDeleteMarkerById(MarkerIdEnum.conductor));
+      navigator.pushNamedAndRemoveUntil('bienbendioUsuario', (route) => false, arguments: nombreUsuario);
     });
   }
 
   void listenPedidoFinalizado({required NavigatorState navigator}){
     SocketService.on('pedido finalizado', (data){
+      add(OnClearPolylines());
       navigator.pushNamedAndRemoveUntil('UsuarioFinalizacion', (route) => false);
     });
   }
 
   void listenComenzarCarrera(){
-    SocketService.on('El conductor comenzo carrera', (data){
+    SocketService.on('El conductor comenzo carrera', (data) async {
       add(OnRemoveMarker(MarkerIdEnum.origen));
       add(OnClearPolylines());
+      
+      paraOrigen = false;
+      Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
+      Marker? conductor = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.conductor);
+      if (destino != null && conductor != null){
+        final polyline = await getPolylines(origen: conductor.position, destino: destino.position);
+        if (polyline != null){
+          add(OnSetAddNewPolylines(
+            Polyline(
+              polylineId: PolylineId(PolylineIdEnum.conductorToDestino.toString()),
+              color: Colors.black,
+              width: 4,
+              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+            )
+          ));
+        }
+      }
+
+
     });
   }
 

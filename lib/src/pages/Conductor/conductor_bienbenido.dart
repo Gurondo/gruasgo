@@ -76,7 +76,10 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
                 }
 
                 // TODO: Para evitar que el usuario pueda ver esto, tengo que separarlo en un nuevo widget
-                return const ComponentWidget();
+                return ComponentWidget(
+                  idUsuario: userBloc.user!.idUsuario,
+                  subCategoria: userBloc.user!.subCategoria,
+                );
               }
 
           ),
@@ -95,8 +98,13 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
 // Para que el setState no trabaje con toda la ventana, solo trabaje con lo que realmente se necesita 
 // para evitar dobles consultas
 class ComponentWidget extends StatefulWidget {
-  const ComponentWidget({ Key? key }) : super(key: key);
-
+  const ComponentWidget({ 
+    Key? key,
+    required this.idUsuario, 
+    required this.subCategoria
+   }) : super(key: key);
+  final String idUsuario;
+  final String subCategoria;
   @override
   State<ComponentWidget> createState() => _ComponentWidgetState();
 }
@@ -109,7 +117,6 @@ class _ComponentWidgetState extends State<ComponentWidget> {
   @override
   Widget build(BuildContext context) {
   final conductorBloc = BlocProvider.of<ConductorBloc>(context);
-  final userBloc = BlocProvider.of<UserBloc>(context);
 
   final navigator = Navigator.of(context);
 
@@ -144,15 +151,15 @@ class _ComponentWidgetState extends State<ComponentWidget> {
                 });
                 
                 final status = await conductorBloc.crearEstado(
-                  idUsuario: userBloc.user!.idUsuario,
-                  servicio: userBloc.user!.subCategoria
+                  idUsuario: widget.idUsuario,
+                  servicio: widget.subCategoria
                 );
 
                 // enviar la lat y lng del conductor que esta ahora mismo
                 if (status){
                   conductorBloc.openSocket(
-                    idUsuario: userBloc.user!.idUsuario,
-                    servicio: userBloc.user!.subCategoria,
+                    idUsuario: widget.idUsuario,
+                    servicio: widget.subCategoria,
                   );
 
                   await navigator.pushNamedAndRemoveUntil('MapaConductor', (route) => false);

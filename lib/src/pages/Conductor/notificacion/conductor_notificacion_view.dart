@@ -229,7 +229,11 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                           // _conductorBloc.aceptarPedido(socketClientId: args.socketClientId, clientId: args.clienteId);
                           final navigator = Navigator.of(context);
                           
-                          final statusPedido = await _conductorBloc.pedidoAceptado(idConductor: _userBloc.user!.idUsuario, idPedido: _conductorBloc.detallePedido!.pedidoId);
+                          final statusPedido = await _conductorBloc.pedidoAceptado(
+                            idConductor: _userBloc.user!.idUsuario, 
+                            idPedido: _conductorBloc.detallePedido!.pedidoId,
+                            placa: _userBloc.user!.place
+                          );
                           
                           if (statusPedido){
                             bool statusHora = true;
