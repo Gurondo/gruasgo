@@ -464,7 +464,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   void listenPedidoAceptado({required NavigatorState navigator}) {
     SocketService.on('pedido aceptado por conductor', (data) async {
       add(OnSetIdConductor(data['id']));
-      final markerDriver = await createMarkerImageFromAsset('assets/img/icon_taxi.png');
+      final markerDriver = await createMarkerImageFromAsset('assets/img/icon_truc.png');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
