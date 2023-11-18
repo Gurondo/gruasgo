@@ -23,7 +23,6 @@ import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
 import 'package:http/http.dart';
 import 'package:location/location.dart';
-import 'package:stop_watch_timer/stop_watch_timer.dart';
 
 class ConductorMap extends StatefulWidget {
   const ConductorMap({super.key});
@@ -35,7 +34,7 @@ class ConductorMap extends StatefulWidget {
 class _ConductorMapState extends State<ConductorMap> {
   final DriverMapController _con = DriverMapController();
 
-  bool camaraEnfocada = false;
+
 
   bool tiempoIniciado = false;
 
@@ -99,6 +98,10 @@ class _ConductorMapState extends State<ConductorMap> {
     // if (_conductorBloc.state.detallePedido == null){
     //   _conductorBloc.eliminarEstado();
     // }
+
+    googleMapController.future.then((controllerValue) => {
+      controllerValue.dispose()
+    });
 
     locationSubscription.cancel();
     // TODO: implement dispose
@@ -167,7 +170,7 @@ class _ConductorMapState extends State<ConductorMap> {
           
         ));
 
-        if (camaraEnfocada){
+        if (_userBloc.camaraEnfocada){
           final GoogleMapController controller = await googleMapController.future;
           controller.animateCamera(
             CameraUpdate.newLatLng(LatLng(cLoc.latitude!, cLoc.longitude!))
@@ -195,11 +198,14 @@ class _ConductorMapState extends State<ConductorMap> {
 
           return BlocBuilder<ConductorBloc, ConductorState>(
             builder: (context, state) {
+
               return Stack(
                 children: [
                   Listener(
                     onPointerMove: (event) {
-                      camaraEnfocada = false;
+                      if (!hayPedido(state)){
+                        _userBloc.camaraEnfocada = false;
+                      }
                     },
                     child: GoogleMapWidget(
                       initPosition: LatLng(_position.latitude, _position.longitude), 
@@ -207,6 +213,7 @@ class _ConductorMapState extends State<ConductorMap> {
                       markers: state.markers,
                       myLocationEnabled: false,
                       polylines: state.polylines,
+                      zoom: 14,
                     ),
                   ),
                   // _googleMapsWidget(),
@@ -635,10 +642,10 @@ void showCustomDialog({
   Widget _buttonCenterPosition() {
     return GestureDetector(
       onTap: () async {
-        camaraEnfocada = true;
+        _userBloc.camaraEnfocada = true;
         Position positionD = await getPositionHelpers();
         final GoogleMapController controller = await googleMapController.future;
-        if (camaraEnfocada){
+        if (_userBloc.camaraEnfocada){
           controller.animateCamera(
             CameraUpdate.newLatLng(LatLng(positionD.latitude, positionD.longitude))
           );

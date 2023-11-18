@@ -37,7 +37,8 @@ class UsuarioPedidoState extends Equatable{
     String? idConductor,
     String? distancia,
     String? duracion,
-    bool? conductorEstaAqui
+    bool? conductorEstaAqui,
+    LatLng? coordenadaConductor
   }) => UsuarioPedidoState(
     contador: contador ?? this.contador,
     markers: markers ?? this.markers,
@@ -45,7 +46,7 @@ class UsuarioPedidoState extends Equatable{
     distancia: distancia ?? this.distancia,
     duracion: duracion ?? this.duracion,
     polylines: polylines ?? this.polylines,
-    conductorEstaAqui: conductorEstaAqui ?? this.conductorEstaAqui
+    conductorEstaAqui: conductorEstaAqui ?? this.conductorEstaAqui,
   );
 
   @override

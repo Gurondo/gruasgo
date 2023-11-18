@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
@@ -72,6 +71,9 @@ class _UsuarioMapState extends State<UsuarioMap>{
     _usuarioPedidoBloc.clearSocketComenzarCarrera();
     _usuarioPedidoBloc.add(OnRemoveMarker(MarkerIdEnum.conductor));
 
+    googleMapController.future.then((controllerValue) => {
+      controllerValue.dispose()
+    });
     
     // TODO: implement dispose
     super.dispose();
@@ -90,9 +92,18 @@ class _UsuarioMapState extends State<UsuarioMap>{
         drawer: _drawer(),
         body: BlocBuilder<UsuarioPedidoBloc, UsuarioPedidoState>(
           builder: (context, state) {
+
+
+            final Marker? conductor = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.conductor);
+            if (conductor != null){
+              _actualizarPosicionCamara(conductor.position);
+            }
+
             return Column(
               children: [
-    
+                
+                
+
                 Expanded(
                   child: Stack(
                     children: [
@@ -136,7 +147,9 @@ class _UsuarioMapState extends State<UsuarioMap>{
                             ),
                           ),
                         ),
+                        
                       ),
+
                       (state.conductorEstaAqui) ? Align(
                         alignment: Alignment.topCenter,
                         child: Container(
@@ -161,8 +174,18 @@ class _UsuarioMapState extends State<UsuarioMap>{
                             ],
                           ),
                         ),
-                      ) : Container()
+                      ) : Container(),
+
+                      const Align(
+                        alignment: Alignment.bottomRight,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                        )
+                      )
+                      
                     ],
+
+                    
                   ),
                 ),
               
@@ -249,6 +272,15 @@ class _UsuarioMapState extends State<UsuarioMap>{
       ),
     );
   }
+
+
+  Future<void> _actualizarPosicionCamara(LatLng conductor)async{
+    final GoogleMapController controller = await googleMapController.future;
+    controller.animateCamera(
+      CameraUpdate.newLatLng(LatLng(conductor.latitude, conductor.longitude))
+    );
+  }
+  
 
   Widget _drawer() {
     return Drawer(

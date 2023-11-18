@@ -11,6 +11,9 @@ class UserBloc extends Bloc<UserEvent, UserState> {
 
   UserModel? user;
 
+  // Controlador para la camara
+  bool camaraEnfocada = true;
+
   UserBloc() : super(const UserState()) {
     on<UserEvent>((event, emit) {
       // TODO: implement event handler

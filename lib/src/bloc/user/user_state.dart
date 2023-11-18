@@ -5,17 +5,19 @@ class UserState extends Equatable{
   final Marker? markerSeleccionado;
   final bool isClickPin;
 
+
   const UserState({
     this.markerSeleccionado,
-    this.isClickPin = false
+    this.isClickPin = false,
   });
 
   UserState copyWitch({
     Marker? markerSeleccionado,
-    bool? isClickPin
+    bool? isClickPin,
+    LatLng? coorConductor,
   }) => UserState(
     markerSeleccionado: markerSeleccionado ?? this.markerSeleccionado,
-    isClickPin: isClickPin ?? this.isClickPin
+    isClickPin: isClickPin ?? this.isClickPin,
   );
 
   @override

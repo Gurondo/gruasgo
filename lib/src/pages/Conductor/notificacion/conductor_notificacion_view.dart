@@ -87,6 +87,10 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
     // Limpiar de memoria
     _conductorBloc.clearPedidoCanceladoClienteSocket();
     _conductorBloc.clearSolicitudYaTomadaSocket();
+
+    _mapController.future.then((controllerValue) => {
+      controllerValue.dispose()
+    });
     // TODO: implement dispose
     super.dispose();
   }
@@ -258,6 +262,8 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                                   )
                                 ));
                             }
+
+                            _userBloc.camaraEnfocada = true;
                             _getPolylines();
 
                             if (statusHora){

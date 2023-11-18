@@ -480,6 +480,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       paraOrigen = true;
       if (origen != null){
         final polyline = await getPolylines(origen: LatLng(data['lat'], data['lng']), destino: origen.position);
+
         if (polyline != null){
           add(OnSetAddNewPolylines(
             Polyline(
@@ -550,6 +551,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           }
         }
       }
+
 
       // add(OnSetPositionConductor(LatLng(data['lat'], data['lng'])));
       // print(data);

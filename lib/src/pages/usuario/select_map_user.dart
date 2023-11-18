@@ -19,6 +19,17 @@ class _SelectMapUserState extends State<SelectMapUser> {
   Completer<GoogleMapController> mapController = Completer();
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+
+    mapController.future.then((controllerValue) => {
+      controllerValue.dispose()
+    });
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     final userBloc = BlocProvider.of<UserBloc>(context);
