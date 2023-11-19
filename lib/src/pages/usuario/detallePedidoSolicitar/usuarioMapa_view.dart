@@ -10,6 +10,7 @@ import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
+import 'package:gruasgo/src/widgets/informacion_widget.dart';
 
 class UsuarioMap extends StatefulWidget {
   const UsuarioMap({super.key});
@@ -113,6 +114,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
                         markers: state.markers,
                         polylines: state.polylines,
                         ajustarZoomOrigenDestino: true,
+                        myLocationEnabled: false,
                       ),
                       SafeArea(
                         child: Align(
@@ -419,41 +421,3 @@ class _UsuarioMapState extends State<UsuarioMap>{
 
 }
 
-class InformacionWidget extends StatelessWidget {
-  
-  final IconData icons;
-  final String titulo;
-  final String descripcion;
-
-  const InformacionWidget({
-    super.key,
-    required this.icons,
-    required this.titulo,
-    required this.descripcion
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-          child: Icon(icons, color: Colors.black87,),
-        ),
-        Expanded(
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(titulo, style: const TextStyle(fontSize: 16),)),
-              const SizedBox(height: 3,),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(descripcion, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: Colors.black54),),)
-            ],
-          )
-        )
-      ],
-    );
-  }
-}

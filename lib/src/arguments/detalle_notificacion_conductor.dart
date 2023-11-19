@@ -24,12 +24,12 @@ class DetalleNotificacionConductor {
   final String descripcionDescarga;
   final int referencia;
   final double monto;
-  final String? socketClientId;
   final String pedidoId;
   final String estado;
   final String? horaInicio;
   final String? horaFin;
   final String? tiempoTranscurrido;
+  final String? socketClientId;
 
   DetalleNotificacionConductor({
     required this.origen,

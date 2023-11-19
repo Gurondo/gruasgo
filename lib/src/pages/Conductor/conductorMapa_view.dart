@@ -21,6 +21,7 @@ import 'package:gruasgo/src/pages/Conductor/conductorMapa_controller.dart';
 import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
+import 'package:gruasgo/src/widgets/informacion_widget.dart';
 import 'package:http/http.dart';
 import 'package:location/location.dart';
 
@@ -187,153 +188,85 @@ class _ConductorMapState extends State<ConductorMap> {
   Widget build(BuildContext context) {
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
-    return Scaffold(
-      key: _con.key,
-      drawer: _drawer(),
-      body: FutureBuilder(
-        future: getPosition(conductorBloc: _conductorBloc),
-        builder: (context, snapshot) {
+    return SafeArea(
+      child: Scaffold(
+        key: _con.key,
+        drawer: _drawer(),
+        body: FutureBuilder(
+          future: getPosition(conductorBloc: _conductorBloc),
+          builder: (context, snapshot) {
+    
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: Text('Cargando'),);
+    
+            return BlocBuilder<ConductorBloc, ConductorState>(
+              builder: (context, state) {
+    
+                return Column(
+                  children: [
+    
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Listener(
+                            onPointerMove: (event) {
+                              if (!hayPedido(state)){
+                                _userBloc.camaraEnfocada = false;
+                              }
+                            },
+                            child: GoogleMapWidget(
+                              initPosition: LatLng(_position.latitude, _position.longitude), 
+                              googleMapController: googleMapController,
+                              markers: state.markers,
+                              myLocationEnabled: false,
+                              polylines: state.polylines,
+                              zoom: 14,
+                            ),
+                          ),
 
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: Text('Cargando'),);
-
-          return BlocBuilder<ConductorBloc, ConductorState>(
-            builder: (context, state) {
-
-              return Stack(
-                children: [
-                  Listener(
-                    onPointerMove: (event) {
-                      if (!hayPedido(state)){
-                        _userBloc.camaraEnfocada = false;
-                      }
-                    },
-                    child: GoogleMapWidget(
-                      initPosition: LatLng(_position.latitude, _position.longitude), 
-                      googleMapController: googleMapController,
-                      markers: state.markers,
-                      myLocationEnabled: false,
-                      polylines: state.polylines,
-                      zoom: 14,
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Align(
+                                alignment: Alignment.topCenter,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    _buttonDrawer(), 
+                                    (hayPedido(state)) ? 
+                                      Container() :
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 5),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(7)
+                                          ),
+                                          child: const Text('Esperando solicitud', style: TextStyle(fontSize: 19,color: Colors.red),)
+                                        )
+                                      ),
+                                    _buttonCenterPosition()
+                                    ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  // _googleMapsWidget(),
-                  SafeArea(
-                    child: WidgetDetailMap(
+                    // _googleMapsWidget(),
+                    WidgetDetailMap(
                       builder: (){
                         if (!hayPedido(state)){
                           return Column(
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _buttonDrawer(), 
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 5),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(7)
-                                      ),
-                                      child: const Text('Esperando solicitud', style: TextStyle(fontSize: 19,color: Colors.red),)
-                                    )
-                                  ),
-                                  _buttonCenterPosition()
-                                  ],
-                              ),
-                              Expanded(child: Container()),
                               _buttonConectar(_conductorBloc),
                             ],
                           );
                         }else{
                           return Column(
                             children: [
-                              Container(
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 15),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10),
-                                child: Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-                                          _buttonDrawer(), 
-                                
-                                          Expanded(
-                                            child: ButtonApp(
-                                              text: 'Cancelar',
-                                              color: Colors.amber,
-                                              textColor: Colors.black,
-                                              onPressed: ()async{
-                                                
-                                                // TODO: Cancelar Pedido
-                                                
-                                                
-                                                showCustomDialog(
-                                                  context: context,
-                                                  title: 'Estas seguro??',
-                                                  content: '¿Estas seguro que quieres cancelar el viaje?',
-                                                  onPressed: () async {
-                                                    
-                                                    final navigator = Navigator.of(context);
-                                                    _conductorBloc.emitRespuestaPedidoProcesoCancelado();
-                                                    final status = await _conductorBloc.actualizarPedido(
-                                                      estado: 'CACO',
-                                                      idConductor: _userBloc.user!.idUsuario,
-                                                      idPedido: state.detallePedido!.pedidoId,
-                                                      idVehiculo: _userBloc.user!.place
-                                                    );
-                                                    if (status){
-                                                      final statusEstadoConductor = await _conductorBloc.eliminarEstado(
-                                                        idUsuario: _userBloc.user!.idUsuario
-                                                      );
-                                                
-                                                      if (statusEstadoConductor){
-                                                        _timer?.cancel();
-                                                        _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
-                                                        _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
-                                                        _conductorBloc.add(OnSetClearPolylines());
-                                                        _conductorBloc.add(OnSetLimpiarPedidos());
-                                                        _conductorBloc.add(OnSetNewMarkets({}));
-                                                        _conductorBloc.yaHayPedido = false;
-
-
-                                                        // if (_conductorBloc.state.detallePedido == null){
-                                                        //   _conductorBloc.eliminarEstado();
-                                                        // }
-
-                                                        locationSubscription.cancel();
-                                                        navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false, arguments: _userBloc.user!.nombreusuario);
-                                                      }
-                                                    }
-                                                
-                                                  }
-                                                );
-                                                
-                                            
-                                                
-                                              },
-                                            ),
-                                          ),
-                                          _buttonCenterPosition(),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(),
-                              ),
-      
-                              // TODO: Para mostrar la hora
-      
-                              
+        
                               (
                                 Enviroment().listaServicioHoraAvanzada.contains(state.detallePedido?.servicio ?? '-') ||
                                 (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-') && state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.finalizarCarrera)
@@ -354,187 +287,284 @@ class _ConductorMapState extends State<ConductorMap> {
                                 child: 
                                   Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                                    child: (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.estoyAqui) ? 
-                                    ButtonApp(
-                                      text: 'Estoy aqui',
-                                      color: Colors.amber,
-                                      textColor: Colors.black,
-                                      onPressed: (){
-                                  
-                                        // TODO: Comenzar Ruta
-                                        showCustomDialog(
-                                          context: context,
-                                          title: 'Estas seguro??',
-                                          content: '¿Confirmar que llego al lugar de recogida?',
-                                          onPressed: () async {
+                                    child: Column(
+                                      children: [
+                                        InformacionWidget(
+                                          icons: Icons.arrow_downward,
+                                          titulo: 'Desde',
+                                          descripcion: state.detallePedido?.nombreOrigen ?? '',
+                                        ),
+                                        const SizedBox(height: 12,),
+                                        InformacionWidget(
+                                          icons: Icons.arrow_upward,
+                                          titulo: 'Hasta',
+                                          descripcion: state.detallePedido?.nombreDestino ?? '',
+                                        ),
+                                        const SizedBox(height: 12,),
+                                        InformacionWidget(
+                                          icons: Icons.person,
+                                          titulo: 'Cliente',
+                                          descripcion: state.detallePedido?.cliente ?? '',
+                                        ),
+                                        const SizedBox(height: 12,),
+                                        InformacionWidget(
+                                          icons: Icons.dashboard_customize_sharp,
+                                          titulo: 'Servicio',
+                                          descripcion: state.detallePedido?.servicio ?? '',
+                                        ),
+                                        const SizedBox(height: 12,),
+                                        Row(
+                                          children: [
+                                            (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.estoyAqui) ? 
+                                            Expanded(
+                                              child: ButtonApp(
+                                                text: 'Estoy aqui',
+                                                color: Colors.amber,
+                                                textColor: Colors.black,
+                                                onPressed: (){
+                                                                              
+                                                  // TODO: Comenzar Ruta
+                                                  showCustomDialog(
+                                                    context: context,
+                                                    title: 'Estas seguro??',
+                                                    content: '¿Confirmar que llego al lugar de recogida?',
+                                                    onPressed: () async {
+                                                      
                                             
-
-                                            final status = await _conductorBloc.actualizarPedido(
-                                              idConductor: _userBloc.user!.idUsuario, 
-                                              idPedido: state.detallePedido!.pedidoId, 
-                                              idVehiculo: _userBloc.user!.place, 
-                                              estado: 'NOCL'
-                                            );
-                                            if (status){
-                                              _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.comenzarCarrera));
-                                              _conductorBloc.emitYaEstoyAqui();
-                                            }
-      
-                                          }
-                                        );
-                                        
-                                  
-                                      },
-                                    ) : (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.comenzarCarrera) ? 
-                                    ButtonApp(
-                                      text: 'Comenzar carrera',
-                                      color: Colors.blue,
-                                      textColor: Colors.white,
-                                      onPressed: (){
-      
-                                        showCustomDialog(
-                                          context: context,
-                                          title: 'Estas seguro??',
-                                          content: '¿Estas seguro que quieres comenzar el viaje?',
-                                          onPressed: () async {
-                                            
-                                            if (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-')){
-                                              _conductorBloc.add(OnSetDetallePedido(
-                                                DetalleNotificacionConductor(
-                                                  origen: state.detallePedido!.origen, 
-                                                  destino: state.detallePedido!.destino, 
-                                                  servicio: state.detallePedido!.servicio, 
-                                                  cliente: state.detallePedido!.cliente, 
-                                                  clienteId: state.detallePedido!.clienteId, 
-                                                  nombreOrigen: state.detallePedido!.nombreOrigen, 
-                                                  nombreDestino: state.detallePedido!.nombreDestino, 
-                                                  descripcionDescarga: state.detallePedido!.descripcionDescarga, 
-                                                  referencia: state.detallePedido!.referencia, 
-                                                  monto: state.detallePedido!.monto, 
-                                                  socketClientId: state.detallePedido!.socketClientId, 
-                                                  pedidoId: state.detallePedido!.pedidoId, 
-                                                  estado: state.detallePedido!.estado,
-                                                  horaInicio: getHoraHelpers()
-                                                )
-                                              ));
-                                            }
-                                            _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
-                                            _conductorBloc.add(OnSetClearPolylines());
-                                            _conductorBloc.add(OnSetRemoveMarker(MarkerIdEnum.origen));
-                                            _getPolylines(state);
-                                            final statusPedido = await _conductorBloc.actualizarPedido(
-                                              estado: 'VICO',
-                                              idConductor: _userBloc.user!.idUsuario,
-                                              idPedido: state.detallePedido!.pedidoId,
-                                              idVehiculo: _userBloc.user!.place
-                                            );
-      
-                                            if (statusPedido){
-                                              if (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido!.servicio)){
-                                                await _conductorBloc.adiccionarHora(
-                                                  idPedido: state.detallePedido!.pedidoId
-                                                );
-      
-                                              }
-
-                                              _conductorBloc.emitComenzarCarrera();
-                                            }
-                                    
-                                          
-                                          }
-                                        );
-      
-                                      },
-                                    ): ButtonApp(
-                                      text: 'Finalizar Viaje',
-                                      color: Colors.green,
-                                      textColor: Colors.white,
-                                      onPressed: (){
-                                        // TODO: Finalizar viaje
-      
-                                        showCustomDialog(
-                                          context: context,
-                                          title: 'Estas seguro??',
-                                          content: '¿Estas seguro de finalizar el viaje?',
-                                          onPressed: () async {
-                                            
-                                            final navigator = Navigator.of(context);
-                                            final status = await _conductorBloc.actualizarPedido(
-                                              estado: 'VITE',
-                                              idConductor: _userBloc.user!.idUsuario,
-                                              idPedido: state.detallePedido!.pedidoId,
-                                              idVehiculo: _userBloc.user!.place
-                                            );
-                                            if (status){
-                                              if (
-                                                Enviroment().listaServicioHoraAvanzada.contains(state.detallePedido?.servicio ?? '-') ||
-                                                Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-')
-                                              ){
-                                                
-                                                String? minutos = await _conductorBloc.getMinutosConsumidos(idPedido: state.detallePedido!.pedidoId);
-                                                if (minutos != null){
-                                                  _conductorBloc.add(OnSetTiempoTranscurrido(minutos));
+                                                      final status = await _conductorBloc.actualizarPedido(
+                                                        idConductor: _userBloc.user!.idUsuario, 
+                                                        idPedido: state.detallePedido!.pedidoId, 
+                                                        idVehiculo: _userBloc.user!.place, 
+                                                        estado: 'NOCL'
+                                                      );
+                                                      if (status){
+                                                        _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.comenzarCarrera));
+                                                        _conductorBloc.emitYaEstoyAqui();
+                                                      }
                                                   
-                                                  final Response precioResponse = await ConductorService.getPrecioHoras(
-                                                    servicio: state.detallePedido!.servicio,
-                                                    minutos: minutos
+                                                    }
                                                   );
-      
-                                                  print('El precio es');
-                                                  print(precioResponse.body);
-                                                  final precio = json.decode(precioResponse.body)['costo'];
-                                                  if (precio != null){
-                                                    _conductorBloc.add(OnSetDetallePedido(DetalleNotificacionConductor(
-                                                      origen: _conductorBloc.state.detallePedido!.origen, 
-                                                      destino: _conductorBloc.state.detallePedido!.destino, 
-                                                      servicio: _conductorBloc.state.detallePedido!.servicio, 
-                                                      cliente: _conductorBloc.state.detallePedido!.cliente, 
-                                                      clienteId: _conductorBloc.state.detallePedido!.clienteId, 
-                                                      nombreOrigen: _conductorBloc.state.detallePedido!.nombreOrigen, 
-                                                      nombreDestino: _conductorBloc.state.detallePedido!.nombreDestino, 
-                                                      descripcionDescarga: _conductorBloc.state.detallePedido!.descripcionDescarga, 
-                                                      referencia: _conductorBloc.state.detallePedido!.referencia, 
-                                                      monto: double.parse(precio.toString()), 
-                                                      socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
-                                                      pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
-                                                      estado: _conductorBloc.state.detallePedido!.estado,
-                                                      tiempoTranscurrido: minutos
-                                                    )));
-                                                  }
-      
-                                                }
-      
-      
-                                                _conductorBloc.emitFinalizarPedido();
-                                                _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
-                                                // TODO: Aqui cuando finaliza el pedido
-                                                _conductorBloc.add(OnSetClearPolylines());
-                                                _getPolylines(state);
-                                                _conductorBloc.eliminarCrearEstado(
-                                                  idUsuario: _userBloc.user!.idUsuario,
-                                                  servicio: _userBloc.user!.subCategoria
-                                                );
-                                                navigator.pushNamedAndRemoveUntil('ConductorFinalizacion', (route) => false);
-                                              }else{
-      
-      
-                                                _conductorBloc.emitFinalizarPedido();
-                                                _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
-                                                // TODO: Aqui cuando finaliza el pedido
-                                                _conductorBloc.add(OnSetClearPolylines());
-                                                _getPolylines(state);
-                                                _conductorBloc.eliminarCrearEstado(
-                                                  idUsuario: _userBloc.user!.idUsuario,
-                                                  servicio: _userBloc.user!.subCategoria
-                                                );
-                                                navigator.pushNamedAndRemoveUntil('ConductorFinalizacion', (route) => false);
-                                              }
-      
-                                            }
-      
-                                          }
-                                        );
-                                      },
+                                                  
+                                                                              
+                                                },
+                                              ),
+                                            ) : (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.comenzarCarrera) ? 
+                                            Expanded(
+                                              child: ButtonApp(
+                                                text: 'Comenzar carrera',
+                                                color: Colors.blue,
+                                                textColor: Colors.white,
+                                                onPressed: (){
+                                                  
+                                                  showCustomDialog(
+                                                    context: context,
+                                                    title: 'Estas seguro??',
+                                                    content: '¿Estas seguro que quieres comenzar el viaje?',
+                                                    onPressed: () async {
+                                                      
+                                                      if (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-')){
+                                                        _conductorBloc.add(OnSetDetallePedido(
+                                                          DetalleNotificacionConductor(
+                                                            origen: state.detallePedido!.origen, 
+                                                            destino: state.detallePedido!.destino, 
+                                                            servicio: state.detallePedido!.servicio, 
+                                                            cliente: state.detallePedido!.cliente, 
+                                                            clienteId: state.detallePedido!.clienteId, 
+                                                            nombreOrigen: state.detallePedido!.nombreOrigen, 
+                                                            nombreDestino: state.detallePedido!.nombreDestino, 
+                                                            descripcionDescarga: state.detallePedido!.descripcionDescarga, 
+                                                            referencia: state.detallePedido!.referencia, 
+                                                            monto: state.detallePedido!.monto, 
+                                                            socketClientId: state.detallePedido!.socketClientId, 
+                                                            pedidoId: state.detallePedido!.pedidoId, 
+                                                            estado: state.detallePedido!.estado,
+                                                            horaInicio: getHoraHelpers()
+                                                          )
+                                                        ));
+                                                      }
+                                                      _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
+                                                      _conductorBloc.add(OnSetClearPolylines());
+                                                      _conductorBloc.add(OnSetRemoveMarker(MarkerIdEnum.origen));
+                                                      _getPolylines(state);
+                                                      final statusPedido = await _conductorBloc.actualizarPedido(
+                                                        estado: 'VICO',
+                                                        idConductor: _userBloc.user!.idUsuario,
+                                                        idPedido: state.detallePedido!.pedidoId,
+                                                        idVehiculo: _userBloc.user!.place
+                                                      );
+                                                  
+                                                      if (statusPedido){
+                                                        if (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido!.servicio)){
+                                                          await _conductorBloc.adiccionarHora(
+                                                            idPedido: state.detallePedido!.pedidoId
+                                                          );
+                                                  
+                                                        }
+                                            
+                                                        _conductorBloc.emitComenzarCarrera();
+                                                      }
+                                              
+                                                    
+                                                    }
+                                                  );
+                                                  
+                                                },
+                                              ),
+                                            ): Expanded(
+                                              child: ButtonApp(
+                                                text: 'Finalizar Viaje',
+                                                color: Colors.green,
+                                                textColor: Colors.white,
+                                                onPressed: (){
+                                                  // TODO: Finalizar viaje
+                                                  
+                                                  showCustomDialog(
+                                                    context: context,
+                                                    title: 'Estas seguro??',
+                                                    content: '¿Estas seguro de finalizar el viaje?',
+                                                    onPressed: () async {
+                                                      
+                                                      final navigator = Navigator.of(context);
+                                                      final status = await _conductorBloc.actualizarPedido(
+                                                        estado: 'VITE',
+                                                        idConductor: _userBloc.user!.idUsuario,
+                                                        idPedido: state.detallePedido!.pedidoId,
+                                                        idVehiculo: _userBloc.user!.place
+                                                      );
+                                                      if (status){
+                                                        if (
+                                                          Enviroment().listaServicioHoraAvanzada.contains(state.detallePedido?.servicio ?? '-') ||
+                                                          Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-')
+                                                        ){
+                                                          
+                                                          String? minutos = await _conductorBloc.getMinutosConsumidos(idPedido: state.detallePedido!.pedidoId);
+                                                          if (minutos != null){
+                                                            _conductorBloc.add(OnSetTiempoTranscurrido(minutos));
+                                                            
+                                                            final Response precioResponse = await ConductorService.getPrecioHoras(
+                                                              servicio: state.detallePedido!.servicio,
+                                                              minutos: minutos
+                                                            );
+                                                  
+                                                            print('El precio es');
+                                                            print(precioResponse.body);
+                                                            final precio = json.decode(precioResponse.body)['costo'];
+                                                            if (precio != null){
+                                                              _conductorBloc.add(OnSetDetallePedido(DetalleNotificacionConductor(
+                                                                origen: _conductorBloc.state.detallePedido!.origen, 
+                                                                destino: _conductorBloc.state.detallePedido!.destino, 
+                                                                servicio: _conductorBloc.state.detallePedido!.servicio, 
+                                                                cliente: _conductorBloc.state.detallePedido!.cliente, 
+                                                                clienteId: _conductorBloc.state.detallePedido!.clienteId, 
+                                                                nombreOrigen: _conductorBloc.state.detallePedido!.nombreOrigen, 
+                                                                nombreDestino: _conductorBloc.state.detallePedido!.nombreDestino, 
+                                                                descripcionDescarga: _conductorBloc.state.detallePedido!.descripcionDescarga, 
+                                                                referencia: _conductorBloc.state.detallePedido!.referencia, 
+                                                                monto: double.parse(precio.toString()), 
+                                                                socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
+                                                                pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
+                                                                estado: _conductorBloc.state.detallePedido!.estado,
+                                                                tiempoTranscurrido: minutos
+                                                              )));
+                                                            }
+                                                  
+                                                          }
+                                                  
+                                                  
+                                                          _conductorBloc.emitFinalizarPedido();
+                                                          _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+                                                          // TODO: Aqui cuando finaliza el pedido
+                                                          _conductorBloc.add(OnSetClearPolylines());
+                                                          _getPolylines(state);
+                                                          _conductorBloc.eliminarCrearEstado(
+                                                            idUsuario: _userBloc.user!.idUsuario,
+                                                            servicio: _userBloc.user!.subCategoria
+                                                          );
+                                                          navigator.pushNamedAndRemoveUntil('ConductorFinalizacion', (route) => false);
+                                                        }else{
+                                                  
+                                                  
+                                                          _conductorBloc.emitFinalizarPedido();
+                                                          _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+                                                          // TODO: Aqui cuando finaliza el pedido
+                                                          _conductorBloc.add(OnSetClearPolylines());
+                                                          _getPolylines(state);
+                                                          _conductorBloc.eliminarCrearEstado(
+                                                            idUsuario: _userBloc.user!.idUsuario,
+                                                            servicio: _userBloc.user!.subCategoria
+                                                          );
+                                                          navigator.pushNamedAndRemoveUntil('ConductorFinalizacion', (route) => false);
+                                                        }
+                                                  
+                                                      }
+                                                  
+                                                    }
+                                                  );
+                                                },
+                                              ),
+                                            ),
+    
+                                            const SizedBox(width: 10,),
+    
+                                             Expanded(
+                                                child: ButtonApp(
+                                                  text: 'Cancelar',
+                                                  color: Colors.amber,
+                                                  textColor: Colors.black,
+                                                  onPressed: ()async{
+                                                    
+                                                    // TODO: Cancelar Pedido
+                                                    
+                                                    
+                                                    showCustomDialog(
+                                                      context: context,
+                                                      title: 'Estas seguro??',
+                                                      content: '¿Estas seguro que quieres cancelar el viaje?',
+                                                      onPressed: () async {
+                                                        
+                                                        final navigator = Navigator.of(context);
+                                                        _conductorBloc.emitRespuestaPedidoProcesoCancelado();
+                                                        final status = await _conductorBloc.actualizarPedido(
+                                                          estado: 'CACO',
+                                                          idConductor: _userBloc.user!.idUsuario,
+                                                          idPedido: state.detallePedido!.pedidoId,
+                                                          idVehiculo: _userBloc.user!.place
+                                                        );
+                                                        if (status){
+                                                          final statusEstadoConductor = await _conductorBloc.eliminarEstado(
+                                                            idUsuario: _userBloc.user!.idUsuario
+                                                          );
+                                                    
+                                                          if (statusEstadoConductor){
+                                                            _timer?.cancel();
+                                                            _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
+                                                            _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+                                                            _conductorBloc.add(OnSetClearPolylines());
+                                                            _conductorBloc.add(OnSetLimpiarPedidos());
+                                                            _conductorBloc.add(OnSetNewMarkets({}));
+                                                            _conductorBloc.yaHayPedido = false;
+    
+    
+                                                            // if (_conductorBloc.state.detallePedido == null){
+                                                            //   _conductorBloc.eliminarEstado();
+                                                            // }
+    
+                                                            locationSubscription.cancel();
+                                                            navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false, arguments: _userBloc.user!.nombreusuario);
+                                                          }
+                                                        }
+                                                    
+                                                      }
+                                                    );
+                                                    
+                                                
+                                                    
+                                                  },
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ) 
                               )
@@ -542,13 +572,13 @@ class _ConductorMapState extends State<ConductorMap> {
                           );
                         }
                       },
-                    ),
-                  )
-                ],
-              );
-            },
-          );
-        }
+                    )
+                  ],
+                );
+              },
+            );
+          }
+        ),
       ),
     );
 
@@ -688,7 +718,7 @@ void showCustomDialog({
     return Container(
       height: 50,
       alignment: Alignment.bottomCenter,
-      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 30),
+      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 10),
       child: ButtonApp(
         text: 'DESCONECTARSE',
         color: Colors.amber,
