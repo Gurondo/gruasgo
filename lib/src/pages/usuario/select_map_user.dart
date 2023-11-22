@@ -50,7 +50,8 @@ class _SelectMapUserState extends State<SelectMapUser> {
                   userBloc.add(OnSetMarker(
                     Marker(
                       markerId: state.markerSeleccionado!.markerId,
-                      position: p0
+                      position: p0,
+                      icon: state.markerSeleccionado?.icon ?? BitmapDescriptor.defaultMarker
                     )
                   ));
                 },

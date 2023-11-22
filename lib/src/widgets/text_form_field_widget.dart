@@ -6,11 +6,13 @@ class TextFormFieldWidget extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputType textInputType;
   final int maxLength;
+  final EdgeInsetsGeometry margin;
 
   const TextFormFieldWidget({
     super.key,
     this.textInputType = TextInputType.text,
     this.maxLength = 35,
+    this.margin = const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 0),
     required this.tecNroContrato,
     required this.label,
     required this.validator
@@ -21,7 +23,7 @@ class TextFormFieldWidget extends StatelessWidget {
     return Container(
       //width: 233, // Ancho del segundo widget
       //height: 70, // Alto del segundo widget
-      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 0),
+      margin: margin,
       child: TextFormField(
         
         keyboardType: textInputType,

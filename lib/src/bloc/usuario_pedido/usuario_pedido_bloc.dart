@@ -2,16 +2,15 @@ import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_marker.dart';
+import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as data;
 import 'package:gruasgo/src/services/http/cliente_service.dart';
@@ -351,7 +350,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       dynamic jsonDataId = json.decode(idResponse.body);
       final id = jsonDataId[0]['genId'];
 
-
+    
 
       final response = await ClienteService.registrarPedido(
         uuidPedido: id, 
@@ -455,23 +454,17 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }
   
 
-  Future<BitmapDescriptor>? createMarkerImageFromAsset(String path) async{
-    ImageConfiguration configuration = const ImageConfiguration();
-    BitmapDescriptor bitmapDescriptor =
-    await BitmapDescriptor.fromAssetImage(configuration, path);
-    return bitmapDescriptor;
-  }
   void listenPedidoAceptado({required NavigatorState navigator}) {
     SocketService.on('pedido aceptado por conductor', (data) async {
       add(OnSetIdConductor(data['id']));
-      final markerDriver = await createMarkerImageFromAsset('assets/img/icon_truc.png');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
           position: LatLng(data['lat'], data['lng']),
-          icon: markerDriver!,
+          icon: MapIcons.iconConductorDelCliente ?? BitmapDescriptor.defaultMarker
         )
       ));
+
 
 
       // TODO: Aqui comenzar a dibujar

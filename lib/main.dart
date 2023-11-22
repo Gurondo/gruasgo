@@ -6,6 +6,7 @@ import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
+import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorRegistro_view.dart';
 import 'package:gruasgo/src/pages/Conductor/conductor_bienbenido.dart';
@@ -28,10 +29,11 @@ void main() async {
   // TODO: Posible solucion para evitar que el mapa haga un crash cuando cambia rapido de ventana
   // TODO: Mantener desabilitado en el desarrollo, ya que puede generar problemas solo en el modo desarrollo
   // TODO: Antes de poner a produccion, hacer muchas pruebas para verificar que esta solucion funciona y no hace cosas extrañas
+  WidgetsFlutterBinding.ensureInitialized(); 
   if (Platform.isAndroid){
-    WidgetsFlutterBinding.ensureInitialized(); 
     await GoogleMapsFlutterAndroid().initializeWithRenderer(AndroidMapRenderer.latest);
   }
+  await MapIcons.loadIcons();
 
   runApp(MultiBlocProvider(
     providers: [

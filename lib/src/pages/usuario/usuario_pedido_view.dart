@@ -10,6 +10,7 @@ import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/helpers/get_position.dart';
+import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/models/models/position_model.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 import 'package:gruasgo/src/widgets/button_app.dart';
@@ -55,7 +56,8 @@ class _UsuarioPedidoState extends State<UsuarioPedido> {
     usuarioPedidoBloc.add(OnSetAddNewMarkets(
       Marker(
         markerId: MarkerId(MarkerIdEnum.origen.toString()),
-        position: LatLng(position.latitude, position.longitude)
+        position: LatLng(position.latitude, position.longitude),
+        icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker
       )
     ));
 
@@ -141,6 +143,9 @@ class _FormWidgetState extends State<FormWidget> {
   static List<String> listaDetallePedido = <String>['RIPIO', 'ARENILLA', 'ARENA FINA', 'RELLENO'];
   static List<String> listaPorHora = <String>['Grua Pluma', 'Grua Crane 30 Ton', 'Grua Crane 50 Ton', 'Monta Carga 1 Tonelada', 'Monta Carga 2 Tonelada', 'Monta Carga 5 Tonelada',];
   String detalleServicio = listaDetallePedido.first;
+
+  static List<String> listaTipoPago = <String>['Efectivo', 'QR'];
+  String tipoPago = listaTipoPago.first;
 
   TextEditingController tecDestino = TextEditingController();
   TextEditingController tecNroContrato = TextEditingController();
@@ -229,7 +234,8 @@ class _FormWidgetState extends State<FormWidget> {
                             widget.usuarioPedidoBloc.add(OnSetAddNewMarkets(
                               Marker(
                                 markerId: MarkerId(MarkerIdEnum.origen.toString()),
-                                position: LatLng(position.lat, position.lng)
+                                position: LatLng(position.lat, position.lng),
+                                icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker
                               )
                             ));
                           }
@@ -261,8 +267,9 @@ class _FormWidgetState extends State<FormWidget> {
                               markerId: MarkerId(MarkerIdEnum.origen.toString()),
                                 position: LatLng(
                                   position.latitude, 
-                                  position.longitude
-                                )
+                                  position.longitude,
+                                ),
+                                icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker
                               );
                           }
                           
@@ -275,6 +282,7 @@ class _FormWidgetState extends State<FormWidget> {
                       ),
 
                       TextFormFieldMapWidget(
+                        marginButton: 0,
                         suffixIcon: IconButton(
                           onPressed: (){
                             tecDestino.text = '';
@@ -298,7 +306,8 @@ class _FormWidgetState extends State<FormWidget> {
                             widget.usuarioPedidoBloc.add(OnSetAddNewMarkets(
                               Marker(
                                 markerId: MarkerId(MarkerIdEnum.destino.toString()),
-                                position: LatLng(position.lat, position.lng)
+                                position: LatLng(position.lat, position.lng),
+                                icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
                               )
                             ));
                           }
@@ -337,7 +346,8 @@ class _FormWidgetState extends State<FormWidget> {
                                     position: LatLng(
                                       position.latitude, 
                                       position.longitude
-                                    )
+                                    ),
+                                    icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
                                   );
                               }
                             }
@@ -355,20 +365,46 @@ class _FormWidgetState extends State<FormWidget> {
             ],
           ),
 
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: TextFormFieldWidget(
-              tecNroContrato: tecNroContrato,
-              label: 'Numero de contacto para entrega',
-              textInputType: TextInputType.number,
-              maxLength: 8,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty){
-                  return 'Este campo es obligatorio';
-                }
-                return null;
-              },
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20,),
+                    TextFormFieldWidget(
+                      margin: const EdgeInsets.only(top: 0, left: 15, right: 6, bottom: 10),
+                      tecNroContrato: tecNroContrato,
+                      label: 'Numero Telefonico',
+                      textInputType: TextInputType.number,
+                      maxLength: 8,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty){
+                          return 'Este campo es obligatorio';
+                        } 
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: DropButtonWidget( 
+                  margin: const EdgeInsets.only(top: 0, left: 6, right: 15, bottom: 10),
+                  value: tipoPago, 
+                  listDropdownMenu: listaTipoPago, 
+                  label: 'Tipo de pago', 
+                  onChanged: (String? value) {
+                    if (value != null){
+                      tipoPago = value;
+                      setState(() {});
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
           
           (listaRecibida[0] == 'VOLQUETAS') ? 
@@ -385,15 +421,27 @@ class _FormWidgetState extends State<FormWidget> {
               },
               // EN caso contrario, es un Input normal y corriente para describir cosas de la carga
             ) : TextFormFieldWidget(
-            label: 'Descripcion de la carga',
-            tecNroContrato: tecDescripcion,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty){
-                return 'Este campo es obligatorio';
-              }
-              return null;
-            },
+              maxLength: 60,
+              label: 'Descripcion Carga (Tipo, Modelo, Color)',
+              tecNroContrato: tecDescripcion,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty){
+                  return 'Este campo es obligatorio';
+                }
+                return null;
+              },
+           ),
+
+          const Text(
+            'Ejemplo (Vagoneta, Toyota Corolla, Blanco) ',
+            style: TextStyle(
+              color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+            ),
           ),
+           
           (!isLoading) ? Container(
             margin: const EdgeInsets.symmetric(horizontal: 15,vertical: 25),
 
@@ -520,7 +568,7 @@ class _FormWidgetState extends State<FormWidget> {
                   idUsuario: userBloc.user!.idUsuario,
                   ubiInicial: widget.tecOrigen.text.trim(),  
                   ubiFinal: tecDestino.text.trim(),  
-                  metodoPago: 'QR',  
+                  metodoPago: tipoPago,  
                   monto: (listaPorHora.contains(listaRecibida[1])) ? '0' : precio ?? '', 
                   servicio: servicio, 
                   descripcionDescarga: tecDescripcion.text.trim(), 

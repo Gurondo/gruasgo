@@ -6,18 +6,20 @@ class DropButtonWidget extends StatelessWidget {
     required this.value,
     required this.listDropdownMenu,
     required this.label,
-    required this.onChanged
+    required this.onChanged,
+    this.margin = const EdgeInsets.only(top:0, left: 15, right: 15, bottom: 10)
   });
 
   final String value;
   final String label;
   final List<String> listDropdownMenu;
   final Function(String?)? onChanged;
+  final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 0, left: 15, right: 15, bottom: 10),
+      margin: margin,
       child: Stack(
         children: [
           Container(
@@ -45,7 +47,7 @@ class DropButtonWidget extends StatelessWidget {
             alignment: Alignment.topLeft,
             child: Container(
               color: Colors.white,
-              margin: EdgeInsets.only(left: 5),
+              margin: const EdgeInsets.only(left: 5),
               padding: const EdgeInsets.all(8),
               child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13),)
             )

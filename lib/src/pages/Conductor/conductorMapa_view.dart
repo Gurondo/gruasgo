@@ -308,9 +308,9 @@ class _ConductorMapState extends State<ConductorMap> {
                                         ),
                                         const SizedBox(height: 12,),
                                         InformacionWidget(
-                                          icons: Icons.dashboard_customize_sharp,
-                                          titulo: 'Servicio',
-                                          descripcion: state.detallePedido?.servicio ?? '',
+                                          icons: Icons.map_outlined,
+                                          titulo: 'Descripcion Carga',
+                                          descripcion: state.detallePedido?.descripcionDescarga ?? '',
                                         ),
                                         const SizedBox(height: 12,),
                                         Row(

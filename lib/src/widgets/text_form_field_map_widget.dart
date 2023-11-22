@@ -13,6 +13,7 @@ class TextFormFieldMapWidget extends StatelessWidget {
   final TextEditingController textEditingController;
   final void Function(String) onSuggestionSelected;
   final Widget? suffixIcon;
+  final double marginButton;
 
 
   const TextFormFieldMapWidget({
@@ -25,12 +26,13 @@ class TextFormFieldMapWidget extends StatelessWidget {
     required this.onSuggestionSelected,
     this.suffixIcon,
     this.validator,
+    this.marginButton = 10
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 10),
+      margin: EdgeInsets.only(top: 5, left: 15, right: 15, bottom: marginButton),
       height: 70, // ALTO DEL TEXT
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

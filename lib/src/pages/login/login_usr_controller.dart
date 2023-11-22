@@ -32,6 +32,7 @@ class loginController{
       "bpassword": passwordController.text,
     });
     if (response.statusCode == 200) {
+      // print(response.body);
       var datauser = json.decode(response.body);
       if (datauser.length == 0) {
         utils.Snackbar.showSnackbar(context!, key, 'Usuario o contraseña incorrectos.');

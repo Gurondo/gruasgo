@@ -13,6 +13,7 @@ import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
+import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/models/response/estado_pedido_response.dart';
 import 'package:gruasgo/src/models/response/estado_response.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as polyline;
@@ -308,11 +309,15 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         Marker origen = (data.estado != 'VICO') ? Marker(
           markerId: MarkerId(MarkerIdEnum.origen.toString()),
           position: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
-        ) : Marker(markerId: MarkerId(MarkerIdEnum.origen.toString()));
+          icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker
+        ) : Marker(
+          markerId: MarkerId(MarkerIdEnum.origen.toString())
+        );
         
         Marker destino = Marker(
           markerId: MarkerId(MarkerIdEnum.destino.toString()),
           position: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+          icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
         );
 
 
@@ -617,11 +622,13 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         add(OnSetNewMarkets({
           Marker(
             markerId: MarkerId(MarkerIdEnum.origen.toString()),
-            position: detallePedido!.origen
+            position: detallePedido!.origen,
+            icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker
           ),
           Marker(
             markerId: MarkerId(MarkerIdEnum.destino.toString()),
-            position: detallePedido!.destino
+            position: detallePedido!.destino,
+            icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
           ),
         }));
 
