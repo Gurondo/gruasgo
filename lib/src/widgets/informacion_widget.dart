@@ -5,9 +5,11 @@ class InformacionWidget extends StatelessWidget {
   final IconData icons;
   final String titulo;
   final String descripcion;
+  final bool isColumn;
 
   const InformacionWidget({
     super.key,
+    this.isColumn = true,
     required this.icons,
     required this.titulo,
     required this.descripcion
@@ -18,11 +20,12 @@ class InformacionWidget extends StatelessWidget {
     return Row(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Icon(icons, color: Colors.black87,),
         ),
         Expanded(
-          child: Column(
+          child: (isColumn) ? 
+          Column(
             children: [
               Align(
                 alignment: Alignment.centerLeft,
@@ -30,7 +33,16 @@ class InformacionWidget extends StatelessWidget {
               const SizedBox(height: 3,),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(descripcion, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: Colors.black54),),)
+                child: Text(descripcion, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black45),),)
+            ],
+          ) : 
+          Row(
+            children: [
+              Text(titulo, style: const TextStyle(fontSize: 16),),
+              const SizedBox(
+                width: 10,
+              ),
+              Text(descripcion, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),)
             ],
           )
         )

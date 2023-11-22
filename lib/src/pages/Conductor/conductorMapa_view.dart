@@ -291,28 +291,37 @@ class _ConductorMapState extends State<ConductorMap> {
                                       children: [
                                         InformacionWidget(
                                           icons: Icons.arrow_downward,
-                                          titulo: 'Desde',
+                                          titulo: 'Origen',
                                           descripcion: state.detallePedido?.nombreOrigen ?? '',
                                         ),
-                                        const SizedBox(height: 12,),
+                                        const SizedBox(height: 5,),
                                         InformacionWidget(
                                           icons: Icons.arrow_upward,
-                                          titulo: 'Hasta',
+                                          titulo: 'Destino',
                                           descripcion: state.detallePedido?.nombreDestino ?? '',
                                         ),
-                                        const SizedBox(height: 12,),
+                                        const SizedBox(height: 5,),
                                         InformacionWidget(
+                                          isColumn: false,
                                           icons: Icons.person,
                                           titulo: 'Cliente',
                                           descripcion: state.detallePedido?.cliente ?? '',
                                         ),
-                                        const SizedBox(height: 12,),
+                                        const SizedBox(height: 5,),
+                                        const InformacionWidget(
+                                          isColumn: false,
+                                          icons: Icons.phone,
+                                          titulo: 'Celular Ref',
+                                          descripcion: '00000000',
+                                        ),
+                                        const SizedBox(height: 5,),
                                         InformacionWidget(
+                                          isColumn: false,
                                           icons: Icons.map_outlined,
                                           titulo: 'Descripcion Carga',
                                           descripcion: state.detallePedido?.descripcionDescarga ?? '',
                                         ),
-                                        const SizedBox(height: 12,),
+                                        const SizedBox(height: 5,),
                                         Row(
                                           children: [
                                             (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.estoyAqui) ? 
