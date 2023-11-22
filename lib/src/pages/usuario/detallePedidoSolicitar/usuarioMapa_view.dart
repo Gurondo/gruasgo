@@ -208,22 +208,32 @@ class _UsuarioMapState extends State<UsuarioMap>{
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(height: 12,),
+                        const SizedBox(height: 5,),
                         InformacionWidget(
                           icons: Icons.add_location,
-                          titulo: 'Desde',
+                          titulo: 'Origen',
                           descripcion: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
                         ),
-                        const SizedBox(height: 12,),
+                        const SizedBox(height: 5,),
                         InformacionWidget(
                           icons: Icons.my_location,
-                          titulo: 'Hasta',
+                          titulo: 'Destinjo',
                           descripcion: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
                         ),
+
+                        InformacionWidget(
+                          colorDescription: Colors.red,
+                          isColumn: false,
+                          icons: Icons.car_crash,
+                          titulo: 'Vehiculo',
+                          descripcion: _usuarioPedidoBloc.pedidoModel?.bservicio ?? '',
+                        ),
                         
-                        (_usuarioPedidoBloc.pedidoModel!.bmonto != '0') ? const SizedBox(height: 12,) : Container(),
+                        (_usuarioPedidoBloc.pedidoModel!.bmonto != '0') ? const SizedBox(height: 5,) : Container(),
                         
                         (_usuarioPedidoBloc.pedidoModel!.bmonto != '0') ? InformacionWidget(
+                          colorDescription: Colors.red,
+                          isColumn: false,
                           icons: Icons.attach_money,
                           titulo: 'Precio',
                           descripcion: '${_usuarioPedidoBloc.pedidoModel!.bmonto} Bs.',
@@ -249,21 +259,35 @@ class _UsuarioMapState extends State<UsuarioMap>{
                   ),
                 ) : Column(
                   children: [
-                    ListTile(
-                      leading: const Icon(Icons.arrow_downward),
-                      title: const Text('Desde', style: TextStyle(fontWeight: FontWeight.bold),),
-                      subtitle: Text(usuarioPedidoBloc.pedidoModel!.bubinicial),
+                    const SizedBox(height: 10,),
+                    InformacionWidget(
+                      icons: Icons.add_location,
+                      titulo: 'Origen',
+                      descripcion: _usuarioPedidoBloc.pedidoModel?.bubinicial ?? '',
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.arrow_upward),
-                      title: const Text('Hasta', style: TextStyle(fontWeight: FontWeight.bold),),
-                      subtitle: Text(usuarioPedidoBloc.pedidoModel!.bubfinal),
+                    const SizedBox(height: 5,),
+                    InformacionWidget(
+                      icons: Icons.my_location,
+                      titulo: 'Destino',
+                      descripcion: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.dashboard_customize_sharp),
-                      title: const Text('Servicio', style: TextStyle(fontWeight: FontWeight.bold),),
-                      subtitle: Text(usuarioPedidoBloc.pedidoModel!.bservicio),
+                    const SizedBox(height: 5,),
+                    const InformacionWidget(
+                      colorDescription: Colors.red,
+                      isColumn: false,
+                      icons: Icons.rectangle_outlined,
+                      titulo: 'Placa',
+                      descripcion: 'Placa aqui',
                     ),
+                    const SizedBox(height: 5,),
+                    InformacionWidget(
+                      colorDescription: Colors.red,
+                      isColumn: false,
+                      icons: Icons.car_crash,
+                      titulo: 'Vehiculo',
+                      descripcion: _usuarioPedidoBloc.pedidoModel?.bservicio ?? '',
+                    ),
+                    const SizedBox(height: 10,),
                   ],
                 )
     

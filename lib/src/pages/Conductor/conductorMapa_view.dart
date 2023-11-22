@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,6 +16,7 @@ import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_hora.dart';
 import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/helpers/get_position.dart';
+import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/pages/Conductor/conductorMapa_controller.dart';
 import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
@@ -48,7 +48,6 @@ class _ConductorMapState extends State<ConductorMap> {
 
   late Position _position;
 
-  BitmapDescriptor? markerDriver;
   late StreamSubscription<LocationData> locationSubscription;
 
   @override 
@@ -59,9 +58,7 @@ class _ConductorMapState extends State<ConductorMap> {
     location = Location();
 
 
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      _con.init(context, refresh); //// REFRESH  PARA M3
-    });
+  
 
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
     _userBloc = BlocProvider.of<UserBloc>(context);
@@ -109,23 +106,15 @@ class _ConductorMapState extends State<ConductorMap> {
     super.dispose();
   }
 
-  Future<BitmapDescriptor>? createMarkerImageFromAsset(String path) async{
-    ImageConfiguration configuration = const ImageConfiguration();
-    BitmapDescriptor bitmapDescriptor =
-    await BitmapDescriptor.fromAssetImage(configuration, path);
-    return bitmapDescriptor;
-  }
 
   Future getPosition({required ConductorBloc conductorBloc}) async {
     _position = await getPositionHelpers();
     
-    markerDriver = await createMarkerImageFromAsset('assets/img/icono_grua.png');
-
     conductorBloc.add(OnSetAddMarker(
       Marker(
         markerId: const MarkerId('driver'),
         position: LatLng(_position.latitude, _position.longitude),
-        icon: markerDriver!
+        icon: MapIcons.iconConductor ?? BitmapDescriptor.defaultMarker
       ),
       
     ));
@@ -165,8 +154,7 @@ class _ConductorMapState extends State<ConductorMap> {
           Marker(
             markerId: const MarkerId('driver'),
             position: LatLng(cLoc.latitude!, cLoc.longitude!),
-            icon: markerDriver!,
-            rotation: cLoc.heading ?? 0.0
+            icon: MapIcons.iconConductor ?? BitmapDescriptor.defaultMarker
           ),
           
         ));
@@ -394,6 +382,17 @@ class _ConductorMapState extends State<ConductorMap> {
                                                       _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
                                                       _conductorBloc.add(OnSetClearPolylines());
                                                       _conductorBloc.add(OnSetRemoveMarker(MarkerIdEnum.origen));
+                                                      
+                                                      _conductorBloc.add(
+                                                        OnSetAddMarker(
+                                                          Marker(
+                                                            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+                                                            position: state.detallePedido!.destino,
+                                                            icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
+                                                          )
+                                                        )
+                                                      );
+
                                                       _getPolylines(state);
                                                       final statusPedido = await _conductorBloc.actualizarPedido(
                                                         estado: 'VICO',
@@ -739,26 +738,8 @@ void showCustomDialog({
     );
   }
 
-  Widget _googleMapsWidget() {
-    return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: _con.initialPosition,
-      onMapCreated: _con.onMapCreated,
-      myLocationEnabled: false,
-      myLocationButtonEnabled:
-          false, // BOTON DE UBICACION POR DEFECTO ESQUINA SUPERIOR DERECHA
-      markers: Set<Marker>.of({
-        ..._con.markers.values,
-        ..._conductorBloc.state.markers
-      }),
-      polylines: _conductorBloc.state.polylines,
-    );
-  }
-
   //// UTLIZADO PARA M3
-  void refresh() {
-    // setState(() {});
-  }
+
 
   bool hayPedido(ConductorState state){
 
@@ -770,13 +751,11 @@ void showCustomDialog({
   Future _getPolylines(ConductorState state) async {
 
     Position position = await getPositionHelpers();
-    Marker? marker = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
 
-    if (marker == null) return;
 
     List<PointLatLng>? polyline = await _conductorBloc.getPolylines(
       origen: LatLng(position.latitude, position.longitude), 
-      destino: marker.position
+      destino: state.detallePedido!.destino
     );
 
     if (polyline != null){

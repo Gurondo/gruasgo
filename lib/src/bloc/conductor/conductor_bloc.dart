@@ -313,11 +313,15 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         ) : Marker(
           markerId: MarkerId(MarkerIdEnum.origen.toString())
         );
+
+
         
-        Marker destino = Marker(
+        Marker destino = (data.estado == 'VICO') ? Marker(
           markerId: MarkerId(MarkerIdEnum.destino.toString()),
           position: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
           icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
+        ) : Marker(
+          markerId: MarkerId(MarkerIdEnum.destino.toString())
         );
 
 
@@ -414,6 +418,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     
     final resp = await GoogleMapServices.googleDirections( origen: origen, destino: destino);
     
+    if (destino.latitude == 0 && destino.longitude == 0) return null;
+
     if (resp.statusCode == 200){
       final googleMapDirection = polyline.googleMapDirectionFromJson(resp.body);
       return PolylinePoints().decodePolyline(googleMapDirection.routes[0].overviewPolyline.points);
@@ -532,6 +538,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   void emitComenzarCarrera(){
+
     SocketService.emit('comenzar carrera', {
       'idCliente': state.detallePedido!.clienteId
     });

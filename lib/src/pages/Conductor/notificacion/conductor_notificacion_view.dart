@@ -9,10 +9,12 @@ import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
+import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
 import 'package:gruasgo/src/helpers/get_hora.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
+import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
 import 'package:timer_count_down/timer_count_down.dart';
@@ -265,6 +267,13 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
 
                             _userBloc.camaraEnfocada = true;
                             _getPolylines();
+
+
+                            _conductorBloc.add(OnSetAddMarker(
+                              Marker(markerId: MarkerId(MarkerIdEnum.destino.toString()))
+                            ));
+                            // _conductorBloc.add(OnSetRemoveMarker(MarkerIdEnum.destino));
+
 
                             if (statusHora){
                               _pedidoAceptado = true;

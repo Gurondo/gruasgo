@@ -6,13 +6,15 @@ class InformacionWidget extends StatelessWidget {
   final String titulo;
   final String descripcion;
   final bool isColumn;
+  final Color colorDescription;
 
   const InformacionWidget({
     super.key,
     this.isColumn = true,
+    this.colorDescription = Colors.blue,
     required this.icons,
     required this.titulo,
-    required this.descripcion
+    required this.descripcion,
   });
 
   @override
@@ -42,7 +44,7 @@ class InformacionWidget extends StatelessWidget {
               const SizedBox(
                 width: 10,
               ),
-              Text(descripcion, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),)
+              Text(descripcion, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colorDescription),)
             ],
           )
         )

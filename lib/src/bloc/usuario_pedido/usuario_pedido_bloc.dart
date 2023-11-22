@@ -457,11 +457,16 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   void listenPedidoAceptado({required NavigatorState navigator}) {
     SocketService.on('pedido aceptado por conductor', (data) async {
       add(OnSetIdConductor(data['id']));
+
+      add(OnSetAddNewMarkets(
+        Marker(markerId: MarkerId(MarkerIdEnum.destino.toString()))
+      ));
+
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
           position: LatLng(data['lat'], data['lng']),
-          icon: MapIcons.iconConductorDelCliente ?? BitmapDescriptor.defaultMarker
+          icon: MapIcons.iconConductor ?? BitmapDescriptor.defaultMarker
         )
       ));
 
@@ -591,12 +596,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     SocketService.on('El conductor comenzo carrera', (data) async {
       add(OnRemoveMarker(MarkerIdEnum.origen));
       add(OnClearPolylines());
+
+      add(OnSetAddNewMarkets(
+        Marker(
+          markerId: MarkerId(MarkerIdEnum.destino.toString()),
+          position: pedidoModel!.destino,
+          icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
+        )
+      ));
       
       paraOrigen = false;
-      Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
       Marker? conductor = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.conductor);
-      if (destino != null && conductor != null){
-        final polyline = await getPolylines(origen: conductor.position, destino: destino.position);
+      if (conductor != null){
+        final polyline = await getPolylines(origen: conductor.position, destino: pedidoModel!.destino);
         if (polyline != null){
           add(OnSetAddNewPolylines(
             Polyline(
