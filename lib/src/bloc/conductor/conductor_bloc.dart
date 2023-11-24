@@ -123,7 +123,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           socketClientId: state.detallePedido!.socketClientId, 
           pedidoId: state.detallePedido!.pedidoId, 
           estado: state.detallePedido!.estado,
-          tiempoTranscurrido: event.tiempoTranscurrido
+          tiempoTranscurrido: event.tiempoTranscurrido,
+          tipoPago: state.detallePedido!.tipoPago
         );
 
         emit(state.copyWitch(detallePedido: detalle));
@@ -283,7 +284,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
             pedidoId: data.idPedido,
             estado: data.estado,
             horaFin: data.horaFin,
-            horaInicio: data.horaIni
+            horaInicio: data.horaIni,
+            tipoPago: data.metodoPago
           )));
         }else{
           add(OnSetDetallePedido(DetalleNotificacionConductor(
@@ -300,6 +302,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
             socketClientId: 'socket_id',
             pedidoId: data.idPedido,
             estado: data.estado,
+            tipoPago: data.metodoPago
           )));
         }
 
@@ -526,13 +529,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     SocketService.close();
   }
 
-  void updatePosition({required lat, required lng, required rotation}){
+  void updatePosition({required lat, required lng}){
+    print('enviando coordenadas al usuario');
 
+    // print(state.detallePedido!.clienteId);
     SocketService.emit('actualizar coordenadas conductor', {
       'lat': lat,
       'lng': lng,
-      'rotation': rotation,
-      'idPedido': state.detallePedido?.pedidoId ?? '='
+      'idCliente': state.detallePedido?.clienteId ?? ''
     });
 
   }
@@ -570,6 +574,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     required String cliente,
     required String clienteId,
     required String pedidoId,
+    required String nombreConductor,
+    required String placa
 
   }) async {
 
@@ -584,7 +590,9 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       'idCliente': clienteId,
       'idPedido': pedidoId,
       'lat': position.latitude,
-      'lng': position.longitude
+      'lng': position.longitude,
+      'nombreConductor': nombreConductor,
+      'placa': placa
     });
 
   }
@@ -621,7 +629,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           // TODO: BorrarSOcket
           socketClientId: payload['socket_client_id'],
           pedidoId: responsePedido.idPedido,
-          estado: responsePedido.estado
+          estado: responsePedido.estado,
+          tipoPago: responsePedido.metodoPago
         );
 
         print(detallePedido.toString());

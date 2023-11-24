@@ -67,6 +67,8 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
       cliente: _conductorBloc.detallePedido!.cliente,
       clienteId: _conductorBloc.detallePedido!.clienteId,
       pedidoId: _conductorBloc.detallePedido!.pedidoId,
+      nombreConductor: _userBloc.user!.nombreusuario,
+      placa: _userBloc.user!.place
     );
     if (!_pedidoAceptado){
       _conductorBloc.eliminarCrearEstado(
@@ -260,7 +262,8 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
                                     socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
                                     pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
                                     estado: _conductorBloc.state.detallePedido!.estado,
-                                    horaInicio: getHoraHelpers()
+                                    horaInicio: getHoraHelpers(),
+                                    tipoPago: _conductorBloc.state.detallePedido!.tipoPago
                                   )
                                 ));
                             }

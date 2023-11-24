@@ -272,12 +272,12 @@ class _UsuarioMapState extends State<UsuarioMap>{
                       descripcion: _usuarioPedidoBloc.pedidoModel?.bubfinal ?? '',
                     ),
                     const SizedBox(height: 5,),
-                    const InformacionWidget(
+                    InformacionWidget(
                       colorDescription: Colors.red,
                       isColumn: false,
                       icons: Icons.rectangle_outlined,
                       titulo: 'Placa',
-                      descripcion: 'Placa aqui',
+                      descripcion: _usuarioPedidoBloc.pedidoModel?.placa ?? '',
                     ),
                     const SizedBox(height: 5,),
                     InformacionWidget(

@@ -67,9 +67,13 @@ class _ConductorMapState extends State<ConductorMap> {
 
       final position = await getPositionHelpers();
 
-      _conductorBloc.updatePosition(
-        lat: position.latitude, lng: position.longitude, rotation: position.heading
-      );
+      if (hayPedido(_conductorBloc.state)){
+        _conductorBloc.updatePosition(
+          lat: position.latitude, lng: position.longitude
+        );
+      }
+
+
 
       _conductorBloc.actualizarCoorEstado(
         idUsuario: _userBloc.user!.idUsuario
@@ -296,11 +300,11 @@ class _ConductorMapState extends State<ConductorMap> {
                                           descripcion: state.detallePedido?.cliente ?? '',
                                         ),
                                         const SizedBox(height: 5,),
-                                        const InformacionWidget(
+                                        InformacionWidget(
                                           isColumn: false,
                                           icons: Icons.phone,
                                           titulo: 'Celular Ref',
-                                          descripcion: '00000000',
+                                          descripcion: state.detallePedido?.referencia.toString() ?? '',
                                         ),
                                         const SizedBox(height: 5,),
                                         InformacionWidget(
@@ -375,7 +379,8 @@ class _ConductorMapState extends State<ConductorMap> {
                                                             socketClientId: state.detallePedido!.socketClientId, 
                                                             pedidoId: state.detallePedido!.pedidoId, 
                                                             estado: state.detallePedido!.estado,
-                                                            horaInicio: getHoraHelpers()
+                                                            horaInicio: getHoraHelpers(),
+                                                            tipoPago: state.detallePedido!.tipoPago
                                                           )
                                                         ));
                                                       }
@@ -472,7 +477,8 @@ class _ConductorMapState extends State<ConductorMap> {
                                                                 socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
                                                                 pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
                                                                 estado: _conductorBloc.state.detallePedido!.estado,
-                                                                tiempoTranscurrido: minutos
+                                                                tiempoTranscurrido: minutos,
+                                                                tipoPago: _conductorBloc.state.detallePedido!.tipoPago
                                                               )));
                                                             }
                                                   

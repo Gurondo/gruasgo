@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/utils/colors.dart' as utils;
 
 class UsarioBienbenido extends StatefulWidget {
@@ -16,11 +17,28 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
  // var arguments;
   late final List<String> listaElementos;
 
+
+Future<bool> redireccionar({
+  required UsuarioPedidoBloc usuarioPedidoBloc,
+  required idUsuario
+}) async {
+
+  final resp = await usuarioPedidoBloc.buscarPedidoPendiente(
+    idPedido: '473', 
+    idUsuario: idUsuario
+  );
+  
+
+  return resp!;
+}
+
   @override
   Widget build(BuildContext context) {
     // print('METODO BUILD');
 
     final userBloc = BlocProvider.of<UserBloc>(context);
+    final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
+    final navigator = Navigator.of(context);
 
     // final String username = ModalRoute.of(context)!.settings.arguments as String;
     return Scaffold(
@@ -38,102 +56,93 @@ class _UsarioBienbenidoState extends State<UsarioBienbenido> {
             },
           ),
         ],
-        /*  actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              // Agrega aquí la lógica para manejar la selección del menú
-              if (value == 'opcion1') {
-                // Acción para la opción 1 del menú
-              } else if (value == 'opcion2') {
-                // Acción para la opción 2 del menú
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'opcion1',
-                  child: Text('Opción 1'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'opcion2',
-                  child: Text('Opción 2'),
-                ),
-              ];
-            },
-          ),
-        ],*/
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Menú de Navegación',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                const DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                  ),
+                  child: Text(
+                    'Menú de Navegación',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
+                  ),
                 ),
-              ),
+                ListTile(
+                  title: const Text('Opción 1'),
+                  onTap: () {
+                    // Agrega aquí la lógica para la opción 1 del Drawer
+                    Navigator.pop(context); // Cierra el Drawer
+                  },
+                ),
+                ListTile(
+                  title: const Text('Opción 2'),
+                  onTap: () {
+                    // Agrega aquí la lógica para la opción 2 del Drawer
+                    Navigator.pop(context); // Cierra el Drawer
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              title: const Text('Opción 1'),
-              onTap: () {
-                // Agrega aquí la lógica para la opción 1 del Drawer
-                Navigator.pop(context); // Cierra el Drawer
-              },
-            ),
-            ListTile(
-              title: const Text('Opción 2'),
-              onTap: () {
-                // Agrega aquí la lógica para la opción 2 del Drawer
-                Navigator.pop(context); // Cierra el Drawer
-              },
-            ),
-          ],
-        ),
-      ),
-      backgroundColor: Colors.white,
-      body:
-      WillPopScope(
-        onWillPop: (){
-          return Future(() => false); //Descativar el boton volver atraz
-        },
-
-        child:  SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              _textBienbenido(userBloc.user!.nombreusuario),
-              _textoServicio(),
-              const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  _gruaA('assets/img/GruaGancho.png','GRUAS','Grua Gancho','',''),
-                  _gruaA('assets/img/GruaPlataforma.png','GRUAS','Grua Plataforma','',''),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  _gruaA('assets/img/GruaPluma.png','GRUAS','Grua Pluma','',''),
-                  _gruaA('assets/img/GruaGrane.png','GRUAS','Grua Crane 30 Ton','Grua Crane 50 Ton',''),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  _gruaA('assets/img/Montacarga.png','MONTA CARGA','Monta Carga 1 Tonelada','Monta Carga 2 Toneladas','Monta Carga 5 Toneladas'),
-                  _gruaA('assets/img/Volquetas.png','VOLQUETAS','Volqueta de 5cb','Volqueta de 8cb','Volqueta de 12cb'),
-                ],
-              ),
-            ],
           ),
-        ),
+      backgroundColor: Colors.white,
+      body: FutureBuilder<bool>(
+        future: redireccionar(usuarioPedidoBloc: usuarioPedidoBloc, idUsuario: userBloc.user!.idUsuario),
+        builder: (context, snapshot) {
+
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: Text('Redireccionando'),);
+
+          if (snapshot.data == true){
+            Future.delayed(Duration.zero, (){
+              navigator.pushNamedAndRemoveUntil('MapaUsuario', (route) => false);
+            });
+            return const Text('Redireccionando');
+          }
+
+
+          return WillPopScope(
+            onWillPop: (){
+              return Future(() => false); //Descativar el boton volver atraz
+            },
+      
+            child:  SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  _textBienbenido(userBloc.user!.nombreusuario),
+                  _textoServicio(),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      _gruaA('assets/img/GruaGancho.png','GRUAS','Grua Gancho','',''),
+                      _gruaA('assets/img/GruaPlataforma.png','GRUAS','Grua Plataforma','',''),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      _gruaA('assets/img/GruaPluma.png','GRUAS','Grua Pluma','',''),
+                      _gruaA('assets/img/GruaGrane.png','GRUAS','Grua Crane 30 Ton','Grua Crane 50 Ton',''),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      _gruaA('assets/img/Montacarga.png','MONTA CARGA','Monta Carga 1 Tonelada','Monta Carga 2 Toneladas','Monta Carga 5 Toneladas'),
+                      _gruaA('assets/img/Volquetas.png','VOLQUETAS','Volqueta de 5cb','Volqueta de 8cb','Volqueta de 12cb'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
       ),
     );
   }

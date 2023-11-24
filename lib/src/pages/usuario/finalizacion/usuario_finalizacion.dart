@@ -28,6 +28,8 @@ class _UsuarioFinalizacionState extends State<UsuarioFinalizacion> {
 
     usuarioBloc.add(OnSetIdConductor(''));
     usuarioBloc.add(OnRemoveMarker(MarkerIdEnum.conductor));
+
+    usuarioBloc.add(OnClearPolylines());
     // TODO: implement initState
     super.initState();
 
@@ -76,13 +78,18 @@ class _UsuarioFinalizacionState extends State<UsuarioFinalizacion> {
               ),
               ListTile(
                 leading: const Icon(Icons.pin_drop),
-                title: const Text('Desde', style: TextStyle(fontWeight: FontWeight.bold),),
+                title: const Text('Origen', style: TextStyle(fontWeight: FontWeight.bold),),
                 subtitle: Text(usuarioBloc.pedidoModel!.bubinicial),
               ),
               ListTile(
                 leading: const Icon(Icons.directions_car),
-                title: const Text('Hasta', style: TextStyle(fontWeight: FontWeight.bold),),
+                title: const Text('Destino', style: TextStyle(fontWeight: FontWeight.bold),),
                 subtitle: Text(usuarioBloc.pedidoModel!.bubfinal),
+              ),
+              ListTile(
+                leading: const Icon(Icons.payment),
+                title: const Text('Metodo de pago', style: TextStyle(fontWeight: FontWeight.bold),),
+                subtitle: Text(usuarioBloc.pedidoModel!.bmetodopago),
               ),
               Text('Califica a tu conductor'.toUpperCase(), style: TextStyle(color: Colors.blue[600]),),
               RatingBar.builder(

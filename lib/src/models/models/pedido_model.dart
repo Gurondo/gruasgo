@@ -15,8 +15,12 @@ class PedidoModel{
   int bcelentrega;
   LatLng origen;
   LatLng destino;
+  String? conductor;
+  String? placa;
 
   PedidoModel({
+    this.conductor,
+    this.placa,
     required this.btip,
     required this.bidpedido,
     required this.bidusuario,
@@ -28,7 +32,7 @@ class PedidoModel{
     required this.bdescarga,
     required this.bcelentrega,
     required this.origen,
-    required this.destino
+    required this.destino,
   });
 
 }

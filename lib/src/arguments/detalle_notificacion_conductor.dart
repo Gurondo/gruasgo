@@ -26,6 +26,7 @@ class DetalleNotificacionConductor {
   final double monto;
   final String pedidoId;
   final String estado;
+  final String tipoPago;
   final String? horaInicio;
   final String? horaFin;
   final String? tiempoTranscurrido;
@@ -45,6 +46,7 @@ class DetalleNotificacionConductor {
     required this.socketClientId,
     required this.pedidoId,
     required this.estado,
+    required this.tipoPago,
     this.horaInicio,
     this.horaFin,
     this.tiempoTranscurrido

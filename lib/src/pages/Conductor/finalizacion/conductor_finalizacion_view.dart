@@ -34,6 +34,8 @@ class _ConductorFinalizacionState extends State<ConductorFinalizacion> {
     conductorBloc = BlocProvider.of<ConductorBloc>(context);
 
     conductorBloc.add(OnSetClearPolylines());
+    conductorBloc.add(OnSetNewMarkets({}));
+
   }
 
   @override
@@ -42,7 +44,6 @@ class _ConductorFinalizacionState extends State<ConductorFinalizacion> {
     conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
     conductorBloc.add(OnSetClearPolylines());
     conductorBloc.add(OnSetLimpiarPedidos());
-    conductorBloc.add(OnSetNewMarkets({}));
     conductorBloc.yaHayPedido = false;
 
     // TODO: implement dispose
@@ -94,13 +95,18 @@ class _ConductorFinalizacionState extends State<ConductorFinalizacion> {
               ),
               ListTile(
                 leading: const Icon(Icons.pin_drop),
-                title: const Text('Desde', style: TextStyle(fontWeight: FontWeight.bold),),
+                title: const Text('Origen', style: TextStyle(fontWeight: FontWeight.bold),),
                 subtitle: Text(conductorBloc.state.detallePedido?.nombreOrigen ?? 'none'),
               ),
               ListTile(
                 leading: const Icon(Icons.directions_car),
-                title: const Text('Hasta', style: TextStyle(fontWeight: FontWeight.bold),),
+                title: const Text('Destino', style: TextStyle(fontWeight: FontWeight.bold),),
                 subtitle: Text(conductorBloc.state.detallePedido?.nombreDestino ?? 'none'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.payment),
+                title: const Text('Metodo de pago', style: TextStyle(fontWeight: FontWeight.bold),),
+                subtitle: Text(conductorBloc.state.detallePedido?.tipoPago ?? 'none'),
               ),
               
               (

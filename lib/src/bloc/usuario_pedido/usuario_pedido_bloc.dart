@@ -13,6 +13,7 @@ import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as data;
+import 'package:gruasgo/src/models/response/response_pedido_usuario.dart';
 import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
@@ -134,10 +135,82 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     });
   }
 
-    void desconectarseSocket(){
+  void desconectarseSocket(){
     SocketService.close();
   }
 
+  Future<bool?> buscarPedidoPendiente({
+    required String idPedido,
+    required String idUsuario
+  }) async {
+
+    final resp = await ClienteService.getPedidoPendiente(idPedido: idPedido, idUsuario: idUsuario);
+
+    print(resp.body);
+    print(resp.statusCode);
+
+
+    if (resp.statusCode == 500) return false;
+
+    final responsePedidoUsuario = responsePedidoUsuarioFromJson(resp.body);
+    if (responsePedidoUsuario.isEmpty) return false;
+
+    print(responsePedidoUsuario[0].toJson());
+
+    if (['NOCL', 'APCO', 'VICO'].contains(responsePedidoUsuario[0].peEstado)){
+      add(OnSetIdConductor(responsePedidoUsuario[0].coIdConductor));
+      
+      pedidoModel = PedidoModel(
+        btip: 'addPedido', 
+        bidpedido: responsePedidoUsuario[0].peIdPedido, 
+        bidusuario: responsePedidoUsuario[0].usIdUsuario, 
+        bubinicial: responsePedidoUsuario[0].peUbiInicial, 
+        bubfinal: responsePedidoUsuario[0].peUbiFinal, 
+        bmetodopago: responsePedidoUsuario[0].peMetodoPago, 
+        bmonto: responsePedidoUsuario[0].peMonto, 
+        bservicio: responsePedidoUsuario[0].peServicio, 
+        bdescarga: responsePedidoUsuario[0].peDescripCarga, 
+        bcelentrega: int.parse(responsePedidoUsuario[0].peCelularEntrega), 
+        origen: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), 
+        destino: LatLng(double.parse(responsePedidoUsuario[0].peFinalLat), double.parse(responsePedidoUsuario[0].peFinalLog)), 
+        conductor: responsePedidoUsuario[0].coNombreConductor,
+        placa: responsePedidoUsuario[0].vePlaca
+      );
+
+      if (['NOCL', 'APCO'].contains(responsePedidoUsuario[0].peEstado)){
+
+        add(OnSetAddNewMarkets(
+          Marker(
+            markerId: MarkerId(MarkerIdEnum.origen.toString()),
+            icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker,
+            position: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), 
+          )
+        ));
+
+        paraOrigen = true;
+        return true;
+      } else {
+        add(OnSetAddNewMarkets(
+          Marker(
+            markerId: MarkerId(MarkerIdEnum.destino.toString()),
+            icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker,
+            position: LatLng(double.parse(responsePedidoUsuario[0].peFinalLat), double.parse(responsePedidoUsuario[0].peFinalLog)), 
+          )
+        ));
+
+        paraOrigen = false;
+        return true;
+      }
+    }else{
+
+
+      // TODO: Borrar el id del local storage
+
+    }
+
+    return false;
+
+  }
 
   Future<String?> searchPlaceByCoors({required LatLng coors}) async {
 
@@ -351,7 +424,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       final id = jsonDataId[0]['genId'];
 
     
-
+      print('Este es el id del pedido');
+      print(id);
       final response = await ClienteService.registrarPedido(
         uuidPedido: id, 
         idUsuario: idUsuario, 
@@ -456,6 +530,11 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   void listenPedidoAceptado({required NavigatorState navigator}) {
     SocketService.on('pedido aceptado por conductor', (data) async {
+
+      pedidoModel!.conductor = data['nombreConductor'];
+      pedidoModel!.placa = data['placa'];
+
+
       add(OnSetIdConductor(data['id']));
 
       add(OnSetAddNewMarkets(
@@ -491,6 +570,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         }
       }
 
+
+
       navigator.pop();
       
       
@@ -502,17 +583,14 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   void listenPosicionConductor(){
     SocketService.on('actualizar posicion conductor', (data) async {
       // TODO: Aqui actualizar la posicion del conductor
-      
-      Marker? marker = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.conductor);
-
-      
+            
       print('La nueva posicion es');
       print('${data['lat']}, ${data['lng']}');
       add(OnSetAddNewMarkets(
         Marker(
           markerId: MarkerId(MarkerIdEnum.conductor.toString()),
           position: LatLng(data['lat'], data['lng']),
-          icon: marker?.icon ?? BitmapDescriptor.defaultMarker,
+          icon: MapIcons.iconConductor ?? BitmapDescriptor.defaultMarker,
           // rotation: data['rotation'] ?? 0.0
         )
       ));

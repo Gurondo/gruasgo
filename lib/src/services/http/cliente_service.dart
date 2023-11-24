@@ -126,4 +126,23 @@ class ClienteService{
     });
     return resp;
   }
+
+
+  // Para buscar el pedido
+  static Future<http.Response> getPedidoPendiente({
+    required String idPedido,
+    required String idUsuario
+  }) async {
+
+    var urlParce = Uri.parse('${Enviroment().baseUrl}/pedido.php');
+
+    final resp = await http.post(urlParce, body: {
+      'btip': 'BUCONPedido',
+      'bidpedido': idPedido,
+      'bidusuario': idUsuario
+    });
+
+    return resp;
+
+  }
 }
