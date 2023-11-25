@@ -75,11 +75,17 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
         idUsuario: _userBloc.user!.idUsuario,
         servicio: _userBloc.user!.subCategoria
       );
-      _conductorBloc.pedidoNoAceptado(
-        idConductor: _userBloc.user!.idUsuario, 
-        idPedido: _conductorBloc.detallePedido!.pedidoId,
-        idVehiculo: _userBloc.user!.place
-      );
+
+      if (!_conductorBloc.notificacionPedidoCanceladoCliente){
+        
+        _conductorBloc.pedidoNoAceptado(
+          idConductor: _userBloc.user!.idUsuario, 
+          idPedido: _conductorBloc.detallePedido!.pedidoId,
+          idVehiculo: _userBloc.user!.place
+        );
+      }
+
+
       _conductorBloc.add(OnSetDetallePedido(null));
       _conductorBloc.detallePedido = null;
       _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
@@ -95,6 +101,8 @@ class _ConductorNotificacionState extends State<ConductorNotificacion> {
     _mapController.future.then((controllerValue) => {
       controllerValue.dispose()
     });
+
+    _conductorBloc.notificacionPedidoCanceladoCliente = false;
     // TODO: implement dispose
     super.dispose();
   }

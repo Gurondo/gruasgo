@@ -16,6 +16,8 @@ class UsuarioPedidoState extends Equatable{
   final String idConductor;
 
   // Estado del pedido
+
+  final bool botonCancelarPedido;
   
 
   // Notificacion del conductor
@@ -27,7 +29,8 @@ class UsuarioPedidoState extends Equatable{
     this.idConductor = '',
     this.distancia = '',
     this.duracion = '',
-    this.conductorEstaAqui = false
+    this.conductorEstaAqui = false,
+    this.botonCancelarPedido = false
   });
 
   UsuarioPedidoState copyWitch({
@@ -38,7 +41,8 @@ class UsuarioPedidoState extends Equatable{
     String? distancia,
     String? duracion,
     bool? conductorEstaAqui,
-    LatLng? coordenadaConductor
+    LatLng? coordenadaConductor,
+    bool? botonCancelarPedido
   }) => UsuarioPedidoState(
     contador: contador ?? this.contador,
     markers: markers ?? this.markers,
@@ -47,8 +51,9 @@ class UsuarioPedidoState extends Equatable{
     duracion: duracion ?? this.duracion,
     polylines: polylines ?? this.polylines,
     conductorEstaAqui: conductorEstaAqui ?? this.conductorEstaAqui,
+    botonCancelarPedido: botonCancelarPedido ?? this.botonCancelarPedido
   );
 
   @override
-  List<Object?> get props => [contador, markers, idConductor, distancia, duracion, polylines, conductorEstaAqui];
+  List<Object?> get props => [contador, markers, idConductor, distancia, duracion, polylines, conductorEstaAqui, botonCancelarPedido];
 }

@@ -52,3 +52,8 @@ class OnRemoveMarker extends UsuarioPedidoEvent{
 class OnClearPolylines extends UsuarioPedidoEvent{
   OnClearPolylines();
 }
+
+class OnSetBotonCancelarPedido extends UsuarioPedidoEvent{
+  final bool botonCancelarPedido;
+  OnSetBotonCancelarPedido(this.botonCancelarPedido);
+}

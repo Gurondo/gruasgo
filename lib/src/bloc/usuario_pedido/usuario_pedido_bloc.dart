@@ -123,6 +123,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       emit(state.copyWitch(polylines: {}));
     });
 
+    on<OnSetBotonCancelarPedido>((event, emit) {
+      emit(state.copyWitch(botonCancelarPedido: event.botonCancelarPedido));
+    });
     
   }
 
@@ -150,12 +153,24 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     print(resp.statusCode);
 
 
-    if (resp.statusCode == 500) return false;
+    if (resp.statusCode == 500) {
+      add(OnSetBotonCancelarPedido(false));
+      return false;
+    }
 
     final responsePedidoUsuario = responsePedidoUsuarioFromJson(resp.body);
-    if (responsePedidoUsuario.isEmpty) return false;
+    if (responsePedidoUsuario.isEmpty) {
+      add(OnSetBotonCancelarPedido(false));
+      return false;
+    }
 
     print(responsePedidoUsuario[0].toJson());
+
+    if (responsePedidoUsuario[0].peEstado == 'APCO'){
+      add(OnSetBotonCancelarPedido(true));
+    }else{
+      add(OnSetBotonCancelarPedido(false));
+    }
 
     if (['NOCL', 'APCO', 'VICO'].contains(responsePedidoUsuario[0].peEstado)){
       add(OnSetIdConductor(responsePedidoUsuario[0].coIdConductor));
@@ -177,6 +192,16 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         placa: responsePedidoUsuario[0].vePlaca
       );
 
+      final LatLng positionConductor = LatLng( double.parse(responsePedidoUsuario[0].cdLatitud.toString()),  double.parse(responsePedidoUsuario[0].cdLongitud.toString()),);
+
+      add(OnSetAddNewMarkets(
+        Marker(
+          markerId: MarkerId(MarkerIdEnum.conductor.toString()),
+          position: positionConductor,
+          icon: MapIcons.iconConductor ?? BitmapDescriptor.defaultMarker
+        )
+      ));
+
       if (['NOCL', 'APCO'].contains(responsePedidoUsuario[0].peEstado)){
 
         add(OnSetAddNewMarkets(
@@ -186,6 +211,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
             position: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), 
           )
         ));
+
+        final polyline = await getPolylines(origen: positionConductor, destino: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), );
+        if (polyline != null){
+          add(OnSetAddNewPolylines(
+            Polyline(
+              polylineId: PolylineId(PolylineIdEnum.conductorToOrigen.toString()),
+              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+            )
+          ));
+        }
+
+
+
 
         paraOrigen = true;
         return true;
@@ -198,9 +236,22 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           )
         ));
 
+        final polyline = await getPolylines(origen: positionConductor, destino: LatLng(double.parse(responsePedidoUsuario[0].peFinalLat), double.parse(responsePedidoUsuario[0].peFinalLog)));
+        if (polyline != null){
+          add(OnSetAddNewPolylines(
+            Polyline(
+              polylineId: PolylineId(PolylineIdEnum.conductorToDestino.toString()),
+              points: polyline.map((e) => LatLng(e.latitude, e.longitude)).toList()
+            )
+          ));
+        }
+
         paraOrigen = false;
         return true;
       }
+
+
+      
     }else{
 
 
@@ -496,6 +547,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       final response = await ClienteService.cancelarEstadoPedido(uuidPedido: pedidoModel!.bidpedido);
       print(response.body);
 
+
       return response.statusCode == 200;
 
     } catch (e) {
@@ -503,6 +555,24 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       return false;
     }
 
+  }
+
+  Future<bool> cancelarPedidoEnProceso() async {
+
+    final response = await ClienteService.cancelarEstadoPedido(uuidPedido: pedidoModel!.bidpedido);
+    print(response.body);
+
+    return response.statusCode == 200;
+    
+  }
+
+  void emitPedidoCanceladoEnProceso(){
+
+    print('a este conductor se le notificara que este pedido a sido cancelado');
+    print(state.idConductor);
+    SocketService.emit('pedido CACL cancelado cliente', {
+      'idConductor': state.idConductor
+    });
   }
 
   void respuesta({required ShowAlertCallback showAlert}){
@@ -534,6 +604,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       pedidoModel!.conductor = data['nombreConductor'];
       pedidoModel!.placa = data['placa'];
 
+      add(OnSetBotonCancelarPedido(true));
 
       add(OnSetIdConductor(data['id']));
 
@@ -638,6 +709,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     SocketService.on('El conductor ya esta aqui', (data) async {
       add(OnConductorEstaAqui(true));
 
+      add(OnSetBotonCancelarPedido(false));
       // Reproducir el sonido
       audio();
     });

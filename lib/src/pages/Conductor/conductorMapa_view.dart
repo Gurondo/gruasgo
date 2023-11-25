@@ -56,11 +56,12 @@ class _ConductorMapState extends State<ConductorMap> {
     super.initState();
 
     location = Location();
-
-
-  
-
+    final navigator = Navigator.of(context);
     _conductorBloc = BlocProvider.of<ConductorBloc>(context);
+
+
+    _conductorBloc.listenNotificacionPedidoCancelado(navigator: navigator);
+
     _userBloc = BlocProvider.of<UserBloc>(context);
     _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
 
@@ -80,7 +81,6 @@ class _ConductorMapState extends State<ConductorMap> {
       );
     });
 
-    final navigator = Navigator.of(context);
     _conductorBloc.notificacionNuevaSolicitudConductor(
       navigator: navigator,
       idConductor: _userBloc.user!.idUsuario
@@ -92,10 +92,12 @@ class _ConductorMapState extends State<ConductorMap> {
   void dispose() {
     _timer?.cancel();
     _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
+    _conductorBloc.clearSocketNotificacionPedidoCancelado();
     _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
     _conductorBloc.add(OnSetClearPolylines());
     _conductorBloc.add(OnSetLimpiarPedidos());
     _conductorBloc.add(OnSetNewMarkets({}));
+
     _conductorBloc.yaHayPedido = false;
     // if (_conductorBloc.state.detallePedido == null){
     //   _conductorBloc.eliminarEstado();
@@ -458,6 +460,8 @@ class _ConductorMapState extends State<ConductorMap> {
                                                               servicio: state.detallePedido!.servicio,
                                                               minutos: minutos
                                                             );
+
+                                                            // TODO: Guardar el precio en el pedido
                                                   
                                                             print('El precio es');
                                                             print(precioResponse.body);

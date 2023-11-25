@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
@@ -18,6 +19,7 @@ import 'package:gruasgo/src/models/response/estado_pedido_response.dart';
 import 'package:gruasgo/src/models/response/estado_response.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as polyline;
 import 'package:gruasgo/src/models/response/pedido_response.dart';
+import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
@@ -36,6 +38,9 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   bool yaHayPedido = false;
 
   static AudioPlayer player = AudioPlayer();
+
+
+  bool notificacionPedidoCanceladoCliente = false;
 
   ConductorBloc({
     required this.userBloc
@@ -250,6 +255,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       final responseEstado = responseEstadoFromJson(respEstado.body);
       if (responseEstado.isEmpty) return true;
 
+
       if (responseEstado[0].estado == 'PE'){
         
         final Response resp = await ConductorService.obtenerEstadoConPedido(
@@ -264,7 +270,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         print(resp.body);
         final responseEstadoPedido = responseEstadoPedidoFromJson(resp.body);
         
-        if (responseEstadoPedido.isEmpty) return true;
+        if (responseEstadoPedido.isEmpty || responseEstadoPedido[0].the16 == 'CACL') return false;
 
         final data = responseEstadoPedido[0];
 
@@ -463,7 +469,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         idConductor: idConductor, 
         estado: 'RECO'
       );
-      print('Cambiando el estado que rechazo el pedido');
+      print('Cambiando el estado que rechazo el pedido RECO');
       print(responsePedido.body);
       if (responsePedido.statusCode != 200) return false;
       dynamic jsonDataPedido = json.decode(responsePedido.body);
@@ -532,12 +538,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   void updatePosition({required lat, required lng}){
     print('enviando coordenadas al usuario');
 
-    // print(state.detallePedido!.clienteId);
-    SocketService.emit('actualizar coordenadas conductor', {
-      'lat': lat,
-      'lng': lng,
-      'idCliente': state.detallePedido?.clienteId ?? ''
-    });
+    if (state.detallePedido != null){
+      SocketService.emit('actualizar coordenadas conductor', {
+        'lat': lat,
+        'lng': lng,
+        'idCliente': state.detallePedido?.clienteId ?? ''
+      });
+    }
+
 
   }
 
@@ -680,8 +688,25 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   void listenPedidoCanceladoCliente({required NavigatorState navigator}){
     SocketService.on('pedido cancelado desde cliente', (data) {
+
+      // ClienteService.cancelarEstadoPedido(uuidPedido: detallePedido!.pedidoId);
       print('Aqui a cancelado un cliente');
+      notificacionPedidoCanceladoCliente = true;
+
       navigator.pop();
+    });
+  }
+
+  void listenNotificacionPedidoCancelado({
+    required NavigatorState navigator
+  }){
+    SocketService.on('pedido CACL cancelado', (data){
+
+
+      add(OnSetLimpiarPedidos());
+
+      navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false);
+
     });
   }
 
@@ -695,6 +720,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   void clearSocketNotificacionNuevaSolicitudConductor(){
     SocketService.off('notificacion pedido conductor');
+  }
+  
+  void clearSocketNotificacionPedidoCancelado(){
+    SocketService.off('pedido CACL cancelado');
   }
   
 }

@@ -49,6 +49,8 @@ class ResponsePedidoUsuario {
     String peServicio;
     String peDescripCarga;
     String peCelularEntrega;
+    String cdLatitud;
+    String cdLongitud;
 
     ResponsePedidoUsuario({
         required this.the0,
@@ -91,6 +93,8 @@ class ResponsePedidoUsuario {
         required this.peServicio,
         required this.peDescripCarga,
         required this.peCelularEntrega,
+        required this.cdLatitud,
+        required this.cdLongitud
     });
 
     factory ResponsePedidoUsuario.fromJson(Map<String, dynamic> json) => ResponsePedidoUsuario(
@@ -134,6 +138,8 @@ class ResponsePedidoUsuario {
         peServicio: json["pe_Servicio"],
         peDescripCarga: json["pe_DescripCarga"],
         peCelularEntrega: json["pe_CelularEntrega"],
+        cdLatitud: json["cd_latitud"],
+        cdLongitud: json["cd_longitud"]
     );
 
     Map<String, dynamic> toJson() => {
@@ -177,5 +183,7 @@ class ResponsePedidoUsuario {
         "pe_Servicio": peServicio,
         "pe_DescripCarga": peDescripCarga,
         "pe_CelularEntrega": peCelularEntrega,
+        "cd_latitud": cdLatitud,
+        "cd_longitud": cdLongitud
     };
 }

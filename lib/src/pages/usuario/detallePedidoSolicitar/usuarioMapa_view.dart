@@ -61,8 +61,6 @@ class _UsuarioMapState extends State<UsuarioMap>{
   @override
   void dispose() {
 
-    _usuarioPedidoBloc.desconectarseSocket();
-
     _usuarioPedidoBloc.clearSocketPedidoFinalizado();
     _usuarioPedidoBloc.clearSocketConductorEstaAqui();
     _usuarioPedidoBloc.clearSocketRespuestaUsuario();
@@ -75,6 +73,8 @@ class _UsuarioMapState extends State<UsuarioMap>{
     googleMapController.future.then((controllerValue) => {
       controllerValue.dispose()
     });
+
+    _usuarioPedidoBloc.desconectarseSocket();
     
     // TODO: implement dispose
     super.dispose();
@@ -288,6 +288,26 @@ class _UsuarioMapState extends State<UsuarioMap>{
                       descripcion: _usuarioPedidoBloc.pedidoModel?.bservicio ?? '',
                     ),
                     const SizedBox(height: 10,),
+                    (state.botonCancelarPedido) ? 
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: ButtonApp(
+                        color: Colors.amber,
+                        text: 'Cancelar el pedido',
+                        onPressed: () async{
+                          
+                          final navigator = Navigator.of(context);
+                          final resp = await usuarioPedidoBloc.cancelarPedidoEnProceso();
+                          if (resp){
+                            usuarioPedidoBloc.emitPedidoCanceladoEnProceso();
+                            usuarioPedidoBloc.add(OnSetIdConductor(''));
+                            usuarioPedidoBloc.add(OnClearPolylines());
+                            navigator.pushNamedAndRemoveUntil('bienbendioUsuario', (route) => false);
+                          }
+                        },
+                      ),
+                    ) : 
+                    Container()
                   ],
                 )
     
