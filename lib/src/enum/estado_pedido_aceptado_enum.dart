@@ -1,5 +1,6 @@
 enum EstadoPedidoAceptadoEnum{
   estoyAqui,
   comenzarCarrera,
-  finalizarCarrera
+  finalizarCarrera,
+  sinPedido
 }

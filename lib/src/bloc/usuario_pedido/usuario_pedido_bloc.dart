@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
+import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
 import 'package:gruasgo/src/global/enviroment.dart';
@@ -13,6 +14,7 @@ import 'package:gruasgo/src/helpers/get_marker.dart';
 import 'package:gruasgo/src/lib/map_icon.dart';
 import 'package:gruasgo/src/models/models.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as data;
+import 'package:gruasgo/src/models/response/pedido_response.dart';
 import 'package:gruasgo/src/models/response/response_pedido_usuario.dart';
 import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
@@ -47,15 +49,6 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required this.userBloc
   }) : super(const UsuarioPedidoState()) {
     
-    on<OnActualizarContador>((event, emit){
-      print('actualizando');
-      emit(state.copyWitch(contador: state.contador + event.contador));
-    });
-    
-    on<OnSetContador>((event, emit){
-      emit(state.copyWitch(contador: event.contador));
-    });
-
     on<OnSetAddNewMarkets>((event, emit){
 
       Set<Marker> markers = Set.from(state.markers);
@@ -123,15 +116,15 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       emit(state.copyWitch(polylines: {}));
     });
 
-    on<OnSetBotonCancelarPedido>((event, emit) {
-      emit(state.copyWitch(botonCancelarPedido: event.botonCancelarPedido));
+    on<OnSetEstadoPedidoAceptado>((event, emit){
+      emit(state.copyWitch(estadoPedidoAceptado: event.estadoPedidoAceptado));
     });
     
   }
 
 
   
-  void conectarseSocket({required String idUsuario}){
+  void conectarseSocket({required int idUsuario}){
     SocketService.open();
     SocketService.emit('usuario online', {
       'id': idUsuario,
@@ -154,22 +147,26 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
 
     if (resp.statusCode == 500) {
-      add(OnSetBotonCancelarPedido(false));
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.sinPedido));
       return false;
     }
 
     final responsePedidoUsuario = responsePedidoUsuarioFromJson(resp.body);
     if (responsePedidoUsuario.isEmpty) {
-      add(OnSetBotonCancelarPedido(false));
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.sinPedido));
       return false;
     }
 
     print(responsePedidoUsuario[0].toJson());
 
     if (responsePedidoUsuario[0].peEstado == 'APCO'){
-      add(OnSetBotonCancelarPedido(true));
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+    }else if (responsePedidoUsuario[0].peEstado == 'NOCL'){
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.comenzarCarrera));
+    }else if (responsePedidoUsuario[0].peEstado == 'VICO'){
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
     }else{
-      add(OnSetBotonCancelarPedido(false));
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.sinPedido));
     }
 
     if (['NOCL', 'APCO', 'VICO'].contains(responsePedidoUsuario[0].peEstado)){
@@ -185,9 +182,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         bmonto: responsePedidoUsuario[0].peMonto, 
         bservicio: responsePedidoUsuario[0].peServicio, 
         bdescarga: responsePedidoUsuario[0].peDescripCarga, 
-        bcelentrega: int.parse(responsePedidoUsuario[0].peCelularEntrega), 
-        origen: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), 
-        destino: LatLng(double.parse(responsePedidoUsuario[0].peFinalLat), double.parse(responsePedidoUsuario[0].peFinalLog)), 
+        bcelentrega: responsePedidoUsuario[0].peCelularEntrega, 
+        origen: LatLng(responsePedidoUsuario[0].peIniLat, responsePedidoUsuario[0].peIniLog), 
+        destino: LatLng(responsePedidoUsuario[0].peFinalLat, responsePedidoUsuario[0].peFinalLog), 
         conductor: responsePedidoUsuario[0].coNombreConductor,
         placa: responsePedidoUsuario[0].vePlaca
       );
@@ -208,11 +205,11 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           Marker(
             markerId: MarkerId(MarkerIdEnum.origen.toString()),
             icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker,
-            position: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), 
+            position: LatLng(responsePedidoUsuario[0].peIniLat, responsePedidoUsuario[0].peIniLog), 
           )
         ));
 
-        final polyline = await getPolylines(origen: positionConductor, destino: LatLng(double.parse(responsePedidoUsuario[0].peIniLat), double.parse(responsePedidoUsuario[0].peIniLog)), );
+        final polyline = await getPolylines(origen: positionConductor, destino: LatLng(responsePedidoUsuario[0].peIniLat, responsePedidoUsuario[0].peIniLog), );
         if (polyline != null){
           add(OnSetAddNewPolylines(
             Polyline(
@@ -232,11 +229,11 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
           Marker(
             markerId: MarkerId(MarkerIdEnum.destino.toString()),
             icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker,
-            position: LatLng(double.parse(responsePedidoUsuario[0].peFinalLat), double.parse(responsePedidoUsuario[0].peFinalLog)), 
+            position: LatLng(responsePedidoUsuario[0].peFinalLat, responsePedidoUsuario[0].peFinalLog), 
           )
         ));
 
-        final polyline = await getPolylines(origen: positionConductor, destino: LatLng(double.parse(responsePedidoUsuario[0].peFinalLat), double.parse(responsePedidoUsuario[0].peFinalLog)));
+        final polyline = await getPolylines(origen: positionConductor, destino: LatLng(responsePedidoUsuario[0].peFinalLat, responsePedidoUsuario[0].peFinalLog));
         if (polyline != null){
           add(OnSetAddNewPolylines(
             Polyline(
@@ -322,14 +319,18 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   }
 
-  Future getPedido({required String idPedido}) async {
+  Future<bool> getPedido({required int idPedido}) async {
 
     final response = await ClienteService.getPedido(idPedido: idPedido);
     print(response.body);
+    final responsePedido = responsePedidoFromJson(response.body)[0];
 
+    pedidoModel!.bmonto = responsePedido.monto;
+
+    return true;
   }
 
-  Future<String?> calcularPrecioPorHora({
+  Future<int?> calcularPrecioPorHora({
     required String servicio
   }) async{
     
@@ -339,16 +340,16 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       
       var jsonData1 = json.decode(responsePrecio.body);
       
-      return jsonData1["costo"].toString();
+      return jsonData1["costo"];
 
     } catch (e) {
       print(e);
-      return '';
+      return -1;
     }
 
   }
 
-  Future<String?> calcularPrecioDistancia({
+  Future<int?> calcularPrecioDistancia({
     required String servicio
   }) async {
       
@@ -375,7 +376,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       
       if (jsonData1["costo"] == null) return null;
 
-      return jsonData1["costo"].toString();
+      return jsonData1["costo"];
     } catch (e) {
       print(e);
       return null;
@@ -425,7 +426,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String ubiInicial,
     required String ubiFinal,
     required String metodoPago,
-    required String monto,
+    required int monto,
     required String servicio,
     required String descripcionDescarga,
     required int celentrega,
@@ -434,8 +435,8 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }){
     pedidoModel = PedidoModel(
       btip: 'addPedido', 
-      bidpedido: '-1', 
-      bidusuario: idUsuario.toString(), 
+      bidpedido: -1, 
+      bidusuario: idUsuario, 
       bubinicial: ubiInicial, 
       bubfinal: ubiFinal, 
       bmetodopago: metodoPago, 
@@ -456,7 +457,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String ubiInicial,
     required String ubiFinal,
     required String metodoPago,
-    required String monto,
+    required int monto,
     required String servicio,
     required String descripcionDescarga,
     required int celentrega
@@ -517,9 +518,9 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   // Socket
   void solicitar({
     required String servicio,
-    required String pedidoId,
+    required int pedidoId,
     required String nombreUsuario,
-    required String clienteid,
+    required int clienteid,
     required LatLng origen,
     required LatLng destino,
   }){
@@ -604,7 +605,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       pedidoModel!.conductor = data['nombreConductor'];
       pedidoModel!.placa = data['placa'];
 
-      add(OnSetBotonCancelarPedido(true));
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
 
       add(OnSetIdConductor(data['id']));
 
@@ -709,7 +710,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     SocketService.on('El conductor ya esta aqui', (data) async {
       add(OnConductorEstaAqui(true));
 
-      add(OnSetBotonCancelarPedido(false));
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.comenzarCarrera));
       // Reproducir el sonido
       audio();
     });
@@ -729,7 +730,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }){    
     SocketService.on('pedido en proceso cancelado', (data){
       add(OnClearPolylines());
-      add(OnSetIdConductor(''));
+      add(OnSetIdConductor(-1));
       add(OnDeleteMarkerById(MarkerIdEnum.conductor));
       navigator.pushNamedAndRemoveUntil('bienbendioUsuario', (route) => false, arguments: nombreUsuario);
     });
@@ -737,13 +738,19 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   void listenPedidoFinalizado({required NavigatorState navigator}){
     SocketService.on('pedido finalizado', (data){
+
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.sinPedido));
       add(OnClearPolylines());
-      navigator.pushNamedAndRemoveUntil('UsuarioFinalizacion', (route) => false);
+      final minutos = data['minutos'] ?? '';
+      navigator.pushNamedAndRemoveUntil('UsuarioFinalizacion', (route) => false, arguments: minutos);
     });
   }
 
   void listenComenzarCarrera(){
     SocketService.on('El conductor comenzo carrera', (data) async {
+
+      add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
+
       add(OnRemoveMarker(MarkerIdEnum.origen));
       add(OnClearPolylines());
 

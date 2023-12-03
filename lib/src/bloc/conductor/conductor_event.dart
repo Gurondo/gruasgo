@@ -42,7 +42,7 @@ class OnSetEstadoPedidoAceptado extends ConductorEvent{
 }
 
 class OnSetTiempoTranscurrido extends ConductorEvent{
-  final String tiempoTranscurrido;
+  final int tiempoTranscurrido;
   OnSetTiempoTranscurrido(this.tiempoTranscurrido);
 }
 

@@ -5,7 +5,7 @@ import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:gruasgo/src/utils/snackbar.dart' as utils;
 import 'package:http/http.dart' as http;
 
-const String url = "https://nesasbolivia.com/gruasgo/usuarios.php";
+const String url = "http://3.14.79.171/gruasgo/usuarios.php";
 final Uri uri = Uri.parse(url);
 
 class usuarioRegisterController {

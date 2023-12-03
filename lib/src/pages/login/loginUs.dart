@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 String username = "";
-final String url = "https://nesasbolivia.com/aptra2023/login.php";
+final String url = "http://3.14.79.171/aptra2023/login.php";
 final Uri uri = Uri.parse(url);
 
 class login_Usr extends StatefulWidget {

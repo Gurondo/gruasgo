@@ -18,18 +18,18 @@ class DetalleNotificacionConductor {
   final LatLng destino;
   final String servicio;
   final String cliente;
-  final String clienteId;
+  final int clienteId;
   final String nombreOrigen;
   final String nombreDestino;
   final String descripcionDescarga;
   final int referencia;
-  final double monto;
-  final String pedidoId;
+  final int monto;
+  final int pedidoId;
   final String estado;
   final String tipoPago;
   final String? horaInicio;
   final String? horaFin;
-  final String? tiempoTranscurrido;
+  final int? tiempoTranscurrido;
   final String? socketClientId;
 
   DetalleNotificacionConductor({

@@ -1,7 +1,7 @@
 // TODO: Agrege el idUsuario para que en todo el momento se sepa que usuario esta haciendo cada solicitud, y no
 // TODO: hacer consulta cada vez que se requiera
 class UserModel {
-  String idUsuario;
+  int idUsuario;
   String email;
   String nombreusuario;
   String TipoUsuario;

@@ -5,12 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
 import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
+import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/helpers/helpers.dart';
 import 'package:gruasgo/src/pages/usuario/usuarioMapa_controller.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
 import 'package:gruasgo/src/widgets/informacion_widget.dart';
+import 'package:gruasgo/src/widgets/show_custom_dialog_widget.dart';
 
 class UsuarioMap extends StatefulWidget {
   const UsuarioMap({super.key});
@@ -80,6 +82,15 @@ class _UsuarioMapState extends State<UsuarioMap>{
     super.dispose();
   }
 
+  String getText ({
+    required UsuarioPedidoState state
+  }) {
+    if (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.estoyAqui) return 'El conductor se encuentra en camino';
+    if (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.comenzarCarrera) return 'El conductor ya esta en el lugar';
+    if (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.finalizarCarrera) return 'El conductor inicio la carrera';
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final userBloc = BlocProvider.of<UserBloc>(context);
@@ -117,7 +128,8 @@ class _UsuarioMapState extends State<UsuarioMap>{
                         myLocationEnabled: false,
                       ),
                       SafeArea(
-                        child: Align(
+                        child: (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.sinPedido) ?
+                         Align(
                           alignment: Alignment.topRight,
                           child: Container(
                             margin: const EdgeInsets.only(right: 20),
@@ -148,7 +160,25 @@ class _UsuarioMapState extends State<UsuarioMap>{
                               ],
                             ),
                           ),
-                        ),
+                        ) : 
+                        Column(
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(211, 255, 255, 255),
+                                borderRadius: BorderRadius.circular(12)
+                              ),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: Text(
+                                  getText(state: state)
+                                )
+                              ),
+                            ),
+                          ],
+                        )
                         
                       ),
 
@@ -288,22 +318,33 @@ class _UsuarioMapState extends State<UsuarioMap>{
                       descripcion: _usuarioPedidoBloc.pedidoModel?.bservicio ?? '',
                     ),
                     const SizedBox(height: 10,),
-                    (state.botonCancelarPedido) ? 
+                    (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.estoyAqui) ? 
                     Padding(
                       padding: const EdgeInsets.all(10),
                       child: ButtonApp(
                         color: Colors.amber,
                         text: 'Cancelar el pedido',
-                        onPressed: () async{
+                        onPressed: (){
                           
-                          final navigator = Navigator.of(context);
-                          final resp = await usuarioPedidoBloc.cancelarPedidoEnProceso();
-                          if (resp){
-                            usuarioPedidoBloc.emitPedidoCanceladoEnProceso();
-                            usuarioPedidoBloc.add(OnSetIdConductor(''));
-                            usuarioPedidoBloc.add(OnClearPolylines());
-                            navigator.pushNamedAndRemoveUntil('bienbendioUsuario', (route) => false);
-                          }
+                          showCustomDialog(
+                            context: context,
+                            title: 'Estas seguro??',
+                            content: '¿Estas seguro que quieres cancelar el viaje?',
+                            onPressed: () async {
+                              
+                    
+                              final navigator = Navigator.of(context);
+                              final resp = await usuarioPedidoBloc.cancelarPedidoEnProceso();
+                              if (resp){
+                                usuarioPedidoBloc.emitPedidoCanceladoEnProceso();
+                                usuarioPedidoBloc.add(OnSetIdConductor(-1));
+                                usuarioPedidoBloc.add(OnClearPolylines());
+                                navigator.pushNamedAndRemoveUntil('bienbendioUsuario', (route) => false);
+                              }
+                            }
+                          );
+
+                          
                         },
                       ),
                     ) : 

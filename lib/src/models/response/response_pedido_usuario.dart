@@ -29,28 +29,28 @@ class ResponsePedidoUsuario {
     String the17;
     String the18;
     String the19;
-    String peIdPedido;
-    String usIdUsuario;
+    int peIdPedido;
+    int usIdUsuario;
     String usNombreUsuario;
     String vePlaca;
-    String coIdConductor;
+    int coIdConductor;
     String coNombreConductor;
     DateTime peFecha;
     String peHora;
     String peUbiInicial;
-    String peIniLat;
-    String peIniLog;
+    double peIniLat;
+    double peIniLog;
     String peUbiFinal;
-    String peFinalLat;
-    String peFinalLog;
+    double peFinalLat;
+    double peFinalLog;
     String peEstado;
     String peMetodoPago;
-    String peMonto;
+    int peMonto;
     String peServicio;
     String peDescripCarga;
-    String peCelularEntrega;
-    String cdLatitud;
-    String cdLongitud;
+    int peCelularEntrega;
+    double cdLatitud;
+    double cdLongitud;
 
     ResponsePedidoUsuario({
         required this.the0,

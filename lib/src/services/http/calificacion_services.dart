@@ -7,7 +7,7 @@ class CalificacionService{
   CalificacionService._();
 
   static Future<http.Response> guardarCalificacion({
-    required String idPedido,
+    required int idPedido,
     required String puntaje,
     required String tipoUsuario,
     required String observaciones

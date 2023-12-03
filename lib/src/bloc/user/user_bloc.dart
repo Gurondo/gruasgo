@@ -35,7 +35,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
 
 
   Future<bool> enviarCalificacion({
-    required String idPedido,
+    required int idPedido,
     required String puntaje,
     required String tipoUsuario,
     required String observaciones

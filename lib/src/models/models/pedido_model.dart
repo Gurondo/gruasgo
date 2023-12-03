@@ -4,12 +4,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 class PedidoModel{
   
   String btip;
-  String bidpedido;
-  String bidusuario;
+  int bidpedido;
+  int bidusuario;
   String bubinicial;
   String bubfinal;
   String bmetodopago;
-  String bmonto;
+  int bmonto;
   String bservicio;
   String bdescarga;
   int bcelentrega;

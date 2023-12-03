@@ -6,7 +6,7 @@ import 'package:gruasgo/src/utils/snackbar.dart' as utils;
 
 
 String username = "";
-const String url = "https://nesasbolivia.com/gruasgo/login.php";
+const String url = "http://3.14.79.171/gruasgo/login.php";
 final Uri uri = Uri.parse(url);
 
 class loginController{
@@ -51,7 +51,7 @@ class loginController{
         String subCategoria = datauser['subCategoria'] ?? '';
         String placa = datauser['placa'] ?? '';
       
-        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: licencia, place: placa, subCategoria: subCategoria);
+        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: int.parse(licencia), place: placa, subCategoria: subCategoria);
 
         saveTypeUsuario('typeUser',user.TipoUsuario);
         saveTypeUsuario('sPe_NombreApe',user.nombreusuario);

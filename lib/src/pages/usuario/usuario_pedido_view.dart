@@ -461,7 +461,7 @@ class _FormWidgetState extends State<FormWidget> {
 
                 if (_formKey.currentState!.validate()) {
                   
-                  String? precio;
+                  int? precio;
                   bool porHora = false;
 
                   if (listaPorHora.contains(listaRecibida[1])){
@@ -510,7 +510,7 @@ class _FormWidgetState extends State<FormWidget> {
     );
   }
 
-  Future<dynamic> showDialogPrecio(BuildContext context, bool porHora, String? precio, List<String> listaRecibida, UserBloc userBloc) {
+  Future<dynamic> showDialogPrecio(BuildContext context, bool porHora, int? precio, List<String> listaRecibida, UserBloc userBloc) {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -569,7 +569,7 @@ class _FormWidgetState extends State<FormWidget> {
                   ubiInicial: widget.tecOrigen.text.trim(),  
                   ubiFinal: tecDestino.text.trim(),  
                   metodoPago: tipoPago,  
-                  monto: (listaPorHora.contains(listaRecibida[1])) ? '0' : precio ?? '', 
+                  monto: (listaPorHora.contains(listaRecibida[1])) ? 0 : precio ?? -1, 
                   servicio: servicio, 
                   descripcionDescarga: tecDescripcion.text.trim(), 
                   celentrega: int.parse(tecNroContrato.text.trim()),

@@ -6,12 +6,12 @@ class ClienteService{
   ClienteService._();
 
   static Future registrarPedido({
-    required String uuidPedido,
-    required String idUsuario,
+    required int uuidPedido,
+    required int idUsuario,
     required String ubiInicial,
     required String ubiFinal,
     required String metodoPago,
-    required String monto,
+    required int monto,
     required String servicio,
     required String descripcionDescarga,
     required int celentrega,
@@ -26,8 +26,8 @@ class ClienteService{
 
     final response = await http.post(uri, body: {
       'btip': 'addPedido',
-      'bidpedido': uuidPedido,
-      'bidusuario': idUsuario,
+      'bidpedido': uuidPedido.toString(),
+      'bidusuario': idUsuario.toString(),
       'bidvehiculo': '',
       'bidconductor': '',
       'bubinicial': ubiInicial,
@@ -49,14 +49,14 @@ class ClienteService{
   }
 
   static Future<http.Response> cancelarEstadoPedido({
-    required String  uuidPedido
+    required int  uuidPedido
   }) async {
     final String url = "${Enviroment().baseUrl}/pedido.php";
     final Uri uri = Uri.parse(url);
 
     final response = await http.post(uri, body: {
       'btip': 'updEstado',
-      'bidpedido': uuidPedido,
+      'bidpedido': uuidPedido.toString(),
       'bestado': "CACL",
     });
 
@@ -117,12 +117,12 @@ class ClienteService{
   }
   
   static Future<http.Response> getPedido({
-    required String idPedido
+    required int idPedido
   }) async {
     var urlParce = Uri.parse('${Enviroment().baseUrl}/pedido.php');
     final resp = await http.post(urlParce, body: {
       'btip': 'devPedido',
-      'bidpedido': idPedido,
+      'bidpedido': idPedido.toString(),
     });
     return resp;
   }

@@ -24,7 +24,7 @@ class OnSetAddNewPolylines extends UsuarioPedidoEvent{
 }
 
 class OnSetIdConductor extends UsuarioPedidoEvent{
-  final String idConductor;
+  final int idConductor;
   OnSetIdConductor(this.idConductor);
 }
 
@@ -53,7 +53,7 @@ class OnClearPolylines extends UsuarioPedidoEvent{
   OnClearPolylines();
 }
 
-class OnSetBotonCancelarPedido extends UsuarioPedidoEvent{
-  final bool botonCancelarPedido;
-  OnSetBotonCancelarPedido(this.botonCancelarPedido);
+class OnSetEstadoPedidoAceptado extends UsuarioPedidoEvent{
+  final EstadoPedidoAceptadoEnum estadoPedidoAceptado;
+  OnSetEstadoPedidoAceptado(this.estadoPedidoAceptado);
 }

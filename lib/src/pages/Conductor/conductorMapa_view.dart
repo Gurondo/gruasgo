@@ -22,6 +22,7 @@ import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/widgets/button_app.dart';
 import 'package:gruasgo/src/widgets/google_map_widget.dart';
 import 'package:gruasgo/src/widgets/informacion_widget.dart';
+import 'package:gruasgo/src/widgets/show_custom_dialog_widget.dart';
 import 'package:http/http.dart';
 import 'package:location/location.dart';
 
@@ -261,19 +262,6 @@ class _ConductorMapState extends State<ConductorMap> {
                           return Column(
                             children: [
         
-                              (
-                                Enviroment().listaServicioHoraAvanzada.contains(state.detallePedido?.servicio ?? '-') ||
-                                (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-') && state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.finalizarCarrera)
-                              ) ? Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  margin: const EdgeInsets.only(bottom: 8, left: 8),
-                                  color: Colors.white,
-                                  child: Text('Hora Inicio ${state.detallePedido?.horaInicio ?? getHoraHelpers()}'),
-                                ),
-                              ) : Container(),
-                              
                               Container(
                                 color: Colors.white,
                                 padding: const EdgeInsets.symmetric(
@@ -283,6 +271,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                     padding: const EdgeInsets.symmetric(horizontal: 8),
                                     child: Column(
                                       children: [
+
                                         InformacionWidget(
                                           icons: Icons.arrow_downward,
                                           titulo: 'Origen',
@@ -295,27 +284,38 @@ class _ConductorMapState extends State<ConductorMap> {
                                           descripcion: state.detallePedido?.nombreDestino ?? '',
                                         ),
                                         const SizedBox(height: 5,),
+                                        (
+                                          Enviroment().listaServicioHoraAvanzada.contains(state.detallePedido?.servicio ?? '-') ||
+                                          (Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-') && state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.finalizarCarrera)
+                                        ) ? InformacionWidget(
+                                          isColumn: false,
+                                          colorDescription: Colors.blue,
+                                          icons: Icons.timer,
+                                          titulo: 'Hora de inicio',
+                                          descripcion: state.detallePedido?.horaInicio ?? getHoraHelpers(),
+                                        ) : Container(),
+                                        // const SizedBox(height: 4,),
                                         InformacionWidget(
                                           isColumn: false,
                                           icons: Icons.person,
                                           titulo: 'Cliente',
                                           descripcion: state.detallePedido?.cliente ?? '',
                                         ),
-                                        const SizedBox(height: 5,),
+                                        // const SizedBox(height: 4,),
                                         InformacionWidget(
                                           isColumn: false,
                                           icons: Icons.phone,
                                           titulo: 'Celular Ref',
                                           descripcion: state.detallePedido?.referencia.toString() ?? '',
                                         ),
-                                        const SizedBox(height: 5,),
+                                        // const SizedBox(height: 4,),
                                         InformacionWidget(
                                           isColumn: false,
                                           icons: Icons.map_outlined,
                                           titulo: 'Descripcion Carga',
                                           descripcion: state.detallePedido?.descripcionDescarga ?? '',
                                         ),
-                                        const SizedBox(height: 5,),
+                                        // const SizedBox(height: 4,),
                                         Row(
                                           children: [
                                             (state.estadoPedidoAceptado == EstadoPedidoAceptadoEnum.estoyAqui) ? 
@@ -452,7 +452,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                                           Enviroment().listaServicioPorHoraBasico.contains(state.detallePedido?.servicio ?? '-')
                                                         ){
                                                           
-                                                          String? minutos = await _conductorBloc.getMinutosConsumidos(idPedido: state.detallePedido!.pedidoId);
+                                                          int? minutos = await _conductorBloc.getMinutosConsumidos(idPedido: state.detallePedido!.pedidoId);
                                                           if (minutos != null){
                                                             _conductorBloc.add(OnSetTiempoTranscurrido(minutos));
                                                             
@@ -461,44 +461,60 @@ class _ConductorMapState extends State<ConductorMap> {
                                                               minutos: minutos
                                                             );
 
-                                                            // TODO: Guardar el precio en el pedido
                                                   
                                                             print('El precio es');
                                                             print(precioResponse.body);
                                                             final precio = json.decode(precioResponse.body)['costo'];
                                                             if (precio != null){
-                                                              _conductorBloc.add(OnSetDetallePedido(DetalleNotificacionConductor(
-                                                                origen: _conductorBloc.state.detallePedido!.origen, 
-                                                                destino: _conductorBloc.state.detallePedido!.destino, 
-                                                                servicio: _conductorBloc.state.detallePedido!.servicio, 
-                                                                cliente: _conductorBloc.state.detallePedido!.cliente, 
-                                                                clienteId: _conductorBloc.state.detallePedido!.clienteId, 
-                                                                nombreOrigen: _conductorBloc.state.detallePedido!.nombreOrigen, 
-                                                                nombreDestino: _conductorBloc.state.detallePedido!.nombreDestino, 
-                                                                descripcionDescarga: _conductorBloc.state.detallePedido!.descripcionDescarga, 
-                                                                referencia: _conductorBloc.state.detallePedido!.referencia, 
-                                                                monto: double.parse(precio.toString()), 
-                                                                socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
-                                                                pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
-                                                                estado: _conductorBloc.state.detallePedido!.estado,
-                                                                tiempoTranscurrido: minutos,
-                                                                tipoPago: _conductorBloc.state.detallePedido!.tipoPago
-                                                              )));
+
+
+                                                              // TODO: Guardar el precio en el pedido
+                                                              final statusPrecio = await _conductorBloc.updatePrecioTotal(
+                                                                idPedido: state.detallePedido!.pedidoId, monto: precio
+                                                              );
+
+                                                              if (statusPrecio){
+                                                                _conductorBloc.add(OnSetDetallePedido(DetalleNotificacionConductor(
+                                                                  origen: _conductorBloc.state.detallePedido!.origen, 
+                                                                  destino: _conductorBloc.state.detallePedido!.destino, 
+                                                                  servicio: _conductorBloc.state.detallePedido!.servicio, 
+                                                                  cliente: _conductorBloc.state.detallePedido!.cliente, 
+                                                                  clienteId: _conductorBloc.state.detallePedido!.clienteId, 
+                                                                  nombreOrigen: _conductorBloc.state.detallePedido!.nombreOrigen, 
+                                                                  nombreDestino: _conductorBloc.state.detallePedido!.nombreDestino, 
+                                                                  descripcionDescarga: _conductorBloc.state.detallePedido!.descripcionDescarga, 
+                                                                  referencia: _conductorBloc.state.detallePedido!.referencia, 
+                                                                  monto: precio, 
+                                                                  socketClientId: _conductorBloc.state.detallePedido!.socketClientId, 
+                                                                  pedidoId: _conductorBloc.state.detallePedido!.pedidoId, 
+                                                                  estado: _conductorBloc.state.detallePedido!.estado,
+                                                                  tiempoTranscurrido: minutos,
+                                                                  tipoPago: _conductorBloc.state.detallePedido!.tipoPago
+                                                                )));
+
+
+                                                                _conductorBloc.emitFinalizarPedido(
+                                                                  minutos: minutos
+                                                                );
+                                                                _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+                                                                // TODO: Aqui cuando finaliza el pedido
+                                                                _conductorBloc.add(OnSetClearPolylines());
+                                                                _getPolylines(state);
+                                                                _conductorBloc.eliminarCrearEstado(
+                                                                  idUsuario: _userBloc.user!.idUsuario,
+                                                                  servicio: _userBloc.user!.subCategoria
+                                                                );
+                                                                navigator.pushNamedAndRemoveUntil('ConductorFinalizacion', (route) => false);
+
+                                                              }
+
+                                                             
                                                             }
                                                   
                                                           }
                                                   
                                                   
-                                                          _conductorBloc.emitFinalizarPedido();
-                                                          _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
-                                                          // TODO: Aqui cuando finaliza el pedido
-                                                          _conductorBloc.add(OnSetClearPolylines());
-                                                          _getPolylines(state);
-                                                          _conductorBloc.eliminarCrearEstado(
-                                                            idUsuario: _userBloc.user!.idUsuario,
-                                                            servicio: _userBloc.user!.subCategoria
-                                                          );
-                                                          navigator.pushNamedAndRemoveUntil('ConductorFinalizacion', (route) => false);
+                                                          
                                                         }else{
                                                   
                                                   
@@ -603,37 +619,6 @@ class _ConductorMapState extends State<ConductorMap> {
 
   }
 
-void showCustomDialog({
-  required BuildContext context,
-  required String title,
-  required String content,
-  required Function onPressed
-}) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              onPressed();
-              Navigator.of(context).pop();
-            },
-            child: Text('Aceptar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Cancelar'),
-          ),
-        ],
-      );
-    },
-  );
-}
 
   Widget _drawer() {
     return Drawer(

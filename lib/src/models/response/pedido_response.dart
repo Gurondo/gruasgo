@@ -27,24 +27,24 @@ class ResponsePedido {
     String the15;
     String the16;
     String the17;
-    String idPedido;
-    String idUsuario;
+    int idPedido;
+    int idUsuario;
     String idVehiculo;
-    String idConductor;
+    int idConductor;
     DateTime fecha;
     String hora;
     String ubiInicial;
-    String iniLat;
-    String iniLog;
+    double iniLat;
+    double iniLog;
     String ubiFinal;
-    String finalLat;
-    String finalLog;
+    double finalLat;
+    double finalLog;
     String estado;
     String metodoPago;
-    String monto;
+    int monto;
     String servicio;
     String descripCarga;
-    String celularEntrega;
+    int celularEntrega;
 
     ResponsePedido({
         required this.the0,

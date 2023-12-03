@@ -149,7 +149,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
 
   Future<bool> eliminarCrearEstado({
-    required String idUsuario,
+    required int idUsuario,
     required String servicio
   }) async {
     try {
@@ -171,7 +171,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> adiccionarHora({
-    required String idPedido
+    required int idPedido
   }) async {
 
     final Response resp = await ConductorService.adicionarHora(idPedido: idPedido);
@@ -182,7 +182,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> actualizarCoorEstado({
-    required String idUsuario
+    required int idUsuario
   }) async {
     try {
       
@@ -207,8 +207,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     }
   }
 
-  Future<String?> getMinutosConsumidos({
-    required String idPedido
+  Future<int?> getMinutosConsumidos({
+    required int idPedido
   }) async {
     Response resp = await ConductorService.getMinutosConsumidos(idPedido: idPedido);
 
@@ -220,7 +220,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> eliminarEstado({
-    required String idUsuario
+    required int idUsuario
   }) async {
 
     try {
@@ -239,11 +239,11 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> buscarEstado({
-    required String idUsuario,
+    required int idUsuario,
     required String subServicio
   }) async{
 
-    try {
+    // try {
       
       final Response respEstado = await ConductorService.obtenerEstado(
         idConductor: idUsuario
@@ -276,16 +276,16 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
         if (data.horaIni != null){
           add(OnSetDetallePedido(DetalleNotificacionConductor(
-            origen: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
-            destino: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+            origen: LatLng(data.iniLat, data.iniLog),
+            destino: LatLng(data.finalLat, data.finalLog),
             servicio: data.servicio,
             cliente: "nombre del usuario",
             clienteId: data.idUsuario,
             nombreOrigen: data.ubiInicial,
             nombreDestino: data.ubiFinal,
             descripcionDescarga: data.descripCarga,
-            referencia: int.parse(data.celularEntrega),
-            monto: double.parse(data.monto),
+            referencia: data.celularEntrega,
+            monto: data.monto,
             socketClientId: 'socket_id',
             pedidoId: data.idPedido,
             estado: data.estado,
@@ -295,16 +295,16 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
           )));
         }else{
           add(OnSetDetallePedido(DetalleNotificacionConductor(
-            origen: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
-            destino: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+            origen: LatLng(data.iniLat, data.iniLog),
+            destino: LatLng(data.finalLat, data.finalLog),
             servicio: data.servicio,
             cliente: "nombre del usuario",
             clienteId: data.idUsuario,
             nombreOrigen: data.ubiInicial,
             nombreDestino: data.ubiFinal,
             descripcionDescarga: data.descripCarga,
-            referencia: int.parse(data.celularEntrega),
-            monto: double.parse(data.monto),
+            referencia: data.celularEntrega,
+            monto: data.monto,
             socketClientId: 'socket_id',
             pedidoId: data.idPedido,
             estado: data.estado,
@@ -317,7 +317,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         // add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum));
         Marker origen = (data.estado != 'VICO') ? Marker(
           markerId: MarkerId(MarkerIdEnum.origen.toString()),
-          position: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+          position: LatLng(data.iniLat, data.iniLog),
           icon: MapIcons.iconMarkerOrigen ?? BitmapDescriptor.defaultMarker
         ) : Marker(
           markerId: MarkerId(MarkerIdEnum.origen.toString())
@@ -327,7 +327,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         
         Marker destino = (data.estado == 'VICO') ? Marker(
           markerId: MarkerId(MarkerIdEnum.destino.toString()),
-          position: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+          position: LatLng(data.finalLat, data.finalLog),
           icon: MapIcons.iconMarkerDestino ?? BitmapDescriptor.defaultMarker
         ) : Marker(
           markerId: MarkerId(MarkerIdEnum.destino.toString())
@@ -350,7 +350,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         if (data.estado == 'VICO'){
           polyline = await getPolylines(
             origen: LatLng(position.latitude, position.longitude), 
-            destino: LatLng(double.parse(data.finalLat), double.parse(data.finalLog)),
+            destino: LatLng(data.finalLat, data.finalLog),
           );
           add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.finalizarCarrera));
         }else if(data.estado == 'NOCL'){
@@ -358,7 +358,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         } else {
           polyline = await getPolylines(
             origen: LatLng(position.latitude, position.longitude), 
-            destino: LatLng(double.parse(data.iniLat), double.parse(data.iniLog)),
+            destino: LatLng(data.iniLat, data.iniLog),
           );
           add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
         }
@@ -384,14 +384,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
       return true;
 
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   Future<bool> crearEstado({
-    required String idUsuario,
+    required int idUsuario,
     required String servicio
   }) async {
 
@@ -438,8 +438,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> actualizarPedido({
-    required String idConductor,
-    required String idPedido,
+    required int idConductor,
+    required int idPedido,
     required String idVehiculo,
     required String estado
   })async{
@@ -456,8 +456,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> pedidoNoAceptado({
-    required String idConductor,
-    required String idPedido,
+    required int idConductor,
+    required int idPedido,
     required String idVehiculo
   }) async {
 
@@ -482,8 +482,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> pedidoAceptado({
-    required String idConductor,
-    required String idPedido,
+    required int idConductor,
+    required int idPedido,
     required String placa
   }) async {
     try {
@@ -518,8 +518,27 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   }
 
+  Future<bool> updatePrecioTotal({
+    required int idPedido,
+    required int monto
+  }) async {
+
+    final responsePrecioPedido = await ConductorService.updateMontoTotal(
+      idPedido: idPedido,
+      monto: monto
+    );
+
+    print('Guardando el precio total en horas');
+    print(monto);
+    print(responsePrecioPedido.body);
+    if (responsePrecioPedido.statusCode != 200) return false;
+
+    return true;
+
+  }
+
   void openSocket({
-    required String idUsuario,
+    required int idUsuario,
     required String servicio
   }) {
     SocketService.open();
@@ -556,9 +575,12 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     });
   }
 
-  void emitFinalizarPedido(){
+  void emitFinalizarPedido({
+    int? minutos
+  }){
     SocketService.emit('finalizar pedido', {
       'idCliente': state.detallePedido!.clienteId,
+      'minutos': minutos
     });
   }
   
@@ -580,8 +602,8 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     required LatLng destino,
     required String servicio,
     required String cliente,
-    required String clienteId,
-    required String pedidoId,
+    required int clienteId,
+    required int pedidoId,
     required String nombreConductor,
     required String placa
 
@@ -607,7 +629,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   void notificacionNuevaSolicitudConductor({
     required NavigatorState navigator,
-    required String idConductor
+    required int idConductor
   }){
 
     SocketService.on('notificacion pedido conductor', (data) async {
@@ -624,16 +646,16 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
         final responsePedido = responsePedidoFromJson(response.body)[0];
 
         detallePedido = DetalleNotificacionConductor(
-          origen: LatLng(double.parse(responsePedido.iniLat), double.parse(responsePedido.iniLog)),
-          destino: LatLng(double.parse(responsePedido.finalLat), double.parse(responsePedido.finalLog)),
+          origen: LatLng(responsePedido.iniLat, responsePedido.iniLog),
+          destino: LatLng(responsePedido.finalLat, responsePedido.finalLog),
           servicio: responsePedido.servicio,
           cliente: payload['cliente'],
           clienteId: responsePedido.idUsuario,
           nombreOrigen: responsePedido.ubiInicial,
           nombreDestino: responsePedido.ubiFinal,
           descripcionDescarga: responsePedido.descripCarga,
-          referencia: int.parse(responsePedido.celularEntrega),
-          monto: double.parse(responsePedido.monto),
+          referencia: responsePedido.celularEntrega,
+          monto: responsePedido.monto,
           // TODO: BorrarSOcket
           socketClientId: payload['socket_client_id'],
           pedidoId: responsePedido.idPedido,

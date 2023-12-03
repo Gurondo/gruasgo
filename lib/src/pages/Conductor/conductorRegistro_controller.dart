@@ -5,10 +5,10 @@ import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:gruasgo/src/utils/snackbar.dart' as utils;
 import 'package:http/http.dart' as http;
 
-const String url = "https://nesasbolivia.com/gruasgo/conductor.php";
+const String url = "http://3.14.79.171/gruasgo/conductor.php";
 final Uri uri = Uri.parse(url);
 
-const String url1 = "https://nesasbolivia.com/gruasgo/vehiculo.php";
+const String url1 = "http://3.14.79.171/gruasgo/vehiculo.php";
 final Uri uri1 = Uri.parse(url1);
 
 class conductorController {

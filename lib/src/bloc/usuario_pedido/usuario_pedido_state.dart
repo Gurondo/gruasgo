@@ -9,51 +9,43 @@ class UsuarioPedidoState extends Equatable{
   final String distancia;
   final String duracion;
 
-  // Cuando se busca un conductor
-  final int contador;
-
   // Cuando el pedido es aceptado
-  final String idConductor;
+  final int idConductor;
 
   // Estado del pedido
-
-  final bool botonCancelarPedido;
-  
+  final EstadoPedidoAceptadoEnum estadoPedidoAceptado;
 
   // Notificacion del conductor
   final bool conductorEstaAqui;
   const UsuarioPedidoState({
     this.markers = const {},
     this.polylines = const {},
-    this.contador = 0,
-    this.idConductor = '',
+    this.idConductor = -1,
     this.distancia = '',
     this.duracion = '',
     this.conductorEstaAqui = false,
-    this.botonCancelarPedido = false
+    this.estadoPedidoAceptado = EstadoPedidoAceptadoEnum.estoyAqui
   });
 
   UsuarioPedidoState copyWitch({
-    int? contador,
     Set<Marker>? markers,
     Set<Polyline>? polylines,
-    String? idConductor,
+    int? idConductor,
     String? distancia,
     String? duracion,
     bool? conductorEstaAqui,
-    LatLng? coordenadaConductor,
-    bool? botonCancelarPedido
+    bool? botonCancelarPedido,
+    EstadoPedidoAceptadoEnum? estadoPedidoAceptado
   }) => UsuarioPedidoState(
-    contador: contador ?? this.contador,
     markers: markers ?? this.markers,
     idConductor: idConductor ?? this.idConductor,
     distancia: distancia ?? this.distancia,
     duracion: duracion ?? this.duracion,
     polylines: polylines ?? this.polylines,
     conductorEstaAqui: conductorEstaAqui ?? this.conductorEstaAqui,
-    botonCancelarPedido: botonCancelarPedido ?? this.botonCancelarPedido
+    estadoPedidoAceptado: estadoPedidoAceptado ?? this.estadoPedidoAceptado
   );
 
   @override
-  List<Object?> get props => [contador, markers, idConductor, distancia, duracion, polylines, conductorEstaAqui, botonCancelarPedido];
+  List<Object?> get props => [markers, idConductor, distancia, duracion, polylines, conductorEstaAqui, estadoPedidoAceptado];
 }
