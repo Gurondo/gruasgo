@@ -124,10 +124,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
 
   
-  void conectarseSocket({required int idUsuario}){
+  void conectarseSocket({required String idUsuario}){
     SocketService.open();
     SocketService.emit('usuario online', {
-      'id': idUsuario,
+      'id': int.parse(idUsuario),
     });
   }
 
@@ -136,7 +136,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
   }
 
   Future<bool?> buscarPedidoPendiente({
-    required String idPedido,
+    required int idPedido,
     required String idUsuario
   }) async {
 
@@ -264,7 +264,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
     var urlParse = Uri.parse('${Enviroment().server}/map/searchPlaceByCoors?lat=${coors.latitude}&&lng=${coors.longitude}');
 
-    try {
+    // try {
       
       final response = await http.get(
         urlParse, 
@@ -277,10 +277,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       
       return responseEncode['place'];
            
-    } catch (e) {
-      print(e);
-      return null;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return null;
+    // }
 
   }
 
@@ -288,7 +288,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
     var urlParse = Uri.parse('${Enviroment().server}/map/search?place=$place');
 
-    try {
+    // try {
       
       final response = await http.get(
         urlParse, 
@@ -312,10 +312,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       // return names;
       return placesName;
 
-    } catch (e) {
-      print(e);
-      return [];  
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return [];  
+    // }
 
   }
 
@@ -334,7 +334,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String servicio
   }) async{
     
-    try {
+    // try {
       
       final responsePrecio = await ClienteService.getPrecioHoras(servicio: servicio);
       
@@ -342,10 +342,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       
       return jsonData1["costo"];
 
-    } catch (e) {
-      print(e);
-      return -1;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return -1;
+    // }
 
   }
 
@@ -353,7 +353,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String servicio
   }) async {
       
-    try {
+    // try {
 
       // Obtener el origen y el destino de mi lista de Markers
       Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
@@ -377,10 +377,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
       if (jsonData1["costo"] == null) return null;
 
       return jsonData1["costo"];
-    } catch (e) {
-      print(e);
-      return null;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return null;
+    // }
 
     
     
@@ -463,7 +463,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required int celentrega
   }) async {
     
-    try {
+    // try {
 
       Marker? origen = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.origen);
       Marker? destino = getMarkerHelper(markers: state.markers, id: MarkerIdEnum.destino);
@@ -509,10 +509,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
         return false;
       }
     
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   // Socket
@@ -520,7 +520,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     required String servicio,
     required int pedidoId,
     required String nombreUsuario,
-    required int clienteid,
+    required String clienteid,
     required LatLng origen,
     required LatLng destino,
   }){
@@ -530,7 +530,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
     SocketService.emit('solicitar', {
       'servicio': servicio,
       'cliente': nombreUsuario,
-      'idCliente': clienteid,
+      'idCliente': int.parse(clienteid),
       'idPedido': pedidoId,
       'origen': origen,
       'destino': destino
@@ -540,7 +540,7 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
   Future<bool> cancelarPedido() async {
 
-    try {
+    // try {
       SocketService.emit('cancelar pedido cliente', {
         'idPedido': pedidoModel!.bidpedido
       });
@@ -551,10 +551,10 @@ class UsuarioPedidoBloc extends Bloc<UsuarioPedidoEvent, UsuarioPedidoState> {
 
       return response.statusCode == 200;
 
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
 
   }
 

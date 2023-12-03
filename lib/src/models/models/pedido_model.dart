@@ -5,7 +5,7 @@ class PedidoModel{
   
   String btip;
   int bidpedido;
-  int bidusuario;
+  String bidusuario;
   String bubinicial;
   String bubfinal;
   String bmetodopago;

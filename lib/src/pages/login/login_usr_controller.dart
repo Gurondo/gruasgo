@@ -46,16 +46,17 @@ class loginController{
         };
         String tipusuario = datauser['TipoUsuario'];
         String nombreusuario = datauser['NombreApe'];
-        String licencia = datauser['CI'];
+        Object licencia = datauser['CI'];
+
         String estado = datauser['Estado'];
         String subCategoria = datauser['subCategoria'] ?? '';
         String placa = datauser['placa'] ?? '';
       
-        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: int.parse(licencia), place: placa, subCategoria: subCategoria);
+        UserModel user = UserModel(email: emailController.text, nombreusuario: nombreusuario, TipoUsuario: tipusuario, idUsuario: licencia.toString(), place: placa, subCategoria: subCategoria);
 
         saveTypeUsuario('typeUser',user.TipoUsuario);
         saveTypeUsuario('sPe_NombreApe',user.nombreusuario);
-        saveTypeUsuario('sPe_Licencia',licencia);
+        saveTypeUsuario('sPe_Licencia',licencia.toString());
         saveTypeUsuario('sPe_Estado',estado);
 
         if (user.TipoUsuario == 'usu') {

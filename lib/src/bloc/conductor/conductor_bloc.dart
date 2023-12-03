@@ -9,7 +9,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gruasgo/src/arguments/detalle_notificacion_conductor.dart';
 import 'package:gruasgo/src/bloc/user/user_bloc.dart';
-import 'package:gruasgo/src/bloc/usuario_pedido/usuario_pedido_bloc.dart';
 import 'package:gruasgo/src/enum/estado_pedido_aceptado_enum.dart';
 import 'package:gruasgo/src/enum/marker_id_enum.dart';
 import 'package:gruasgo/src/enum/polyline_id_enum.dart';
@@ -19,7 +18,6 @@ import 'package:gruasgo/src/models/response/estado_pedido_response.dart';
 import 'package:gruasgo/src/models/response/estado_response.dart';
 import 'package:gruasgo/src/models/response/google_map_direction.dart' as polyline;
 import 'package:gruasgo/src/models/response/pedido_response.dart';
-import 'package:gruasgo/src/services/http/cliente_service.dart';
 import 'package:gruasgo/src/services/http/conductor_service.dart';
 import 'package:gruasgo/src/services/http/google_map_services.dart';
 import 'package:gruasgo/src/services/socket_services.dart';
@@ -149,10 +147,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
 
   Future<bool> eliminarCrearEstado({
-    required int idUsuario,
+    required String idUsuario,
     required String servicio
   }) async {
-    try {
+    // try {
       
       await ConductorService.eliminarEstado(idConductor: idUsuario);
       Position position = await getPositionHelpers();
@@ -164,10 +162,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       );
       
       return true;
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   Future<bool> adiccionarHora({
@@ -182,9 +180,9 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> actualizarCoorEstado({
-    required int idUsuario
+    required String idUsuario
   }) async {
-    try {
+    // try {
       
       final Position position = await getPositionHelpers();
 
@@ -201,10 +199,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       if (jsonData['success'] != 'si') return false;
       
       return true;
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   Future<int?> getMinutosConsumidos({
@@ -220,10 +218,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> eliminarEstado({
-    required int idUsuario
+    required String idUsuario
   }) async {
 
-    try {
+    // try {
       
       Response resp = await ConductorService.eliminarEstado(idConductor: idUsuario);
       if (resp.statusCode != 200) return false;
@@ -232,14 +230,14 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       dynamic jsonData = json.decode(resp.body);
       return jsonData['success'] == 'si';
       
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   Future<bool> buscarEstado({
-    required int idUsuario,
+    required String idUsuario,
     required String subServicio
   }) async{
 
@@ -391,11 +389,11 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> crearEstado({
-    required int idUsuario,
+    required String idUsuario,
     required String servicio
   }) async {
 
-    try {
+    // try {
       
       Position position = await getPositionHelpers();
 
@@ -414,10 +412,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
 
       return true;
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   Future<List<PointLatLng>?> getPolylines({
@@ -438,7 +436,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> actualizarPedido({
-    required int idConductor,
+    required String idConductor,
     required int idPedido,
     required String idVehiculo,
     required String estado
@@ -456,12 +454,12 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   Future<bool> pedidoNoAceptado({
-    required int idConductor,
+    required String idConductor,
     required int idPedido,
     required String idVehiculo
   }) async {
 
-    try {
+    // try {
 
       final responsePedido = await ConductorService.actualizarEstadoEnPedido(
         idPedido: idPedido, 
@@ -475,18 +473,18 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       dynamic jsonDataPedido = json.decode(responsePedido.body);
       return (jsonDataPedido['success'] == 'si');
 
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
   }
 
   Future<bool> pedidoAceptado({
-    required int idConductor,
+    required String idConductor,
     required int idPedido,
     required String placa
   }) async {
-    try {
+    // try {
       
       final responseStatus = await ConductorService.actualizarEstadoAceptado(
         idConductor: idConductor, 
@@ -511,10 +509,10 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       dynamic jsonDataPedido = json.decode(responsePedido.body);
       return (jsonDataPedido['success'] == 'si');
 
-    } catch (e) {
-      print(e);
-      return false;
-    }
+    // } catch (e) {
+    //   print(e);
+    //   return false;
+    // }
 
   }
 
@@ -538,13 +536,13 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   }
 
   void openSocket({
-    required int idUsuario,
+    required String idUsuario,
     required String servicio
   }) {
     SocketService.open();
 
     SocketService.emit('usuario online', {
-      'id': idUsuario,
+      'id': int.parse(idUsuario),
       'servicio': servicio
     });
 
@@ -561,7 +559,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       SocketService.emit('actualizar coordenadas conductor', {
         'lat': lat,
         'lng': lng,
-        'idCliente': state.detallePedido?.clienteId ?? ''
+        'idCliente': int.parse(state.detallePedido?.clienteId ?? '-1')
       });
     }
 
@@ -571,7 +569,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
   void emitComenzarCarrera(){
 
     SocketService.emit('comenzar carrera', {
-      'idCliente': state.detallePedido!.clienteId
+      'idCliente': int.parse(state.detallePedido!.clienteId)
     });
   }
 
@@ -579,20 +577,20 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     int? minutos
   }){
     SocketService.emit('finalizar pedido', {
-      'idCliente': state.detallePedido!.clienteId,
+      'idCliente': int.parse(state.detallePedido!.clienteId),
       'minutos': minutos
     });
   }
   
   void emitYaEstoyAqui(){
     SocketService.emit('ya estoy aqui', {
-      'idCliente': state.detallePedido!.clienteId,
+      'idCliente': int.parse(state.detallePedido!.clienteId),
     });
   }
 
   void emitRespuestaPedidoProcesoCancelado(){
     SocketService.emit('pedido proceso cancelado conductor', {
-      'idCliente': state.detallePedido!.clienteId,
+      'idCliente': int.parse(state.detallePedido!.clienteId),
     });
   }
 
@@ -602,7 +600,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
     required LatLng destino,
     required String servicio,
     required String cliente,
-    required int clienteId,
+    required String clienteId,
     required int pedidoId,
     required String nombreConductor,
     required String placa
@@ -617,7 +615,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       'destino': destino,
       'servicio': servicio,
       'cliente': cliente,
-      'idCliente': clienteId,
+      'idCliente': int.parse(clienteId),
       'idPedido': pedidoId,
       'lat': position.latitude,
       'lng': position.longitude,
@@ -629,7 +627,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
 
   void notificacionNuevaSolicitudConductor({
     required NavigatorState navigator,
-    required int idConductor
+    required String idConductor
   }){
 
     SocketService.on('notificacion pedido conductor', (data) async {

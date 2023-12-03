@@ -22,7 +22,7 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
 
   Future<bool> recuperarDato({
     required ConductorBloc conductorBloc, 
-    required int idUsuario, 
+    required String idUsuario, 
     required String subServicio
   }) async {
     await conductorBloc.buscarEstado(
@@ -103,7 +103,7 @@ class ComponentWidget extends StatefulWidget {
     required this.idUsuario, 
     required this.subCategoria
    }) : super(key: key);
-  final int idUsuario;
+  final String idUsuario;
   final String subCategoria;
   @override
   State<ComponentWidget> createState() => _ComponentWidgetState();

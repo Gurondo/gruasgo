@@ -18,7 +18,7 @@ class CalificacionService{
 
     final response = await http.post(uri, body: {
       'btip': 'addCalificacion',
-      'bidpedido': idPedido,
+      'bidpedido': idPedido.toString(),
       'bpuntaje': puntaje,
       'btipusu': tipoUsuario,
       'bobservaciones': observaciones,

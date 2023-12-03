@@ -222,7 +222,7 @@ class _UsuarioMapState extends State<UsuarioMap>{
                 ),
               
     
-                (state.idConductor == '') ? 
+                (state.idConductor == -1) ? 
     
                 Align(
                   alignment: Alignment.bottomCenter,

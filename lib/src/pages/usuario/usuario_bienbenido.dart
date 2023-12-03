@@ -24,7 +24,7 @@ Future<bool> redireccionar({
 }) async {
 
   final resp = await usuarioPedidoBloc.buscarPedidoPendiente(
-    idPedido: '525', 
+    idPedido: -1, 
     idUsuario: idUsuario
   );
   

@@ -18,7 +18,7 @@ class DetalleNotificacionConductor {
   final LatLng destino;
   final String servicio;
   final String cliente;
-  final int clienteId;
+  final String clienteId;
   final String nombreOrigen;
   final String nombreDestino;
   final String descripcionDescarga;
