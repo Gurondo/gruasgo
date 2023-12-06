@@ -251,7 +251,7 @@ class ConductorBloc extends Bloc<ConductorEvent, ConductorState> {
       if (respEstado.statusCode != 200) return false;
       
       final responseEstado = responseEstadoFromJson(respEstado.body);
-      if (responseEstado.isEmpty) return true;
+      if (responseEstado.isEmpty) return false;
 
 
       if (responseEstado[0].estado == 'PE'){

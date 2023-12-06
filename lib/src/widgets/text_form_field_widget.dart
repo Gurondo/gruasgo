@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TextFormFieldWidget extends StatelessWidget {
   final TextEditingController tecNroContrato;
@@ -27,6 +28,8 @@ class TextFormFieldWidget extends StatelessWidget {
       child: TextFormField(
         
         keyboardType: textInputType,
+
+        inputFormatters: (textInputType == TextInputType.number) ? [FilteringTextInputFormatter.digitsOnly] : [],
         // inputFormatters: <TextInputFormatter> [
         //   FilteringTextInputFormatter.digitsOnly,
         // ],

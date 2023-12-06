@@ -39,6 +39,7 @@ Future<bool> redireccionar({
     final userBloc = BlocProvider.of<UserBloc>(context);
     final usuarioPedidoBloc = BlocProvider.of<UsuarioPedidoBloc>(context);
     final navigator = Navigator.of(context);
+    usuarioPedidoBloc.add(OnClearPolylines());
 
     // final String username = ModalRoute.of(context)!.settings.arguments as String;
     return Scaffold(

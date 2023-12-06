@@ -40,6 +40,7 @@ class _ConductorBienvenidaState extends State<ConductorBienbenido> {
 
     final conductorBloc = BlocProvider.of<ConductorBloc>(context);
     final userBloc = BlocProvider.of<UserBloc>(context);
+    conductorBloc.add(OnSetClearPolylines());
 
     return SafeArea(
       child: Scaffold(

@@ -91,6 +91,13 @@ class _ConductorMapState extends State<ConductorMap> {
 
   @override
   void dispose() {
+
+    googleMapController.future.then((controllerValue) => {
+      controllerValue.dispose()
+    });
+
+    locationSubscription.cancel();
+    
     _timer?.cancel();
     _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
     _conductorBloc.clearSocketNotificacionPedidoCancelado();
@@ -104,11 +111,7 @@ class _ConductorMapState extends State<ConductorMap> {
     //   _conductorBloc.eliminarEstado();
     // }
 
-    googleMapController.future.then((controllerValue) => {
-      controllerValue.dispose()
-    });
 
-    locationSubscription.cancel();
     // TODO: implement dispose
     super.dispose();
   }
@@ -546,6 +549,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                                   color: Colors.amber,
                                                   textColor: Colors.black,
                                                   onPressed: ()async{
+
                                                     
                                                     // TODO: Cancelar Pedido
                                                     
@@ -572,7 +576,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                                           if (statusEstadoConductor){
                                                             _timer?.cancel();
                                                             _conductorBloc.clearSocketNotificacionNuevaSolicitudConductor();
-                                                            _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.estoyAqui));
+                                                            _conductorBloc.add(OnSetEstadoPedidoAceptado(EstadoPedidoAceptadoEnum.sinPedido));
                                                             _conductorBloc.add(OnSetClearPolylines());
                                                             _conductorBloc.add(OnSetLimpiarPedidos());
                                                             _conductorBloc.add(OnSetNewMarkets({}));
@@ -582,6 +586,7 @@ class _ConductorMapState extends State<ConductorMap> {
                                                             // if (_conductorBloc.state.detallePedido == null){
                                                             //   _conductorBloc.eliminarEstado();
                                                             // }
+
     
                                                             locationSubscription.cancel();
                                                             navigator.pushNamedAndRemoveUntil('bienbenidoConductor', (route) => false, arguments: _userBloc.user!.nombreusuario);

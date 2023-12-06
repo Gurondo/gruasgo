@@ -24,7 +24,7 @@ class UsuarioPedidoState extends Equatable{
     this.distancia = '',
     this.duracion = '',
     this.conductorEstaAqui = false,
-    this.estadoPedidoAceptado = EstadoPedidoAceptadoEnum.estoyAqui
+    this.estadoPedidoAceptado = EstadoPedidoAceptadoEnum.sinPedido
   });
 
   UsuarioPedidoState copyWitch({

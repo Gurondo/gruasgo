@@ -58,13 +58,6 @@ class ConductorService{
       'btip': 'BUSEST',
       'bidconductor': idConductor
     });
-
-    var urlParce1 = Uri.parse('${Enviroment().baseUrl}/conductorDisponible.php');
-    final resp1 = await http.post(urlParce, body: {
-      'btip': 'BUES',
-    });
-    print('----------------aqui esta todo-----------------------');
-    print(resp1.body);
     return resp;
   }
 
@@ -90,7 +83,7 @@ class ConductorService{
     
     final String url = "${Enviroment().baseUrl}/pedido.php";
     final Uri uri = Uri.parse(url);
-
+    print(idPedido);
     final response = await http.post(uri, body: {
       'btip': 'addHoraini',
       'bidpedido': idPedido.toString(),
@@ -159,6 +152,7 @@ class ConductorService{
   static Future<http.Response> getMinutosConsumidos({
     required int idPedido
   }) async {
+    print(idPedido);
     var urlParce = Uri.parse('${Enviroment().baseUrl}/pedido.php');
     final resp = await http.post(urlParce, body: {
       'btip': 'devuelveMinutos',
